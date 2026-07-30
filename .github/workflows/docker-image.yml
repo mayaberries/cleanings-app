@@ -6,6 +6,7 @@ on:
   pull_request:
     branches: [ "master" ]
   workflow_dispatch:
+
 jobs:
 
   build:
@@ -18,5 +19,5 @@ jobs:
       run: |
         cp docker-compose.yml.dist docker-compose.yml
         cp ./backend/.env.template ./backend/.env
-        docker-compose up --build -d
+        docker compose up --build -d  # 👈 Changed from docker-compose
         docker exec fastapi-cleanings-server pytest -v
