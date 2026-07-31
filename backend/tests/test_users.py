@@ -250,10 +250,10 @@ class TestUserLogin:
         "credential, wrong_value, status_code",
         (
             ("email", "wrong@email.com", 401),
-            ("email", None, 401),
+            ("email", None, 422),
             ("email", "notemail", 401),
             ("password", "wrongpassword", 401),
-            ("password", None, 401),
+            ("password", None, 422),
         ),
     )
     async def test_user_with_wrong_creds_doesnt_receive_token(

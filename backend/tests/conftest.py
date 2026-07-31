@@ -5,7 +5,7 @@ import os
 import pytest_asyncio
 from asgi_lifespan import LifespanManager
 from fastapi import FastAPI
-from httpx import AsyncClient
+from httpx import AsyncClient, ASGITransport
 from databases import Database
 import alembic
 from alembic.config import Config
@@ -52,16 +52,17 @@ def db(app: FastAPI) -> Database:
 # Make requests in our tests
 
 
+
 @pytest_asyncio.fixture
 async def client(app: FastAPI) -> AsyncClient:
     async with LifespanManager(app):
+        transport = ASGITransport(app=app)
         async with AsyncClient(
-            app=app,
+            transport=transport,
             base_url="http://testserver",
             headers={"Content-Type": "application/json"}
         ) as client:
             yield client
-
 
 @pytest_asyncio.fixture
 async def test_cleaning(db: Database, user_elliot: UserInDB) -> CleaningInDB:

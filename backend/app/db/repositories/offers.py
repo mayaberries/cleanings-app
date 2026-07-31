@@ -60,6 +60,7 @@ RESCIND_OFFER_QUERY = """
     DELETE FROM user_offers_for_cleanings
     WHERE cleaning_id = :cleaning_id
     AND user_id = :user_id
+    RETURNING cleaning_id, user_id, status, created_at, updated_at;
 """
 
 MARK_AS_COMPLETED_QUERY = """
@@ -138,14 +139,15 @@ class OffersRepository(BaseRepository):
 
             return OfferInDB(**canceled_offer)
 
-    async def rescind_offer(self, *, offer: OfferInDB) -> int:
-        return await self.db.execute(
+    async def rescind_offer(self, *, offer: OfferInDB) -> OfferInDB:
+        rescinded_offer = await self.db.fetch_one(
             query=RESCIND_OFFER_QUERY,
             values={
                 "cleaning_id": offer.cleaning_id,
                 "user_id": offer.user_id
             }
         )
+        return OfferInDB(**rescinded_offer)
 
     async def mark_as_completed(self, *, cleaning: CleaningInDB, cleaner: UserInDB) -> OfferInDB:
         return await self.db.execute(
