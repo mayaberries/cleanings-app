@@ -1,5 +1,4 @@
 from typing import Optional, Type
-from _pytest.python_api import raises
 import bcrypt
 from fastapi.exceptions import HTTPException
 import jwt
