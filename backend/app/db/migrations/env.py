@@ -3,7 +3,7 @@ import sys
 import os
 
 import alembic
-from sqlalchemy import engine_from_config, pool, create_engine
+from sqlalchemy import engine_from_config, pool, create_engine, text
 from psycopg2 import DatabaseError
 
 from logging.config import fileConfig
@@ -31,8 +31,8 @@ def run_migrations_online() -> None:
             str(DATABASE_URL), isolation_level="AUTOCOMMIT")
 
         with default_engine.connect() as default_conn:
-            default_conn.execute(f"DROP DATABASE IF EXISTS {POSTGRES_DB}_test")
-            default_conn.execute(f"CREATE DATABASE {POSTGRES_DB}_test")
+            default_conn.execute(text(f"DROP DATABASE IF EXISTS {POSTGRES_DB}_test"))
+            default_conn.execute(text(f"CREATE DATABASE {POSTGRES_DB}_test"))
 
     connectable = config.attributes.get("connection", None)
     config.set_main_option("sqlalchemy.url", DB_URL)
