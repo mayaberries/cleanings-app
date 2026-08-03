@@ -47,7 +47,15 @@ UPDATE_PROFILE_QUERY = """
 
 class ProfilesRepository(BaseRepository):
     async def create_profile_for_user(self, *, profile_create: ProfileCreate) -> ProfileInDB:
-        created_profile = await self.db.fetch_one(query=CREATE_PROFILE_FOR_USER_QUERY, values={**profile_create.dict(), "id": str(uuid4())})
+        values = {**profile_create.model_dump(), "id": str(uuid4())}
+
+        if values.get("image") is not None:
+            values["image"] = str(values["image"])
+
+        created_profile = await self.db.fetch_one(
+            query=CREATE_PROFILE_FOR_USER_QUERY,
+            values=values,
+        )
 
         return created_profile
 
@@ -68,13 +76,18 @@ class ProfilesRepository(BaseRepository):
     async def update_profile(self, *, profile_update: ProfileUpdate, requesting_user: UserInDB) -> ProfileInDB:
         profile = await self.get_profile_by_user_id(user_id=requesting_user.id)
 
-        update_params = profile.copy(
-            update=profile_update.dict(exclude_unset=True))
+        update_params = profile.model_copy(
+            update=profile_update.model_dump(exclude_unset=True))
+
+        values = update_params.model_dump(
+            exclude={"id", "created_at", "updated_at", "username", "email"})
+
+        if values.get("image") is not None:
+            values["image"] = str(values["image"])
 
         updated_profile = await self.db.fetch_one(
             query=UPDATE_PROFILE_QUERY,
-            values=update_params.dict(
-                exclude={"id", "created_at", "updated_at", "username", "email"}),
+            values=values,
         )
 
         return ProfileInDB(**updated_profile)

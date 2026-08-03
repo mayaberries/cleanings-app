@@ -4,6 +4,7 @@ from databases import Database
 
 from fastapi import FastAPI, status
 from httpx import AsyncClient
+from pydantic import HttpUrl
 from starlette.status import HTTP_200_OK
 
 from app.models.user import UserInDB, UserPublic
@@ -39,7 +40,7 @@ class TestProfileCreate:
 
 class TestProfileView:
     async def test_authenticated_user_can_view_other_users_profile(
-        self, app: FastAPI, elliots_authorized_client: AsyncClient, user_elliot: UserInDB, user_darlene: UserInDB
+            self, app: FastAPI, elliots_authorized_client: AsyncClient, user_elliot: UserInDB, user_darlene: UserInDB
     ) -> None:
         response = await elliots_authorized_client.get(
             app.url_path_for("profiles:get-profile-by-username",
@@ -50,7 +51,7 @@ class TestProfileView:
         assert profile.username == user_darlene.username
 
     async def test_unregistered_users_cannot_access_other_users_profile(
-        self, app: FastAPI, client: AsyncClient, user_darlene: UserInDB
+            self, app: FastAPI, client: AsyncClient, user_darlene: UserInDB
     ) -> None:
         response = await client.get(
             app.url_path_for("profiles:get-profile-by-username",
@@ -60,7 +61,7 @@ class TestProfileView:
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
     async def test_no_profile_is_returned_when_username_matches_no_user(
-        self, app: FastAPI, elliots_authorized_client: AsyncClient
+            self, app: FastAPI, elliots_authorized_client: AsyncClient
     ) -> None:
         response = await elliots_authorized_client.get(
             app.url_path_for("profiles:get-profile-by-username",
@@ -74,14 +75,14 @@ class TestProfileManagement:
     @pytest.mark.parametrize(
         "attr,value",
         (
-            ("full_name", "Lebron James"),
-            ("phone_number", "555-333-1000"),
-            ("bio", "This is a test bio"),
-            ("image", "http://testimages.com/testimage"),
+                ("full_name", "Lebron James"),
+                ("phone_number", "555-333-1000"),
+                ("bio", "This is a test bio"),
+                ("image", "http://testimages.com/testimage"),
         )
     )
     async def test_user_can_update_own_profile(
-        self, app: FastAPI, elliots_authorized_client: AsyncClient, user_elliot: UserInDB, attr: str, value: str
+            self, app: FastAPI, elliots_authorized_client: AsyncClient, user_elliot: UserInDB, attr: str, value: str
     ) -> None:
         assert getattr(user_elliot.profile, attr) != value
 
@@ -94,25 +95,29 @@ class TestProfileManagement:
 
         profile = ProfilePublic(**response.json())
 
-        assert getattr(profile, attr) == value
+        actual = getattr(profile, attr)
+        if isinstance(actual, HttpUrl):
+            actual = str(actual)
+
+        assert actual == value
 
     @pytest.mark.parametrize(
         "attr, value, status_code",
         (
-            ("full_name", [], 422),
-            ("bio", {}, 422),
-            ("image", "./image-string.png", 422),
-            ("image", 5, 422),
+                ("full_name", [], 422),
+                ("bio", {}, 422),
+                ("image", "./image-string.png", 422),
+                ("image", 5, 422),
         ),
     )
     async def test_user_receives_error_for_invalid_update_params(
-        self,
-        app: FastAPI,
-        elliots_authorized_client: AsyncClient,
-        user_elliot: UserInDB,
-        attr: str,
-        value: str,
-        status_code: int,
+            self,
+            app: FastAPI,
+            elliots_authorized_client: AsyncClient,
+            user_elliot: UserInDB,
+            attr: str,
+            value: str,
+            status_code: int,
     ) -> None:
         response = await elliots_authorized_client.put(
             app.url_path_for("profiles:update-own-profile"),
