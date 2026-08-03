@@ -1,38 +1,42 @@
-from typing import Optional, Union
-from enum import Enum
+from typing import Optional
+from pydantic import field_validator
 
 from app.models.core import IDModelMixin, CoreModel, DateTimeModelMixin
 from app.models.user import UserPublic
-
-
-class ServiceType(str, Enum):
-    dust_up = "dust_up"
-    spot_clean = "spot_clean"
-    full_clean = "full_clean"
+from app.models.service_categories import normalize_category
 
 
 class ServiceBase(CoreModel):
     name: Optional[str] = None
     description: Optional[str] = None
     price: Optional[float] = None
-    service_type: Optional[ServiceType] = ServiceType.spot_clean
+    category: Optional[str] = None
+    duration_minutes: Optional[int] = None
+
+    @field_validator("category", mode="before")
+    @classmethod
+    def category_is_normalized(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return value
+        return normalize_category(value)
 
 
 class ServiceCreate(ServiceBase):
     name: str
     price: float
+    category: str
 
 
 class ServiceUpdate(ServiceBase):
-    service_type: Optional[ServiceType] = None
+    category: Optional[str] = None
 
 
 class ServiceInDB(IDModelMixin, ServiceBase, DateTimeModelMixin):
     name: str
     price: float
-    service_type: ServiceType
+    category: str
     owner: str
 
 
 class ServicePublic(IDModelMixin, ServiceBase):
-    owner: Union[str, UserPublic]
+    owner: "str | UserPublic"

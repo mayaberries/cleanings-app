@@ -70,7 +70,7 @@ async def test_service(db: Database, user_elliot: UserInDB) -> ServiceInDB:
         name="fake service name",
         description="fake service description",
         price=9.99,
-        service_type="spot_clean",
+        category="spot_clean",
     )
     return await service_repo.create_service(new_service=new_service, requesting_user=user_elliot)
 
@@ -198,7 +198,7 @@ async def test_service_with_offers(
     offers_repo = OffersRepository(db)
 
     new_service = ServiceCreate(
-        name="service with offers", description="lorem ipsum", price=9.99, service_type="full_clean"
+        name="service with offers", description="lorem ipsum", price=9.99, category="full_clean"
     )
 
     created_service = await service_repo.create_service(
@@ -228,7 +228,7 @@ async def test_service_with_accepted_offer(
         name="service with offers",
         description="lorem ipsum",
         price=9.99,
-        service_type="full_clean"
+        category="full_clean"
     )
 
     created_service = await service_repo.create_service(
@@ -306,7 +306,7 @@ async def test_list_of_services_with_evaluated_offer(
                 name=f"test service - {i}",
                 description=f"test description - {i}",
                 price=float(f"{i}9.99"),
-                service_type="full_clean",
+                category="full_clean",
 
             ),
             eval_create=EvaluationCreate(
@@ -332,7 +332,7 @@ async def test_list_of_new_and_updated_services(db: Database, test_user_list: Li
                 name=f"feed item service job - {i}",
                 description=f"test description for feed item service: {i}",
                 price=float(f"{i}9.99"),
-                service_type=["full_clean", "spot_clean", "dust_up"][i % 3],
+                category=["full_clean", "spot_clean", "dust_up"][i % 3],
             ),
             requesting_user=test_user_list[i % len(test_user_list)],
         )

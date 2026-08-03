@@ -54,8 +54,8 @@ def create_services_table() -> None:
         sa.Column("id", sa.CHAR(36), primary_key=True),
         sa.Column("name", sa.Text, nullable=False, index=True),
         sa.Column("description", sa.Text, nullable=True),
-        sa.Column("service_type", sa.Text, nullable=False,
-                  server_default="spot_clean"),
+        sa.Column("category", sa.Text, nullable=False, index=True),
+        sa.Column("duration_minutes", sa.Integer, nullable=True),
         sa.Column("price", sa.Numeric(10, 2), nullable=False),
         sa.Column("owner", sa.CHAR(36), sa.ForeignKey(
             "users.id", ondelete="CASCADE")),

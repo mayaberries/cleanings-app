@@ -12,36 +12,37 @@ from app.models.user import UserInDB
 from app.db.repositories.users import UsersRepository
 
 CREATE_SERVICE_QUERY = """
-    INSERT INTO services (id, name, description, price, service_type, owner)
-    VALUES (:id, :name, :description, :price, :service_type, :owner)
-    RETURNING id, name, description, price, service_type, owner, created_at ,updated_at;
+    INSERT INTO services (id, name, description, price, category, duration_minutes, owner)
+    VALUES (:id, :name, :description, :price, :category, :duration_minutes, :owner)
+    RETURNING id, name, description, price, category, duration_minutes, owner, created_at, updated_at;
 """
 
 GET_SERVICE_BY_ID_QUERY = """
-    SELECT id, name, description, price, service_type, owner, created_at, updated_at
+    SELECT id, name, description, price, category, duration_minutes, owner, created_at, updated_at
     FROM services
     WHERE id = :id;
 """
 
 GET_ALL_SERVICES_QUERY = """
-    SELECT id, name, description, price, service_type  
+    SELECT id, name, description, price, category, duration_minutes  
     FROM services;  
 """
 
 LIST_ALL_USER_SERVICES_QUERY = """
-    SELECT id, name, description, price, service_type, owner, created_at, updated_at
+    SELECT id, name, description, price, category, duration_minutes, owner, created_at, updated_at
     FROM services
     WHERE owner = :owner;
 """
 
 UPDATE_SERVICE_BY_ID_QUERY = """
     UPDATE services
-    SET name         = :name,
-        description  = :description,
-        price        = :price,
-        service_type = :service_type
+    SET name              = :name,
+        description       = :description,
+        price             = :price,
+        category          = :category,
+        duration_minutes  = :duration_minutes
     WHERE id = :id
-    RETURNING id, name, description, price, service_type, owner, created_at, updated_at;  
+    RETURNING id, name, description, price, category, duration_minutes, owner, created_at, updated_at;  
 """
 
 DELETE_SERVICE_BY_ID_QUERY = """
@@ -102,7 +103,7 @@ class ServicesRepository(BaseRepository):
         service_update_params = service.model_copy(
             update=service_update.model_dump(exclude_unset=True))
 
-        if service_update_params.service_type is None:
+        if service_update_params.category is None:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Invalid service type. Cannot be None."
