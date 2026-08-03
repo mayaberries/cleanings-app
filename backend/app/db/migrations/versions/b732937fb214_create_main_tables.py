@@ -48,13 +48,13 @@ def timestamps(indexed: bool = False) -> Tuple[sa.Column, sa.Column]:
     )
 
 
-def create_cleanings_table() -> None:
+def create_services_table() -> None:
     op.create_table(
-        "cleanings",
+        "services",
         sa.Column("id", sa.CHAR(36), primary_key=True),
         sa.Column("name", sa.Text, nullable=False, index=True),
         sa.Column("description", sa.Text, nullable=True),
-        sa.Column("cleaning_type", sa.Text, nullable=False,
+        sa.Column("service_type", sa.Text, nullable=False,
                   server_default="spot_clean"),
         sa.Column("price", sa.Numeric(10, 2), nullable=False),
         sa.Column("owner", sa.CHAR(36), sa.ForeignKey(
@@ -64,9 +64,9 @@ def create_cleanings_table() -> None:
 
     op.execute(
         """
-        CREATE TRIGGER update_cleanings_modtime
+        CREATE TRIGGER update_services_modtime
             BEFORE UPDATE
-            ON cleanings
+            ON services
             FOR EACH ROW
         EXECUTE PROCEDURE update_updated_at_column();
         """
@@ -126,7 +126,7 @@ def create_profiles_table() -> None:
 
 def create_offers_table() -> None:
     op.create_table(
-        "user_offers_for_cleanings",
+        "user_offers_for_services",
         sa.Column(
             "user_id",  # 'user' is a reserved word in postgres, so going with user_id instead
             sa.CHAR(36),
@@ -135,9 +135,9 @@ def create_offers_table() -> None:
             index=True,
         ),
         sa.Column(
-            "cleaning_id",  # going with `cleaning_id` for consistency
+            "service_id",  # going with `service_id` for consistency
             sa.CHAR(36),
-            sa.ForeignKey("cleanings.id", ondelete="CASCADE"),
+            sa.ForeignKey("services.id", ondelete="CASCADE"),
             nullable=False,
             index=True,
         ),
@@ -145,13 +145,13 @@ def create_offers_table() -> None:
                   server_default="pending", index=True),
         *timestamps(),
     )
-    op.create_primary_key("pk_user_offers_for_cleanings",
-                          "user_offers_for_cleanings", ["user_id", "cleaning_id"])
+    op.create_primary_key("pk_user_offers_for_services",
+                          "user_offers_for_services", ["user_id", "service_id"])
     op.execute(
         """
-        CREATE TRIGGER update_user_offers_for_cleanings_modtime
+        CREATE TRIGGER update_user_offers_for_services_modtime
             BEFORE UPDATE
-            ON user_offers_for_cleanings
+            ON user_offers_for_services
             FOR EACH ROW
         EXECUTE PROCEDURE update_updated_at_column();
         """
@@ -160,11 +160,11 @@ def create_offers_table() -> None:
 
 def create_cleaner_evaluations_table() -> None:
     op.create_table(
-        "cleaning_to_cleaner_evaluations",
+        "service_to_cleaner_evaluations",
         sa.Column(
-            "cleaning_id",  # job that was completed
+            "service_id",  # job that was completed
             sa.CHAR(36),
-            sa.ForeignKey("cleanings.id", ondelete="SET NULL"),
+            sa.ForeignKey("services.id", ondelete="SET NULL"),
             nullable=False,
             index=True,
         ),
@@ -186,14 +186,14 @@ def create_cleaner_evaluations_table() -> None:
         *timestamps(),
     )
     op.create_primary_key(
-        "pk_cleaning_to_cleaner_evaluations", "cleaning_to_cleaner_evaluations", [
-            "cleaning_id", "cleaner_id"]
+        "pk_service_to_cleaner_evaluations", "service_to_cleaner_evaluations", [
+            "service_id", "cleaner_id"]
     )
     op.execute(
         """
-        CREATE TRIGGER update_cleaning_to_cleaner_evaluations_modtime
+        CREATE TRIGGER update_service_to_cleaner_evaluations_modtime
             BEFORE UPDATE
-            ON cleaning_to_cleaner_evaluations
+            ON service_to_cleaner_evaluations
             FOR EACH ROW
         EXECUTE PROCEDURE update_updated_at_column();
         """
@@ -204,15 +204,15 @@ def upgrade() -> None:
     create_updated_at_trigger()
     create_users_table()
     create_profiles_table()
-    create_cleanings_table()
+    create_services_table()
     create_offers_table()
     create_cleaner_evaluations_table()
 
 
 def downgrade() -> None:
-    op.drop_table("cleaning_to_cleaner_evaluations")
-    op.drop_table("user_offers_for_cleanings")
-    op.drop_table("cleanings")
+    op.drop_table("service_to_cleaner_evaluations")
+    op.drop_table("user_offers_for_services")
+    op.drop_table("services")
     op.drop_table("profiles")
     op.drop_table("users")
     op.execute("DROP FUNCTION update_updated_at_column")

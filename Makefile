@@ -1,7 +1,7 @@
 #!/bin/bash
 
 OS := $(shell uname)
-DOCKER_BE = fastapi-cleanings-server
+DOCKER_BE = fastapi-services-server
 UID = $(shell id -u)
 
 help: ## Show this help message

@@ -5,34 +5,34 @@ from app.models.core import IDModelMixin, CoreModel, DateTimeModelMixin
 from app.models.user import UserPublic
 
 
-class CleaningType(str, Enum):
+class ServiceType(str, Enum):
     dust_up = "dust_up"
     spot_clean = "spot_clean"
     full_clean = "full_clean"
 
 
-class CleaningBase(CoreModel):
+class ServiceBase(CoreModel):
     name: Optional[str] = None
     description: Optional[str] = None
     price: Optional[float] = None
-    cleaning_type: Optional[CleaningType] = CleaningType.spot_clean
+    service_type: Optional[ServiceType] = ServiceType.spot_clean
 
 
-class CleaningCreate(CleaningBase):
+class ServiceCreate(ServiceBase):
     name: str
     price: float
 
 
-class CleaningUpdate(CleaningBase):
-    cleaning_type: Optional[CleaningType] = None
+class ServiceUpdate(ServiceBase):
+    service_type: Optional[ServiceType] = None
 
 
-class CleaningInDB(IDModelMixin, CleaningBase, DateTimeModelMixin):
+class ServiceInDB(IDModelMixin, ServiceBase, DateTimeModelMixin):
     name: str
     price: float
-    cleaning_type: CleaningType
+    service_type: ServiceType
     owner: str
 
 
-class CleaningPublic(IDModelMixin, CleaningBase):
+class ServicePublic(IDModelMixin, ServiceBase):
     owner: Union[str, UserPublic]

@@ -10,8 +10,8 @@ from databases import Database
 import alembic
 from alembic.config import Config
 
-from app.models.cleaning import CleaningCreate, CleaningInDB, CleaningUpdate
-from app.db.repositories.cleanings import CleaningsRepository
+from app.models.service import ServiceCreate, ServiceInDB, ServiceUpdate
+from app.db.repositories.services import ServicesRepository
 
 from app.models.user import UserCreate, UserInDB
 from app.db.repositories.users import UsersRepository
@@ -64,15 +64,15 @@ async def client(app: FastAPI) -> AsyncGenerator[AsyncClient, Any]:
             yield client
 
 @pytest_asyncio.fixture
-async def test_cleaning(db: Database, user_elliot: UserInDB) -> CleaningInDB:
-    cleaning_repo = CleaningsRepository(db)
-    new_cleaning = CleaningCreate(
-        name="fake cleaning name",
-        description="fake cleaning description",
+async def test_service(db: Database, user_elliot: UserInDB) -> ServiceInDB:
+    service_repo = ServicesRepository(db)
+    new_service = ServiceCreate(
+        name="fake service name",
+        description="fake service description",
         price=9.99,
-        cleaning_type="spot_clean",
+        service_type="spot_clean",
     )
-    return await cleaning_repo.create_cleaning(new_cleaning=new_cleaning, requesting_user=user_elliot)
+    return await service_repo.create_service(new_service=new_service, requesting_user=user_elliot)
 
 
 async def user_fixture_helper(*, db: Database, new_user: UserCreate) -> UserInDB:
@@ -189,59 +189,59 @@ def create_authorized_client(client: AsyncClient) -> Callable:
 
 
 @pytest_asyncio.fixture
-async def test_cleaning_with_offers(
+async def test_service_with_offers(
     db: Database,
     user_darlene: UserInDB,
     test_user_list: List[UserInDB]
-) -> CleaningInDB:
-    cleaning_repo = CleaningsRepository(db)
+) -> ServiceInDB:
+    service_repo = ServicesRepository(db)
     offers_repo = OffersRepository(db)
 
-    new_cleaning = CleaningCreate(
-        name="cleaning with offers", description="lorem ipsum", price=9.99, cleaning_type="full_clean"
+    new_service = ServiceCreate(
+        name="service with offers", description="lorem ipsum", price=9.99, service_type="full_clean"
     )
 
-    created_cleaning = await cleaning_repo.create_cleaning(
-        new_cleaning=new_cleaning, requesting_user=user_darlene
+    created_service = await service_repo.create_service(
+        new_service=new_service, requesting_user=user_darlene
     )
 
     for user in test_user_list:
         if user.id != user_darlene.id:
-            await offers_repo.create_offer_for_cleaning(
+            await offers_repo.create_offer_for_service(
                 new_offer=OfferCreate(
-                    cleaning_id=created_cleaning.id, user_id=user.id
+                    service_id=created_service.id, user_id=user.id
                 )
             )
 
-    return created_cleaning
+    return created_service
 
 
 @pytest_asyncio.fixture
-async def test_cleaning_with_accepted_offer(
+async def test_service_with_accepted_offer(
     db: Database, user_darlene: UserInDB, user_mr_robot: UserInDB,
     test_user_list: List[UserInDB]
-) -> CleaningInDB:
-    cleaning_repo = CleaningsRepository(db)
+) -> ServiceInDB:
+    service_repo = ServicesRepository(db)
     offers_repo = OffersRepository(db)
 
-    new_cleaning = CleaningCreate(
-        name="cleaning with offers",
+    new_service = ServiceCreate(
+        name="service with offers",
         description="lorem ipsum",
         price=9.99,
-        cleaning_type="full_clean"
+        service_type="full_clean"
     )
 
-    created_cleaning = await cleaning_repo.create_cleaning(
-        new_cleaning=new_cleaning, requesting_user=user_darlene
+    created_service = await service_repo.create_service(
+        new_service=new_service, requesting_user=user_darlene
     )
 
     offers = []
 
     for user in test_user_list:
         offers.append(
-            await offers_repo.create_offer_for_cleaning(
+            await offers_repo.create_offer_for_service(
                 new_offer=OfferCreate(
-                    cleaning_id=created_cleaning.id,
+                    service_id=created_service.id,
                     user_id=user.id
                 )
             )
@@ -251,28 +251,28 @@ async def test_cleaning_with_accepted_offer(
         offer=[o for o in offers if o.user_id == user_mr_robot.id][0],
     )
 
-    return created_cleaning
+    return created_service
 
 
-async def create_cleaning_with_evaluated_offer_helper(
+async def create_service_with_evaluated_offer_helper(
     db: Database,
     owner: UserInDB,
     cleaner: UserInDB,
-    cleaning_create: CleaningCreate,
+    service_create: ServiceCreate,
     eval_create: EvaluationCreate
-) -> CleaningInDB:
-    cleaning_repo = CleaningsRepository(db)
+) -> ServiceInDB:
+    service_repo = ServicesRepository(db)
     offers_repo = OffersRepository(db)
     eval_repo = EvaluationsRepository(db)
 
-    created_cleaning = await cleaning_repo.create_cleaning(
-        new_cleaning=cleaning_create,
+    created_service = await service_repo.create_service(
+        new_service=service_create,
         requesting_user=owner
     )
 
-    offer = await offers_repo.create_offer_for_cleaning(
+    offer = await offers_repo.create_offer_for_service(
         new_offer=OfferCreate(
-            cleaning_id=created_cleaning.id,
+            service_id=created_service.id,
             user_id=cleaner.id
         )
     )
@@ -284,29 +284,29 @@ async def create_cleaning_with_evaluated_offer_helper(
 
     await eval_repo.create_evaluation_for_cleaner(
         evaluation_create=eval_create,
-        cleaning=created_cleaning,
+        service=created_service,
         cleaner=cleaner
     )
 
-    return created_cleaning
+    return created_service
 
 
 @pytest_asyncio.fixture
-async def test_list_of_cleanings_with_evaluated_offer(
+async def test_list_of_services_with_evaluated_offer(
     db: Database,
     user_darlene: UserInDB,
     user_mr_robot: UserInDB,
-) -> List[CleaningInDB]:
+) -> List[ServiceInDB]:
     return [
-        await create_cleaning_with_evaluated_offer_helper(
+        await create_service_with_evaluated_offer_helper(
             db=db,
             owner=user_darlene,
             cleaner=user_mr_robot,
-            cleaning_create=CleaningCreate(
-                name=f"test cleaning - {i}",
+            service_create=ServiceCreate(
+                name=f"test service - {i}",
                 description=f"test description - {i}",
                 price=float(f"{i}9.99"),
-                cleaning_type="full_clean",
+                service_type="full_clean",
 
             ),
             eval_create=EvaluationCreate(
@@ -324,29 +324,29 @@ async def test_list_of_cleanings_with_evaluated_offer(
 
 
 @pytest_asyncio.fixture
-async def test_list_of_new_and_updated_cleanings(db: Database, test_user_list: List[UserInDB]) -> List[CleaningInDB]:
-    cleanings_repo = CleaningsRepository(db)
-    new_cleanings = [
-        await cleanings_repo.create_cleaning(
-            new_cleaning=CleaningCreate(
-                name=f"feed item cleaning job - {i}",
-                description=f"test description for feed item cleaning: {i}",
+async def test_list_of_new_and_updated_services(db: Database, test_user_list: List[UserInDB]) -> List[ServiceInDB]:
+    services_repo = ServicesRepository(db)
+    new_services = [
+        await services_repo.create_service(
+            new_service=ServiceCreate(
+                name=f"feed item service job - {i}",
+                description=f"test description for feed item service: {i}",
                 price=float(f"{i}9.99"),
-                cleaning_type=["full_clean", "spot_clean", "dust_up"][i % 3],
+                service_type=["full_clean", "spot_clean", "dust_up"][i % 3],
             ),
             requesting_user=test_user_list[i % len(test_user_list)],
         )
         for i in range(50)
     ]
-    # update every 4 cleanings
-    for i, cleaning in enumerate(new_cleanings):
+    # update every 4 services
+    for i, service in enumerate(new_services):
         if i % 4 == 0:
-            updated_cleaning = await cleanings_repo.update_cleaning(
-                cleaning=cleaning,
-                cleaning_update=CleaningUpdate(
-                    description=f"Updated {cleaning.description}", price=cleaning.price + 100.0
+            updated_service = await services_repo.update_service(
+                service=service,
+                service_update=ServiceUpdate(
+                    description=f"Updated {service.description}", price=service.price + 100.0
                 ),
             )
-            new_cleanings[i] = updated_cleaning
-    return new_cleanings
+            new_services[i] = updated_service
+    return new_services
 

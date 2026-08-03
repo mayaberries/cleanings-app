@@ -4,12 +4,12 @@ from fastapi.exceptions import HTTPException
 from starlette import status
 
 from app.api.dependencies.auth import get_current_active_user
-from app.api.dependencies.cleanings import get_cleaning_by_id_from_path, user_owns_cleaning
+from app.api.dependencies.services import get_service_by_id_from_path, user_owns_service
 from app.api.dependencies.database import get_repository
-from app.api.dependencies.offers import get_offer_for_cleaning_from_user_by_path
+from app.api.dependencies.offers import get_offer_for_service_from_user_by_path
 from app.api.dependencies.users import get_user_by_username_from_path
 from app.db.repositories.evaluations import EvaluationsRepository
-from app.models.cleaning import CleaningInDB
+from app.models.service import ServiceInDB
 from app.models.offer import OfferInDB
 from app.models.user import UserInDB
 from app.models.evaluation import EvaluationInDB
@@ -17,16 +17,16 @@ from app.models.evaluation import EvaluationInDB
 
 async def check_evaluation_create_permissions(
     current_user: UserInDB = Depends(get_current_active_user),
-    cleaning: CleaningInDB = Depends(get_cleaning_by_id_from_path),
+    service: ServiceInDB = Depends(get_service_by_id_from_path),
     cleaner: UserInDB = Depends(get_user_by_username_from_path),
-    offer: OfferInDB = Depends(get_offer_for_cleaning_from_user_by_path),
+    offer: OfferInDB = Depends(get_offer_for_service_from_user_by_path),
     evals_repo: EvaluationsRepository = Depends(
         get_repository(EvaluationsRepository))
 ) -> None:
-    if not user_owns_cleaning(user=current_user, cleaning=cleaning):
+    if not user_owns_service(user=current_user, service=service):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Users are unable to leave evaluations for cleaning jobs they do not own."
+            detail="Users are unable to leave evaluations for service jobs they do not own."
         )
 
     if offer.status != "accepted":
@@ -50,18 +50,18 @@ async def list_evaluations_for_cleaner_from_path(
     return await evals_repo.list_evaluations_for_cleaner(cleaner=cleaner)
 
 
-async def get_cleaner_evaluation_for_cleaning_from_path(
-    cleaning: CleaningInDB = Depends(get_cleaning_by_id_from_path),
+async def get_cleaner_evaluation_for_service_from_path(
+    service: ServiceInDB = Depends(get_service_by_id_from_path),
     cleaner: UserInDB = Depends(get_user_by_username_from_path),
     evals_repo: EvaluationsRepository = Depends(
         get_repository(EvaluationsRepository))
 ):
-    evaluation = await evals_repo.get_cleaner_evaluation_for_cleaning(cleaning=cleaning, cleaner=cleaner)
+    evaluation = await evals_repo.get_cleaner_evaluation_for_service(service=service, cleaner=cleaner)
 
     if not evaluation:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"No evaluation found for cleaning ${cleaning.id}"
+            detail=f"No evaluation found for service ${service.id}"
         )
 
     return evaluation

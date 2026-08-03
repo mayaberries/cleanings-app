@@ -3,7 +3,7 @@ from pydantic import conint, confloat
 
 from app.models.core import DateTimeModelMixin, CoreModel
 from app.models.user import UserPublic
-from app.models.cleaning import CleaningPublic
+from app.models.service import ServicePublic
 
 
 class EvaluationBase(CoreModel):
@@ -26,7 +26,7 @@ class EvaluationUpdate(EvaluationBase):
 
 class EvaluationInDB(DateTimeModelMixin, EvaluationBase):
     cleaner_id: str
-    cleaning_id: str
+    service_id: str
 
 
 class EvaluationAggregate(CoreModel):
@@ -48,4 +48,4 @@ class EvaluationAggregate(CoreModel):
 class EvaluationPublic(EvaluationInDB):
     owner: Optional[Union[str, UserPublic]] = None
     cleaner: Optional[UserPublic] = None
-    cleaning: Optional[CleaningPublic] = None
+    service: Optional[ServicePublic] = None

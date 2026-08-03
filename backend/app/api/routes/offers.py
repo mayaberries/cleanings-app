@@ -3,10 +3,10 @@ from fastapi import APIRouter, Path, Body, status, HTTPException
 from fastapi.param_functions import Depends
 
 from app.models.offer import OfferCreate, OfferUpdate, OfferInDB, OfferPublic
-from app.models.cleaning import CleaningInDB
+from app.models.service import ServiceInDB
 from app.models.user import UserInDB
 
-from app.api.dependencies.cleanings import get_cleaning_by_id_from_path
+from app.api.dependencies.services import get_service_by_id_from_path
 from app.api.dependencies.auth import get_current_active_user
 from app.api.dependencies.database import get_repository
 from app.api.dependencies.offers import (
@@ -15,9 +15,9 @@ from app.api.dependencies.offers import (
     check_offer_create_permissions,
     check_offer_get_permissions,
     check_offer_list_permissions,
-    get_offer_for_cleaning_from_current_user,
-    get_offer_for_cleaning_from_user_by_path,
-    list_offers_for_cleaning_by_id_from_path,
+    get_offer_for_service_from_current_user,
+    get_offer_for_service_from_user_by_path,
+    list_offers_for_service_by_id_from_path,
     check_offer_rescind_permissions
 )
 
@@ -35,24 +35,24 @@ router = APIRouter()
     dependencies=[Depends(check_offer_create_permissions)]
 )
 async def create_offer(
-    cleaning: CleaningInDB = Depends(get_cleaning_by_id_from_path),
+    service: ServiceInDB = Depends(get_service_by_id_from_path),
     current_user: UserInDB = Depends(get_current_active_user),
     offers_repo: OffersRepository = Depends(get_repository(OffersRepository))
 ) -> OfferPublic:
-    return await offers_repo.create_offer_for_cleaning(
-        new_offer=OfferCreate(cleaning_id=cleaning.id, user_id=current_user.id)
+    return await offers_repo.create_offer_for_service(
+        new_offer=OfferCreate(service_id=service.id, user_id=current_user.id)
     )
 
 
 @router.get(
     "/",
     response_model=List[OfferPublic],
-    name="offers:list-offers-for-cleaning",
+    name="offers:list-offers-for-service",
     status_code=status.HTTP_200_OK,
     dependencies=[Depends(check_offer_list_permissions)]
 )
-async def list_offer_for_cleaning(
-    offers: List[OfferInDB] = Depends(list_offers_for_cleaning_by_id_from_path)
+async def list_offer_for_service(
+    offers: List[OfferInDB] = Depends(list_offers_for_service_by_id_from_path)
 ) -> List[OfferPublic]:
     return offers
 
@@ -65,7 +65,7 @@ async def list_offer_for_cleaning(
     dependencies=[Depends(check_offer_get_permissions)]
 )
 async def get_offer_from_user(
-    offer: OfferInDB = Depends(get_offer_for_cleaning_from_user_by_path)
+    offer: OfferInDB = Depends(get_offer_for_service_from_user_by_path)
 ) -> OfferPublic:
     return offer
 
@@ -78,7 +78,7 @@ async def get_offer_from_user(
     dependencies=[Depends(check_offer_acceptance_permissions)]
 )
 async def accept_offer_from_user(
-    offer: OfferInDB = Depends(get_offer_for_cleaning_from_user_by_path),
+    offer: OfferInDB = Depends(get_offer_for_service_from_user_by_path),
     offers_repo: OffersRepository = Depends(get_repository(OffersRepository))
 ) -> OfferPublic:
     return await offers_repo.accept_offer(
@@ -94,7 +94,7 @@ async def accept_offer_from_user(
     dependencies=[Depends(check_offer_cancel_permissions)]
 )
 async def cancel_offer_from_user(
-    offer: OfferInDB = Depends(get_offer_for_cleaning_from_current_user),
+    offer: OfferInDB = Depends(get_offer_for_service_from_current_user),
     offers_repo: OffersRepository = Depends(get_repository(OffersRepository))
 ) -> OfferPublic:
     return await offers_repo.cancel_offer(
@@ -110,7 +110,7 @@ async def cancel_offer_from_user(
     dependencies=[Depends(check_offer_rescind_permissions)]
 )
 async def rescind_offer_from_user(
-    offer: OfferInDB = Depends(get_offer_for_cleaning_from_current_user),
+    offer: OfferInDB = Depends(get_offer_for_service_from_current_user),
     offers_repo: OffersRepository = Depends(get_repository(OffersRepository))
 ) -> OfferPublic:
     rescinded_offer = await offers_repo.rescind_offer(offer=offer)

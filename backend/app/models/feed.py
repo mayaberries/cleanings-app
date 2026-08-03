@@ -1,7 +1,7 @@
 from typing import Optional, Literal
 import datetime
 from app.models.core import CoreModel
-from app.models.cleaning import CleaningPublic
+from app.models.service import ServicePublic
 
 
 class FeedItem(CoreModel):
@@ -9,5 +9,5 @@ class FeedItem(CoreModel):
     event_timestamp: Optional[datetime.datetime] = None
 
 
-class CleaningFeedItem(CleaningPublic, FeedItem):
+class ServiceFeedItem(ServicePublic, FeedItem):
     event_type: Optional[Literal["is_update", "is_create"]] = None

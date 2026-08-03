@@ -5,7 +5,7 @@ from httpx import AsyncClient
 from fastapi import FastAPI, status
 import random
 
-from app.models.cleaning import CleaningCreate, CleaningInDB
+from app.models.service import ServiceCreate, ServiceInDB
 from app.models.user import UserInDB
 from app.models.offer import OfferCreate, OfferUpdate, OfferInDB, OfferPublic
 from app.db.repositories.offers import OffersRepository
@@ -18,76 +18,76 @@ FAKE_ID = str(uuid.uuid4())
 
 class TestOffersRoutes:
     async def test_routes_exist(self, app: FastAPI, client: AsyncClient) -> None:
-        response = await client.post(app.url_path_for("offers:create-offer", cleaning_id=1))
+        response = await client.post(app.url_path_for("offers:create-offer", service_id=1))
         assert response.status_code != status.HTTP_404_NOT_FOUND
 
-        response = await client.get(app.url_path_for("offers:list-offers-for-cleaning", cleaning_id=1))
+        response = await client.get(app.url_path_for("offers:list-offers-for-service", service_id=1))
         assert response.status_code != status.HTTP_404_NOT_FOUND
 
-        response = await client.get(app.url_path_for("offers:get-offer-from-user", cleaning_id=1, username="bradpitt"))
+        response = await client.get(app.url_path_for("offers:get-offer-from-user", service_id=1, username="bradpitt"))
         assert response.status_code != status.HTTP_404_NOT_FOUND
 
-        response = await client.put(app.url_path_for("offers:accept-offer-from-user", cleaning_id=1, username="braddpit"))
+        response = await client.put(app.url_path_for("offers:accept-offer-from-user", service_id=1, username="braddpit"))
         assert response.status_code != status.HTTP_404_NOT_FOUND
 
-        response = await client.put(app.url_path_for("offers:cancel-offer-from-user", cleaning_id=1))
+        response = await client.put(app.url_path_for("offers:cancel-offer-from-user", service_id=1))
         assert response.status_code != status.HTTP_404_NOT_FOUND
 
-        response = await client.delete(app.url_path_for("offers:rescind-offer-from-user", cleaning_id=1))
+        response = await client.delete(app.url_path_for("offers:rescind-offer-from-user", service_id=1))
         assert response.status_code != status.HTTP_404_NOT_FOUND
 
 
 class TestCreateOffers:
-    async def test_user_can_successfully_create_offer_for_other_users_cleaning_job(
-        self, app: FastAPI, create_authorized_client: Callable, test_cleaning: CleaningInDB, user_mr_robot: UserInDB,
+    async def test_user_can_successfully_create_offer_for_other_users_service_job(
+        self, app: FastAPI, create_authorized_client: Callable, test_service: ServiceInDB, user_mr_robot: UserInDB,
     ) -> None:
         elliots_authorized_client = create_authorized_client(
             user=user_mr_robot)
 
         response = await elliots_authorized_client.post(
             app.url_path_for("offers:create-offer",
-                             cleaning_id=test_cleaning.id)
+                             service_id=test_service.id)
         )
         assert response.status_code == status.HTTP_201_CREATED
 
         offer = OfferPublic(**response.json())
         assert offer.user_id == user_mr_robot.id
-        assert offer.cleaning_id == test_cleaning.id
+        assert offer.service_id == test_service.id
         assert offer.status == "pending"
 
     async def test_user_cant_create_duplicate_offers(
-        self, app: FastAPI, create_authorized_client: Callable, test_cleaning: CleaningInDB, user_tyrell: UserInDB,
+        self, app: FastAPI, create_authorized_client: Callable, test_service: ServiceInDB, user_tyrell: UserInDB,
     ) -> None:
         elliots_authorized_client = create_authorized_client(user=user_tyrell)
 
         response = await elliots_authorized_client.post(
             app.url_path_for("offers:create-offer",
-                             cleaning_id=test_cleaning.id)
+                             service_id=test_service.id)
         )
         assert response.status_code == status.HTTP_201_CREATED
 
         response = await elliots_authorized_client.post(
             app.url_path_for("offers:create-offer",
-                             cleaning_id=test_cleaning.id)
+                             service_id=test_service.id)
         )
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
-    async def test_user_unable_to_create_offer_for_their_own_cleaning_job(
-        self, app: FastAPI, elliots_authorized_client: AsyncClient, user_elliot: UserInDB, test_cleaning: CleaningInDB
+    async def test_user_unable_to_create_offer_for_their_own_service_job(
+        self, app: FastAPI, elliots_authorized_client: AsyncClient, user_elliot: UserInDB, test_service: ServiceInDB
     ) -> None:
         response = await elliots_authorized_client.post(
             app.url_path_for("offers:create-offer",
-                             cleaning_id=test_cleaning.id)
+                             service_id=test_service.id)
         )
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     async def test_unauthenticated_users_cant_create_offers(
-        self, app: FastAPI, client: AsyncClient, test_cleaning: CleaningInDB,
+        self, app: FastAPI, client: AsyncClient, test_service: ServiceInDB,
     ) -> None:
         response = await client.post(
             app.url_path_for("offers:create-offer",
-                             cleaning_id=test_cleaning.id)
+                             service_id=test_service.id)
         )
 
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
@@ -105,20 +105,20 @@ class TestCreateOffers:
         elliots_authorized_client = create_authorized_client(user=user_angela)
 
         response = await elliots_authorized_client.post(
-            app.url_path_for("offers:create-offer", cleaning_id=id)
+            app.url_path_for("offers:create-offer", service_id=id)
         )
 
         assert response.status_code == status_code
 
 
 class TestGetOffers:
-    async def test_cleaning_owner_can_get_offer_from_user(
+    async def test_service_owner_can_get_offer_from_user(
         self,
         app: FastAPI,
         create_authorized_client: Callable,
         user_darlene: UserInDB,
         test_user_list: List[UserInDB],
-        test_cleaning_with_offers: CleaningInDB,
+        test_service_with_offers: ServiceInDB,
     ) -> None:
         authorized_client = create_authorized_client(
             user=user_darlene
@@ -129,7 +129,7 @@ class TestGetOffers:
         response = await authorized_client.get(
             app.url_path_for(
                 "offers:get-offer-from-user",
-                cleaning_id=test_cleaning_with_offers.id,
+                service_id=test_service_with_offers.id,
                 username=selected_user.username,
             )
         )
@@ -145,7 +145,7 @@ class TestGetOffers:
         app: FastAPI,
         create_authorized_client: Callable,
         test_user_list: List[UserInDB],
-        test_cleaning_with_offers: CleaningInDB,
+        test_service_with_offers: ServiceInDB,
 
     ) -> None:
         first_test_user = test_user_list[0]
@@ -157,7 +157,7 @@ class TestGetOffers:
         response = await authorized_client.get(
             app.url_path_for(
                 "offers:get-offer-from-user",
-                cleaning_id=test_cleaning_with_offers.id,
+                service_id=test_service_with_offers.id,
                 username=first_test_user.username
             )
         )
@@ -173,7 +173,7 @@ class TestGetOffers:
         app: FastAPI,
         create_authorized_client: Callable,
         test_user_list: List[UserInDB],
-        test_cleaning_with_offers: CleaningInDB,
+        test_service_with_offers: ServiceInDB,
     ) -> None:
         first_test_user = test_user_list[0]
         second_test_user = test_user_list[1]
@@ -183,25 +183,25 @@ class TestGetOffers:
         response = await authorized_client.get(
             app.url_path_for(
                 "offers:get-offer-from-user",
-                cleaning_id=test_cleaning_with_offers.id,
+                service_id=test_service_with_offers.id,
                 username=second_test_user.username,
             )
         )
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
-    async def test_cleaning_owner_can_get_all_offers_for_cleanings(
+    async def test_service_owner_can_get_all_offers_for_services(
         self,
         app: FastAPI,
         create_authorized_client: Callable,
         user_darlene: UserInDB,
         test_user_list: List[UserInDB],
-        test_cleaning_with_offers: CleaningInDB,
+        test_service_with_offers: ServiceInDB,
     ) -> None:
         authorized_client = create_authorized_client(user=user_darlene)
 
         response = await authorized_client.get(
-            app.url_path_for("offers:list-offers-for-cleaning",
-                             cleaning_id=test_cleaning_with_offers.id)
+            app.url_path_for("offers:list-offers-for-service",
+                             service_id=test_service_with_offers.id)
         )
 
         assert response.status_code == status.HTTP_200_OK
@@ -209,16 +209,16 @@ class TestGetOffers:
         for offer in response.json():
             assert offer["user_id"] in [user.id for user in test_user_list]
 
-    async def test_non_owners_forbidden_from_fetching_all_offers_for_cleaning(
+    async def test_non_owners_forbidden_from_fetching_all_offers_for_service(
         self,
         app: FastAPI,
         elliots_authorized_client: AsyncClient,
-        test_cleaning_with_offers: CleaningInDB,
+        test_service_with_offers: ServiceInDB,
     ) -> None:
         response = await elliots_authorized_client.get(
             app.url_path_for(
-                "offers:list-offers-for-cleaning",
-                cleaning_id=test_cleaning_with_offers.id
+                "offers:list-offers-for-service",
+                service_id=test_service_with_offers.id
             )
         )
 
@@ -226,13 +226,13 @@ class TestGetOffers:
 
 
 class TestAcceptOffers:
-    async def test_cleaning_owner_can_accept_offer_succesfully(
+    async def test_service_owner_can_accept_offer_succesfully(
         self,
         app: FastAPI,
         create_authorized_client: Callable,
         user_darlene: UserInDB,
         test_user_list: List[UserInDB],
-        test_cleaning_with_offers: CleaningInDB
+        test_service_with_offers: ServiceInDB
     ) -> None:
         selected_user = random.choice(test_user_list)
 
@@ -241,7 +241,7 @@ class TestAcceptOffers:
         response = await authorized_client.put(
             app.url_path_for(
                 "offers:accept-offer-from-user",
-                cleaning_id=test_cleaning_with_offers.id,
+                service_id=test_service_with_offers.id,
                 username=selected_user.username
             )
         )
@@ -252,34 +252,34 @@ class TestAcceptOffers:
 
         assert accepted_offer.status == "accepted"
         assert accepted_offer.user_id == selected_user.id
-        assert accepted_offer.cleaning_id == test_cleaning_with_offers.id
+        assert accepted_offer.service_id == test_service_with_offers.id
 
-    async def test_non_owner_forbidden_from_accepting_offer_for_cleaning(
+    async def test_non_owner_forbidden_from_accepting_offer_for_service(
         self,
         app: FastAPI,
         elliots_authorized_client: AsyncClient,
         test_user_list: List[UserInDB],
-        test_cleaning_with_offers: CleaningInDB
+        test_service_with_offers: ServiceInDB
     ) -> None:
         selected_user = random.choice(test_user_list)
 
         response = await elliots_authorized_client.put(
             app.url_path_for(
                 "offers:accept-offer-from-user",
-                cleaning_id=test_cleaning_with_offers.id,
+                service_id=test_service_with_offers.id,
                 username=selected_user.username
             )
         )
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
-    async def test_cleaning_owner_cant_accept_multiple_offers(
+    async def test_service_owner_cant_accept_multiple_offers(
         self,
         app: FastAPI,
         create_authorized_client: Callable,
         user_darlene: UserInDB,
         test_user_list: List[UserInDB],
-        test_cleaning_with_offers: CleaningInDB
+        test_service_with_offers: ServiceInDB
     ) -> None:
 
         authorized_client = create_authorized_client(user=user_darlene)
@@ -287,7 +287,7 @@ class TestAcceptOffers:
         response = await authorized_client.put(
             app.url_path_for(
                 "offers:accept-offer-from-user",
-                cleaning_id=test_cleaning_with_offers.id,
+                service_id=test_service_with_offers.id,
                 username=test_user_list[0].username
             )
         )
@@ -297,7 +297,7 @@ class TestAcceptOffers:
         response = await authorized_client.put(
             app.url_path_for(
                 "offers:accept-offer-from-user",
-                cleaning_id=test_cleaning_with_offers.id,
+                service_id=test_service_with_offers.id,
                 username=test_user_list[1].username
             )
         )
@@ -310,7 +310,7 @@ class TestAcceptOffers:
         create_authorized_client: Callable,
         user_darlene: UserInDB,
         test_user_list: List[UserInDB],
-        test_cleaning_with_offers: CleaningInDB
+        test_service_with_offers: ServiceInDB
     ) -> None:
 
         selected_user = random.choice(test_user_list)
@@ -320,7 +320,7 @@ class TestAcceptOffers:
         response = await authorized_client.put(
             app.url_path_for(
                 "offers:accept-offer-from-user",
-                cleaning_id=test_cleaning_with_offers.id,
+                service_id=test_service_with_offers.id,
                 username=selected_user.username
             )
         )
@@ -329,8 +329,8 @@ class TestAcceptOffers:
 
         response = await authorized_client.get(
             app.url_path_for(
-                "offers:list-offers-for-cleaning",
-                cleaning_id=test_cleaning_with_offers.id
+                "offers:list-offers-for-service",
+                service_id=test_service_with_offers.id
             )
         )
 
@@ -351,14 +351,14 @@ class TestCancelOffers:
         app: FastAPI,
         create_authorized_client: Callable,
         user_mr_robot: UserInDB,
-        test_cleaning_with_accepted_offer: CleaningInDB
+        test_service_with_accepted_offer: ServiceInDB
     ) -> None:
         accepted_user_client = create_authorized_client(user=user_mr_robot)
 
         response = await accepted_user_client.put(
             app.url_path_for(
                 "offers:cancel-offer-from-user",
-                cleaning_id=test_cleaning_with_accepted_offer.id
+                service_id=test_service_with_accepted_offer.id
             )
         )
 
@@ -368,21 +368,21 @@ class TestCancelOffers:
 
         assert cancelled_offer.status == "cancelled"
         assert cancelled_offer.user_id == user_mr_robot.id
-        assert cancelled_offer.cleaning_id == test_cleaning_with_accepted_offer.id
+        assert cancelled_offer.service_id == test_service_with_accepted_offer.id
 
     async def test_only_accepted_offers_can_be_cancelled(
         self,
         app: FastAPI,
         create_authorized_client: Callable,
         user_tyrell: UserInDB,
-        test_cleaning_with_accepted_offer: CleaningInDB
+        test_service_with_accepted_offer: ServiceInDB
     ) -> None:
         accepted_user_client = create_authorized_client(user=user_tyrell)
 
         response = await accepted_user_client.put(
             app.url_path_for(
                 "offers:cancel-offer-from-user",
-                cleaning_id=test_cleaning_with_accepted_offer.id
+                service_id=test_service_with_accepted_offer.id
             )
         )
 
@@ -393,14 +393,14 @@ class TestCancelOffers:
         app: FastAPI,
         create_authorized_client: Callable,
         user_mr_robot: UserInDB,
-        test_cleaning_with_accepted_offer: CleaningInDB
+        test_service_with_accepted_offer: ServiceInDB
     ) -> None:
         accepted_user_client = create_authorized_client(user=user_mr_robot)
 
         response = await accepted_user_client.put(
             app.url_path_for(
                 "offers:cancel-offer-from-user",
-                cleaning_id=test_cleaning_with_accepted_offer.id
+                service_id=test_service_with_accepted_offer.id
             )
         )
 
@@ -408,8 +408,8 @@ class TestCancelOffers:
 
         offers_repo = OffersRepository(app.state._db)
 
-        offers = await offers_repo.list_offers_for_cleaning(
-            cleaning=test_cleaning_with_accepted_offer
+        offers = await offers_repo.list_offers_for_service(
+            service=test_service_with_accepted_offer
         )
 
         for offer in offers:
@@ -426,7 +426,7 @@ class TestRescindOffers:
         create_authorized_client: Callable,
         user_tyrell: UserInDB,
         test_user_list: List[UserInDB],
-        test_cleaning_with_offers: CleaningInDB
+        test_service_with_offers: ServiceInDB
     ) -> None:
         authorized_client = create_authorized_client(
             user=user_tyrell
@@ -435,7 +435,7 @@ class TestRescindOffers:
         response = await authorized_client.delete(
             app.url_path_for(
                 "offers:rescind-offer-from-user",
-                cleaning_id=test_cleaning_with_offers.id
+                service_id=test_service_with_offers.id
             )
         )
 
@@ -443,8 +443,8 @@ class TestRescindOffers:
 
         offers_repo = OffersRepository(app.state._db)
 
-        offers = await offers_repo.list_offers_for_cleaning(
-            cleaning=test_cleaning_with_offers
+        offers = await offers_repo.list_offers_for_service(
+            service=test_service_with_offers
         )
 
         user_ids = [user.id for user in test_user_list]
@@ -458,7 +458,7 @@ class TestRescindOffers:
         app: FastAPI,
         create_authorized_client: Callable,
         user_mr_robot: UserInDB,
-        test_cleaning_with_accepted_offer: CleaningInDB
+        test_service_with_accepted_offer: ServiceInDB
     ) -> None:
         authorized_client = create_authorized_client(
             user=user_mr_robot
@@ -467,7 +467,7 @@ class TestRescindOffers:
         response = await authorized_client.delete(
             app.url_path_for(
                 "offers:rescind-offer-from-user",
-                cleaning_id=test_cleaning_with_accepted_offer.id
+                service_id=test_service_with_accepted_offer.id
             )
         )
 
@@ -478,7 +478,7 @@ class TestRescindOffers:
         app: FastAPI,
         create_authorized_client: Callable,
         user_mr_robot: UserInDB,
-        test_cleaning_with_accepted_offer: CleaningInDB
+        test_service_with_accepted_offer: ServiceInDB
     ) -> None:
         authorized_client = create_authorized_client(
             user=user_mr_robot
@@ -487,7 +487,7 @@ class TestRescindOffers:
         response = await authorized_client.put(
             app.url_path_for(
                 "offers:cancel-offer-from-user",
-                cleaning_id=test_cleaning_with_accepted_offer.id
+                service_id=test_service_with_accepted_offer.id
             )
         )
 
@@ -496,7 +496,7 @@ class TestRescindOffers:
         response = await authorized_client.delete(
             app.url_path_for(
                 "offers:rescind-offer-from-user",
-                cleaning_id=test_cleaning_with_accepted_offer.id
+                service_id=test_service_with_accepted_offer.id
             )
         )
 
@@ -507,7 +507,7 @@ class TestRescindOffers:
         app: FastAPI,
         create_authorized_client: Callable,
         user_tyrell: UserInDB,
-        test_cleaning_with_accepted_offer: CleaningInDB
+        test_service_with_accepted_offer: ServiceInDB
     ) -> None:
         authorized_client = create_authorized_client(
             user=user_tyrell
@@ -516,7 +516,7 @@ class TestRescindOffers:
         response = await authorized_client.delete(
             app.url_path_for(
                 "offers:rescind-offer-from-user",
-                cleaning_id=test_cleaning_with_accepted_offer.id
+                service_id=test_service_with_accepted_offer.id
             )
         )
 

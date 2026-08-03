@@ -4,7 +4,7 @@ import pytest
 import uuid
 from httpx import AsyncClient
 from fastapi import FastAPI, status
-from app.models.cleaning import CleaningInDB
+from app.models.service import ServiceInDB
 from app.models.evaluation import EvaluationAggregate, EvaluationCreate, EvaluationInDB, EvaluationPublic
 
 from app.models.user import UserInDB
@@ -16,10 +16,10 @@ FAKE_ID = str(uuid.uuid4())
 
 class TestEvaluationRoutes:
     async def test_routes_exist(self, app: FastAPI, client: AsyncClient) -> None:
-        response = await client.post(app.url_path_for("evaluations:create-evaluation-for-cleaner", cleaning_id=FAKE_ID, username="braddpit"))
+        response = await client.post(app.url_path_for("evaluations:create-evaluation-for-cleaner", service_id=FAKE_ID, username="braddpit"))
         assert response.status_code != status.HTTP_404_NOT_FOUND
 
-        response = await client.get(app.url_path_for("evaluations:get-evaluation-for-cleaner", cleaning_id=FAKE_ID,  username="braddpit"))
+        response = await client.get(app.url_path_for("evaluations:get-evaluation-for-cleaner", service_id=FAKE_ID,  username="braddpit"))
         assert response.status_code != status.HTTP_404_NOT_FOUND
 
         response = await client.get(app.url_path_for("evaluations:list-evaluations-for-cleaner", username="bradpitt"))
@@ -36,7 +36,7 @@ class TestCreateEvaluations:
         create_authorized_client: Callable,
         user_darlene: UserInDB,
         user_mr_robot: UserInDB,
-        test_cleaning_with_accepted_offer: CleaningInDB,
+        test_service_with_accepted_offer: ServiceInDB,
     ) -> None:
         evaluation_create = EvaluationCreate(
             no_show=False,
@@ -56,7 +56,7 @@ Though the cleaner took their time, I would definitely hire them again for the q
         response = await authorized_client.post(
             app.url_path_for(
                 "evaluations:create-evaluation-for-cleaner",
-                cleaning_id=test_cleaning_with_accepted_offer.id,
+                service_id=test_service_with_accepted_offer.id,
                 username=user_mr_robot.username
             ),
             json=evaluation_create.model_dump()
@@ -73,7 +73,7 @@ Though the cleaner took their time, I would definitely hire them again for the q
         response = await authorized_client.get(
             app.url_path_for(
                 "offers:get-offer-from-user",
-                cleaning_id=test_cleaning_with_accepted_offer.id,
+                service_id=test_service_with_accepted_offer.id,
                 username=user_mr_robot.username
             ),
         )
@@ -87,7 +87,7 @@ Though the cleaner took their time, I would definitely hire them again for the q
         create_authorized_client: Callable,
         user_mr_robot: UserInDB,
         user_tyrell: UserInDB,
-        test_cleaning_with_accepted_offer: CleaningInDB,
+        test_service_with_accepted_offer: ServiceInDB,
     ) -> None:
 
         authorized_client = create_authorized_client(user=user_tyrell)
@@ -95,7 +95,7 @@ Though the cleaner took their time, I would definitely hire them again for the q
         response = await authorized_client.post(
             app.url_path_for(
                 "evaluations:create-evaluation-for-cleaner",
-                cleaning_id=test_cleaning_with_accepted_offer.id,
+                service_id=test_service_with_accepted_offer.id,
                 username=user_mr_robot.username
             ),
             json={"overall_rating": 2}
@@ -109,7 +109,7 @@ Though the cleaner took their time, I would definitely hire them again for the q
         create_authorized_client: Callable,
         user_darlene: UserInDB,
         user_tyrell: UserInDB,
-        test_cleaning_with_accepted_offer: CleaningInDB,
+        test_service_with_accepted_offer: ServiceInDB,
     ) -> None:
 
         authorized_client = create_authorized_client(user=user_darlene)
@@ -117,7 +117,7 @@ Though the cleaner took their time, I would definitely hire them again for the q
         response = await authorized_client.post(
             app.url_path_for(
                 "evaluations:create-evaluation-for-cleaner",
-                cleaning_id=test_cleaning_with_accepted_offer.id,
+                service_id=test_service_with_accepted_offer.id,
                 username=user_tyrell.username
             ),
             json={"overall_rating": 2}
@@ -132,7 +132,7 @@ Though the cleaner took their time, I would definitely hire them again for the q
         user_darlene: UserInDB,
         user_mr_robot: UserInDB,
 
-        test_cleaning_with_accepted_offer: CleaningInDB,
+        test_service_with_accepted_offer: ServiceInDB,
     ) -> None:
 
         authorized_client = create_authorized_client(user=user_darlene)
@@ -140,7 +140,7 @@ Though the cleaner took their time, I would definitely hire them again for the q
         response = await authorized_client.post(
             app.url_path_for(
                 "evaluations:create-evaluation-for-cleaner",
-                cleaning_id=test_cleaning_with_accepted_offer.id,
+                service_id=test_service_with_accepted_offer.id,
                 username=user_mr_robot.username
             ),
             json={"overall_rating": 2}
@@ -151,7 +151,7 @@ Though the cleaner took their time, I would definitely hire them again for the q
         response = await authorized_client.post(
             app.url_path_for(
                 "evaluations:create-evaluation-for-cleaner",
-                cleaning_id=test_cleaning_with_accepted_offer.id,
+                service_id=test_service_with_accepted_offer.id,
                 username=user_mr_robot.username
             ),
             json={"overall_rating": 1}
@@ -161,20 +161,20 @@ Though the cleaner took their time, I would definitely hire them again for the q
 
 
 class TestGetEvaluations:
-    async def test_authenticated_user_can_get_evaluation_for_cleaning(
+    async def test_authenticated_user_can_get_evaluation_for_service(
         self,
         app: FastAPI,
         create_authorized_client: Callable,
         user_mr_robot: UserInDB,
         user_tyrell: UserInDB,
-        test_list_of_cleanings_with_evaluated_offer: List[CleaningInDB]
+        test_list_of_services_with_evaluated_offer: List[ServiceInDB]
     ) -> None:
         authorized_client = create_authorized_client(user=user_tyrell)
 
         response = await authorized_client.get(
             app.url_path_for(
                 "evaluations:get-evaluation-for-cleaner",
-                cleaning_id=test_list_of_cleanings_with_evaluated_offer[0].id,
+                service_id=test_list_of_services_with_evaluated_offer[0].id,
                 username=user_mr_robot.username
             )
         )
@@ -183,7 +183,7 @@ class TestGetEvaluations:
 
         evaluation = EvaluationPublic(**response.json())
 
-        assert evaluation.cleaning_id == test_list_of_cleanings_with_evaluated_offer[0].id
+        assert evaluation.service_id == test_list_of_services_with_evaluated_offer[0].id
         assert evaluation.cleaner_id == user_mr_robot.id
 
         assert "test headline" in evaluation.headline
@@ -200,7 +200,7 @@ class TestGetEvaluations:
         create_authorized_client: Callable,
         user_mr_robot: UserInDB,
         user_tyrell: UserInDB,
-        test_list_of_cleanings_with_evaluated_offer: List[CleaningInDB]
+        test_list_of_services_with_evaluated_offer: List[ServiceInDB]
     ) -> None:
         authorized_client = create_authorized_client(user=user_tyrell)
 
@@ -227,7 +227,7 @@ class TestGetEvaluations:
         create_authorized_client: Callable,
         user_mr_robot: UserInDB,
         user_tyrell: UserInDB,
-        test_list_of_cleanings_with_evaluated_offer: List[CleaningInDB]
+        test_list_of_services_with_evaluated_offer: List[ServiceInDB]
     ) -> None:
         authorized_client = create_authorized_client(user=user_tyrell)
 
@@ -281,12 +281,12 @@ class TestGetEvaluations:
         app: FastAPI,
         client: AsyncClient,
         user_mr_robot: UserInDB,
-        test_list_of_cleanings_with_evaluated_offer: List[CleaningInDB]
+        test_list_of_services_with_evaluated_offer: List[ServiceInDB]
     ) -> None:
         response = await client.get(
             app.url_path_for(
                 "evaluations:get-evaluation-for-cleaner",
-                cleaning_id=test_list_of_cleanings_with_evaluated_offer[0].id,
+                service_id=test_list_of_services_with_evaluated_offer[0].id,
                 username=user_mr_robot.username,
             )
         )
