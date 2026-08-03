@@ -1,17 +1,16 @@
+from datetime import datetime, timedelta, timezone
 from typing import Optional, Type
-import bcrypt
-from fastapi.exceptions import HTTPException
-import jwt
-from datetime import datetime, timedelta
 
+import bcrypt
+import jwt
+from fastapi.exceptions import HTTPException
+from passlib.context import CryptContext
 from pydantic.error_wrappers import ValidationError
 from starlette import status
-from passlib.context import CryptContext
 
-from app.core.config import SECRET_KEY, JWT_ALGORITHM, JWT_AUDIENCE, JWT_TOKEN_PREFIX, ACCESS_TOKEN_EXPIRE_MINUTES
+from app.core.config import SECRET_KEY, JWT_ALGORITHM, JWT_AUDIENCE, ACCESS_TOKEN_EXPIRE_MINUTES
 from app.models.token import JWTMeta, JWTCreds, JWTPayload
-from app.models.user import UserPasswordUpdate, UserInDB, UserBase
-
+from app.models.user import UserPasswordUpdate, UserBase
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -38,24 +37,25 @@ class AuthService:
         return pwd_context.hash(password + salt)
 
     def verify_password(self, *, password: str, salt: str, hashed_pwd: str) -> bool:
-        return pwd_context.verify(password+salt, hashed_pwd)
+        return pwd_context.verify(password + salt, hashed_pwd)
 
     def create_access_token_for_user(
-        self,
-        *,
-        user: Type[UserBase],
-        secret_key: str = str(SECRET_KEY),
-        audience: str = JWT_AUDIENCE,
-        expires_in: int = ACCESS_TOKEN_EXPIRE_MINUTES
+            self,
+            *,
+            user: Type[UserBase],
+            secret_key: str = str(SECRET_KEY),
+            audience: str = JWT_AUDIENCE,
+            expires_in: int = ACCESS_TOKEN_EXPIRE_MINUTES
     ) -> str:
         if not user or not isinstance(user, UserBase):
             return None
 
+        now = datetime.now(timezone.utc)
+
         jwt_meta = JWTMeta(
             aud=audience,
-            iat=datetime.timestamp(datetime.utcnow()),
-            exp=datetime.timestamp(datetime.utcnow() +
-                                   timedelta(minutes=expires_in)),
+            iat=datetime.timestamp(now),
+            exp=datetime.timestamp(now + timedelta(minutes=expires_in)),
         )
 
         jwt_creds = JWTCreds(sub=user.email, username=user.username)
