@@ -12,8 +12,6 @@ from app.core.config import SECRET_KEY, JWT_ALGORITHM, JWT_AUDIENCE, ACCESS_TOKE
 from app.models.token import JWTMeta, JWTCreds, JWTPayload
 from app.models.user import UserPasswordUpdate, UserBase
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
 
 class AuthException(BaseException):
     """
@@ -34,10 +32,10 @@ class AuthService:
         return bcrypt.gensalt().decode()
 
     def hash_password(self, *, password: str, salt: str) -> str:
-        return pwd_context.hash(password + salt)
+        return bcrypt.hashpw((password + salt).encode(), bcrypt.gensalt()).decode()
 
     def verify_password(self, *, password: str, salt: str, hashed_pwd: str) -> bool:
-        return pwd_context.verify(password + salt, hashed_pwd)
+        return bcrypt.checkpw((password + salt).encode(), hashed_pwd.encode())
 
     def create_access_token_for_user(
             self,
