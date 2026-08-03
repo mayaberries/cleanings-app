@@ -14,8 +14,8 @@ class OfferStatus(str, Enum):
 
 
 class OfferBase(CoreModel):
-    user_id: Optional[str]
-    cleaning_id: Optional[str]
+    user_id: Optional[str] = None
+    cleaning_id: Optional[str] = None
     status: Optional[OfferStatus] = OfferStatus.pending
 
 
@@ -34,5 +34,5 @@ class OfferInDB(DateTimeModelMixin, OfferBase):
 
 
 class OfferPublic(OfferInDB):
-    user: Optional[UserPublic]
-    cleaning: Optional[CleaningPublic]
+    user: Optional[UserPublic] = None
+    cleaning: Optional[CleaningPublic] = None

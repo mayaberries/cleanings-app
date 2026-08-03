@@ -1,5 +1,4 @@
 from typing import Optional, Union
-
 from pydantic import conint, confloat
 
 from app.models.core import DateTimeModelMixin, CoreModel
@@ -9,12 +8,12 @@ from app.models.cleaning import CleaningPublic
 
 class EvaluationBase(CoreModel):
     no_show: bool = False
-    headline: Optional[str]
-    comment: Optional[str]
-    professionalism: Optional[conint(ge=0, le=5)]
-    completeness: Optional[conint(ge=0, le=5)]
-    efficiency: Optional[conint(ge=0, le=5)]
-    overall_rating: Optional[conint(ge=0, le=5)]
+    headline: Optional[str] = None
+    comment: Optional[str] = None
+    professionalism: Optional[conint(ge=0, le=5)] = None
+    completeness: Optional[conint(ge=0, le=5)] = None
+    efficiency: Optional[conint(ge=0, le=5)] = None
+    overall_rating: Optional[conint(ge=0, le=5)] = None
 
 
 class EvaluationCreate(EvaluationBase):
@@ -47,6 +46,6 @@ class EvaluationAggregate(CoreModel):
 
 
 class EvaluationPublic(EvaluationInDB):
-    owner: Optional[Union[str, UserPublic]]
-    cleaner: Optional[UserPublic]
-    cleaning: Optional[CleaningPublic]
+    owner: Optional[Union[str, UserPublic]] = None
+    cleaner: Optional[UserPublic] = None
+    cleaning: Optional[CleaningPublic] = None

@@ -1,15 +1,14 @@
 from typing import Optional
-
 from pydantic import EmailStr, HttpUrl
 
 from app.models.core import DateTimeModelMixin, IDModelMixin, CoreModel
 
 
 class ProfileBase(CoreModel):
-    full_name: Optional[str]
-    phone_number: Optional[str]
-    bio: Optional[str]
-    image: Optional[HttpUrl]
+    full_name: Optional[str] = None
+    phone_number: Optional[str] = None
+    bio: Optional[str] = None
+    image: Optional[HttpUrl] = None
 
 
 class ProfileCreate(ProfileBase):
@@ -22,8 +21,8 @@ class ProfileUpdate(ProfileBase):
 
 class ProfileInDB(IDModelMixin, DateTimeModelMixin, ProfileBase):
     user_id: str
-    username: Optional[str]
-    email: Optional[EmailStr]
+    username: Optional[str] = None
+    email: Optional[EmailStr] = None
 
 
 class ProfilePublic(ProfileInDB):

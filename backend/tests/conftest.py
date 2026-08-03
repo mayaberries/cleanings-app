@@ -1,4 +1,4 @@
-from typing import Callable, List
+from typing import Callable, List, Any, AsyncGenerator
 import random
 import warnings
 import os
@@ -54,11 +54,10 @@ def db(app: FastAPI) -> Database:
 
 
 @pytest_asyncio.fixture
-async def client(app: FastAPI) -> AsyncClient:
+async def client(app: FastAPI) -> AsyncGenerator[AsyncClient, Any]:
     async with LifespanManager(app):
-        transport = ASGITransport(app=app)
         async with AsyncClient(
-            transport=transport,
+            transport=ASGITransport(app=app),
             base_url="http://testserver",
             headers={"Content-Type": "application/json"}
         ) as client:

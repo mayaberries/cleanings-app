@@ -5,9 +5,9 @@ from app.models.cleaning import CleaningPublic
 
 
 class FeedItem(CoreModel):
-    row_number: Optional[int]
-    event_timestamp: Optional[datetime.datetime]
+    row_number: Optional[int] = None
+    event_timestamp: Optional[datetime.datetime] = None
 
 
 class CleaningFeedItem(CleaningPublic, FeedItem):
-    event_type: Optional[Literal["is_update", "is_create"]]
+    event_type: Optional[Literal["is_update", "is_create"]] = None

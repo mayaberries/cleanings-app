@@ -12,13 +12,10 @@ class CleaningType(str, Enum):
 
 
 class CleaningBase(CoreModel):
-    """
-    All common characteristics of our cleaning resource
-    """
-    name: Optional[str]
-    description: Optional[str]
-    price: Optional[float]
-    cleaning_type: Optional[CleaningType] = "spot_clean"
+    name: Optional[str] = None
+    description: Optional[str] = None
+    price: Optional[float] = None
+    cleaning_type: Optional[CleaningType] = CleaningType.spot_clean
 
 
 class CleaningCreate(CleaningBase):
@@ -27,7 +24,7 @@ class CleaningCreate(CleaningBase):
 
 
 class CleaningUpdate(CleaningBase):
-    cleaning_type: Optional[CleaningType]
+    cleaning_type: Optional[CleaningType] = None
 
 
 class CleaningInDB(IDModelMixin, CleaningBase, DateTimeModelMixin):
