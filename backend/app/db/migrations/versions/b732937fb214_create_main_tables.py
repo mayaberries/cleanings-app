@@ -77,17 +77,14 @@ def create_users_table() -> None:
     op.create_table(
         "users",
         sa.Column("id", sa.CHAR(36), primary_key=True),
-        sa.Column("username", sa.Text, unique=True,
-                  nullable=False, index=True),
+        sa.Column("username", sa.Text, unique=True, nullable=False, index=True),
         sa.Column("email", sa.Text, unique=True, nullable=False, index=True),
-        sa.Column("email_verified", sa.Boolean,
-                  nullable=False, server_default="False"),
+        sa.Column("email_verified", sa.Boolean, nullable=False, server_default="False"),
+        sa.Column("role", sa.Text, nullable=False, server_default="client", index=True),
         sa.Column("salt", sa.Text, nullable=False),
         sa.Column("password", sa.Text, nullable=False),
-        sa.Column("is_active", sa.Boolean(),
-                  nullable=False, server_default="True"),
-        sa.Column("is_superuser", sa.Boolean(),
-                  nullable=False, server_default="False"),
+        sa.Column("is_active", sa.Boolean(), nullable=False, server_default="True"),
+        sa.Column("is_superuser", sa.Boolean(), nullable=False, server_default="False"),
         *timestamps(),
     )
     op.execute(

@@ -1,4 +1,5 @@
 import string
+from enum import Enum
 from typing import Optional
 from pydantic import EmailStr, constr, field_validator
 
@@ -14,10 +15,17 @@ def validate_username(username: str) -> str:
     return username
 
 
+class UserRole(str, Enum):
+    clinic_admin = "clinic_admin"
+    clinic_aux = "clinic_aux"
+    client = "client"
+
+
 class UserBase(CoreModel):
     email: Optional[EmailStr] = None
     username: Optional[str] = None
     email_verified: bool = False
+    role: UserRole = UserRole.client
     is_active: bool = True
     is_superuser: bool = False
 

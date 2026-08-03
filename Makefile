@@ -1,8 +1,6 @@
 #!/bin/bash
 
-OS := $(shell uname)
-DOCKER_BE = fastapi-services-server
-UID = $(shell id -u)
+DOCKER_DB = fastapi-pets-db
 
 help: ## Show this help message
 	@echo 'usage: make [target]'
@@ -10,36 +8,29 @@ help: ## Show this help message
 	@echo 'targets:'
 	@egrep '^(.+)\:\ ##\ (.+)' ${MAKEFILE_LIST} | column -t -c 2 -s ':#'
 
-build: ## Rebuilds all the containers
-	U_ID=${UID} docker-compose up --build -d
+db-up: ## Start the database container
+	docker-compose up -d db
 
-run: ## Start the containers
-	U_ID=${UID} docker-compose up -d
+db-stop: ## Stop the database container
+	docker-compose stop db
 
-frontend: ## Start the react app
-	U_ID=${UID} yarn --cwd ./frontend start
+db-down: ## Stop and remove the database container + volume (destructive)
+	docker-compose down -v
 
-stop: ## Stop the containers
-	U_ID=${UID} docker-compose stop
+db-login: ## Log into the Postgres server
+	docker-compose exec db psql -h localhost -U postgres --dbname=postgres
 
-ssh-be: ## ssh's into the be container
-	U_ID=${UID} docker exec -it ${DOCKER_BE} bash
+db-logs: ## Show database container logs
+	docker-compose logs --follow db
 
-db-login: # logs into the PostreSQL server
-	U_ID=${UID} docker-compose exec db psql -h localhost -U postgres --dbname=postgres
+upgrade-db: ## Run migrations against the dockerized db, use with precaution
+	cd backend && alembic upgrade head
 
-upgrade-db: ## runs migrations, use with precaution
-	U_ID=${UID} docker exec -it ${DOCKER_BE} alembic upgrade head
+downgrade-db: ## Roll back migrations against the dockerized db, use with precaution
+	cd backend && alembic downgrade base
 
-downgrade-db: ## removes migrations, use with precaution
-	U_ID=${UID} docker exec -it ${DOCKER_BE} alembic downgrade base
+tests: ## Run tests locally (venv), against the dockerized db
+	cd backend && pytest -v
 
-be-logs: # Shows the containers logs
-	U_ID=${UID} docker-compose logs --follow
-
-tests: # Runs existent tests
-	U_ID=${UID} docker exec -it ${DOCKER_BE} pytest -v
-
-pep: # Runs PEP8 Style standards
-	U_ID=${UID} autopep8 . --recursive --in-place --pep8-passes 2000 --verbose
-
+pep: ## Run PEP8 style standards locally
+	cd backend && autopep8 . --recursive --in-place --pep8-passes 2000 --verbose

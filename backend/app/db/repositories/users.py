@@ -8,29 +8,31 @@ from starlette.status import HTTP_400_BAD_REQUEST
 from databases import Database
 
 from app.db.repositories.base import BaseRepository
-from app.models.user import UserCreate, UserPublic, UserUpdate, UserInDB
+from app.models.user import UserCreate, UserPublic, UserUpdate, UserInDB, UserRole
 from app.services import auth_service
 from app.db.repositories.profiles import ProfilesRepository
 from app.models.profile import ProfileCreate, ProfilePublic
 
 GET_USER_BY_EMAIL_QUERY = """
-    SELECT id, username, email, email_verified, password, salt, is_active, is_superuser, created_at, updated_at
+    SELECT id, username, email, email_verified, role, password, salt, is_active, is_superuser, created_at, updated_at
     FROM users
     WHERE email = :email;
 """
+
 GET_USER_BY_USERNAME_QUERY = """
-    SELECT id, username, email, email_verified, password, salt, is_active, is_superuser, created_at, updated_at
+    SELECT id, username, email, email_verified, role, password, salt, is_active, is_superuser, created_at, updated_at
     FROM users
     WHERE username = :username;
 """
+
 REGISTER_NEW_USER_QUERY = """
-    INSERT INTO users (id, username, email, password, salt)
-    VALUES (:id, :username, :email, :password, :salt)
-    RETURNING id, username, email, email_verified, password, salt, is_active, is_superuser, created_at, updated_at;
+    INSERT INTO users (id, username, email, password, salt, role)
+    VALUES (:id, :username, :email, :password, :salt, :role)
+    RETURNING id, username, email, email_verified, role, password, salt, is_active, is_superuser, created_at, updated_at;
 """
 
 GET_USER_BY_ID_QUERY = """
-    SELECT id, username, email, email_verified, password, salt, is_active, is_superuser, created_at, updated_at
+    SELECT id, username, email, email_verified, role, password, salt, is_active, is_superuser, created_at, updated_at
     FROM users
     WHERE id = :id;
 """
@@ -102,6 +104,7 @@ class UsersRepository(BaseRepository):
             "email": new_user.email,
             "password": user_password_update.password,
             "salt": user_password_update.salt,
+            "role": UserRole.client.value,
         }
 
         created_user = await self.db.fetch_one(
