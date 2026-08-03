@@ -12,7 +12,6 @@ from app.db.repositories.offers import OffersRepository
 
 pytestmark = pytest.mark.asyncio
 
-# it should be pretty much imposible to find a duplicate this way
 FAKE_ID = str(uuid.uuid4())
 
 
@@ -39,45 +38,40 @@ class TestOffersRoutes:
 
 class TestCreateOffers:
     async def test_user_can_successfully_create_offer_for_other_users_service_job(
-        self, app: FastAPI, create_authorized_client: Callable, test_service: ServiceInDB, user_mr_robot: UserInDB,
+        self, app: FastAPI, create_authorized_client: Callable, test_service: ServiceInDB, user_client_one: UserInDB,
     ) -> None:
-        elliots_authorized_client = create_authorized_client(
-            user=user_mr_robot)
+        authorized_client = create_authorized_client(user=user_client_one)
 
-        response = await elliots_authorized_client.post(
-            app.url_path_for("offers:create-offer",
-                             service_id=test_service.id)
+        response = await authorized_client.post(
+            app.url_path_for("offers:create-offer", service_id=test_service.id)
         )
         assert response.status_code == status.HTTP_201_CREATED
 
         offer = OfferPublic(**response.json())
-        assert offer.user_id == user_mr_robot.id
+        assert offer.user_id == user_client_one.id
         assert offer.service_id == test_service.id
         assert offer.status == "pending"
 
     async def test_user_cant_create_duplicate_offers(
-        self, app: FastAPI, create_authorized_client: Callable, test_service: ServiceInDB, user_tyrell: UserInDB,
+        self, app: FastAPI, create_authorized_client: Callable, test_service: ServiceInDB, user_client_two: UserInDB,
     ) -> None:
-        elliots_authorized_client = create_authorized_client(user=user_tyrell)
+        authorized_client = create_authorized_client(user=user_client_two)
 
-        response = await elliots_authorized_client.post(
-            app.url_path_for("offers:create-offer",
-                             service_id=test_service.id)
+        response = await authorized_client.post(
+            app.url_path_for("offers:create-offer", service_id=test_service.id)
         )
         assert response.status_code == status.HTTP_201_CREATED
 
-        response = await elliots_authorized_client.post(
-            app.url_path_for("offers:create-offer",
-                             service_id=test_service.id)
+        response = await authorized_client.post(
+            app.url_path_for("offers:create-offer", service_id=test_service.id)
         )
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     async def test_user_unable_to_create_offer_for_their_own_service_job(
-        self, app: FastAPI, elliots_authorized_client: AsyncClient, user_elliot: UserInDB, test_service: ServiceInDB
+        self, app: FastAPI, clinic_a_admin_client: AsyncClient, user_clinic_a_admin: UserInDB, test_service: ServiceInDB
     ) -> None:
-        response = await elliots_authorized_client.post(
-            app.url_path_for("offers:create-offer",
-                             service_id=test_service.id)
+        response = await clinic_a_admin_client.post(
+            app.url_path_for("offers:create-offer", service_id=test_service.id)
         )
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -86,8 +80,7 @@ class TestCreateOffers:
         self, app: FastAPI, client: AsyncClient, test_service: ServiceInDB,
     ) -> None:
         response = await client.post(
-            app.url_path_for("offers:create-offer",
-                             service_id=test_service.id)
+            app.url_path_for("offers:create-offer", service_id=test_service.id)
         )
 
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
@@ -100,11 +93,11 @@ class TestCreateOffers:
         ),
     )
     async def test_wrong_id_gives_proper_error_status(
-        self, app: FastAPI, create_authorized_client: Callable, user_angela: UserInDB, id: str, status_code: int
+        self, app: FastAPI, create_authorized_client: Callable, user_client_three: UserInDB, id: str, status_code: int
     ) -> None:
-        elliots_authorized_client = create_authorized_client(user=user_angela)
+        authorized_client = create_authorized_client(user=user_client_three)
 
-        response = await elliots_authorized_client.post(
+        response = await authorized_client.post(
             app.url_path_for("offers:create-offer", service_id=id)
         )
 
@@ -115,18 +108,13 @@ class TestGetOffers:
     async def test_service_owner_can_get_offer_from_user(
         self,
         app: FastAPI,
-        create_authorized_client: Callable,
-        user_darlene: UserInDB,
-        test_user_list: List[UserInDB],
+        clinic_a_admin_client: AsyncClient,
+        test_client_list: List[UserInDB],
         test_service_with_offers: ServiceInDB,
     ) -> None:
-        authorized_client = create_authorized_client(
-            user=user_darlene
-        )
+        selected_user = random.choice(test_client_list)
 
-        selected_user = random.choice(test_user_list)
-
-        response = await authorized_client.get(
+        response = await clinic_a_admin_client.get(
             app.url_path_for(
                 "offers:get-offer-from-user",
                 service_id=test_service_with_offers.id,
@@ -144,15 +132,13 @@ class TestGetOffers:
         self,
         app: FastAPI,
         create_authorized_client: Callable,
-        test_user_list: List[UserInDB],
+        test_client_list: List[UserInDB],
         test_service_with_offers: ServiceInDB,
 
     ) -> None:
-        first_test_user = test_user_list[0]
+        first_test_user = test_client_list[0]
 
-        authorized_client = create_authorized_client(
-            user=first_test_user
-        )
+        authorized_client = create_authorized_client(user=first_test_user)
 
         response = await authorized_client.get(
             app.url_path_for(
@@ -172,11 +158,11 @@ class TestGetOffers:
         self,
         app: FastAPI,
         create_authorized_client: Callable,
-        test_user_list: List[UserInDB],
+        test_client_list: List[UserInDB],
         test_service_with_offers: ServiceInDB,
     ) -> None:
-        first_test_user = test_user_list[0]
-        second_test_user = test_user_list[1]
+        first_test_user = test_client_list[0]
+        second_test_user = test_client_list[1]
 
         authorized_client = create_authorized_client(user=first_test_user)
 
@@ -192,30 +178,29 @@ class TestGetOffers:
     async def test_service_owner_can_get_all_offers_for_services(
         self,
         app: FastAPI,
-        create_authorized_client: Callable,
-        user_darlene: UserInDB,
-        test_user_list: List[UserInDB],
+        clinic_a_admin_client: AsyncClient,
+        test_client_list: List[UserInDB],
         test_service_with_offers: ServiceInDB,
     ) -> None:
-        authorized_client = create_authorized_client(user=user_darlene)
-
-        response = await authorized_client.get(
-            app.url_path_for("offers:list-offers-for-service",
-                             service_id=test_service_with_offers.id)
+        response = await clinic_a_admin_client.get(
+            app.url_path_for("offers:list-offers-for-service", service_id=test_service_with_offers.id)
         )
 
         assert response.status_code == status.HTTP_200_OK
 
         for offer in response.json():
-            assert offer["user_id"] in [user.id for user in test_user_list]
+            assert offer["user_id"] in [user.id for user in test_client_list]
 
     async def test_non_owners_forbidden_from_fetching_all_offers_for_service(
         self,
         app: FastAPI,
-        elliots_authorized_client: AsyncClient,
+        create_authorized_client: Callable,
+        user_client_one: UserInDB,
         test_service_with_offers: ServiceInDB,
     ) -> None:
-        response = await elliots_authorized_client.get(
+        authorized_client = create_authorized_client(user=user_client_one)
+
+        response = await authorized_client.get(
             app.url_path_for(
                 "offers:list-offers-for-service",
                 service_id=test_service_with_offers.id
@@ -229,16 +214,13 @@ class TestAcceptOffers:
     async def test_service_owner_can_accept_offer_succesfully(
         self,
         app: FastAPI,
-        create_authorized_client: Callable,
-        user_darlene: UserInDB,
-        test_user_list: List[UserInDB],
+        clinic_a_admin_client: AsyncClient,
+        test_client_list: List[UserInDB],
         test_service_with_offers: ServiceInDB
     ) -> None:
-        selected_user = random.choice(test_user_list)
+        selected_user = random.choice(test_client_list)
 
-        authorized_client = create_authorized_client(user=user_darlene)
-
-        response = await authorized_client.put(
+        response = await clinic_a_admin_client.put(
             app.url_path_for(
                 "offers:accept-offer-from-user",
                 service_id=test_service_with_offers.id,
@@ -257,13 +239,15 @@ class TestAcceptOffers:
     async def test_non_owner_forbidden_from_accepting_offer_for_service(
         self,
         app: FastAPI,
-        elliots_authorized_client: AsyncClient,
-        test_user_list: List[UserInDB],
+        create_authorized_client: Callable,
+        user_client_one: UserInDB,
+        test_client_list: List[UserInDB],
         test_service_with_offers: ServiceInDB
     ) -> None:
-        selected_user = random.choice(test_user_list)
+        authorized_client = create_authorized_client(user=user_client_one)
+        selected_user = random.choice(test_client_list)
 
-        response = await elliots_authorized_client.put(
+        response = await authorized_client.put(
             app.url_path_for(
                 "offers:accept-offer-from-user",
                 service_id=test_service_with_offers.id,
@@ -276,29 +260,25 @@ class TestAcceptOffers:
     async def test_service_owner_cant_accept_multiple_offers(
         self,
         app: FastAPI,
-        create_authorized_client: Callable,
-        user_darlene: UserInDB,
-        test_user_list: List[UserInDB],
+        clinic_a_admin_client: AsyncClient,
+        test_client_list: List[UserInDB],
         test_service_with_offers: ServiceInDB
     ) -> None:
-
-        authorized_client = create_authorized_client(user=user_darlene)
-
-        response = await authorized_client.put(
+        response = await clinic_a_admin_client.put(
             app.url_path_for(
                 "offers:accept-offer-from-user",
                 service_id=test_service_with_offers.id,
-                username=test_user_list[0].username
+                username=test_client_list[0].username
             )
         )
 
         assert response.status_code == status.HTTP_200_OK
 
-        response = await authorized_client.put(
+        response = await clinic_a_admin_client.put(
             app.url_path_for(
                 "offers:accept-offer-from-user",
                 service_id=test_service_with_offers.id,
-                username=test_user_list[1].username
+                username=test_client_list[1].username
             )
         )
 
@@ -307,17 +287,13 @@ class TestAcceptOffers:
     async def test_accepting_one_offer_rejects_all_other_offers(
         self,
         app: FastAPI,
-        create_authorized_client: Callable,
-        user_darlene: UserInDB,
-        test_user_list: List[UserInDB],
+        clinic_a_admin_client: AsyncClient,
+        test_client_list: List[UserInDB],
         test_service_with_offers: ServiceInDB
     ) -> None:
+        selected_user = random.choice(test_client_list)
 
-        selected_user = random.choice(test_user_list)
-
-        authorized_client = create_authorized_client(user=user_darlene)
-
-        response = await authorized_client.put(
+        response = await clinic_a_admin_client.put(
             app.url_path_for(
                 "offers:accept-offer-from-user",
                 service_id=test_service_with_offers.id,
@@ -327,7 +303,7 @@ class TestAcceptOffers:
 
         assert response.status_code == status.HTTP_200_OK
 
-        response = await authorized_client.get(
+        response = await clinic_a_admin_client.get(
             app.url_path_for(
                 "offers:list-offers-for-service",
                 service_id=test_service_with_offers.id
@@ -350,10 +326,10 @@ class TestCancelOffers:
         self,
         app: FastAPI,
         create_authorized_client: Callable,
-        user_mr_robot: UserInDB,
+        user_client_one: UserInDB,
         test_service_with_accepted_offer: ServiceInDB
     ) -> None:
-        accepted_user_client = create_authorized_client(user=user_mr_robot)
+        accepted_user_client = create_authorized_client(user=user_client_one)
 
         response = await accepted_user_client.put(
             app.url_path_for(
@@ -367,17 +343,17 @@ class TestCancelOffers:
         cancelled_offer = OfferPublic(**response.json())
 
         assert cancelled_offer.status == "cancelled"
-        assert cancelled_offer.user_id == user_mr_robot.id
+        assert cancelled_offer.user_id == user_client_one.id
         assert cancelled_offer.service_id == test_service_with_accepted_offer.id
 
     async def test_only_accepted_offers_can_be_cancelled(
         self,
         app: FastAPI,
         create_authorized_client: Callable,
-        user_tyrell: UserInDB,
+        user_client_two: UserInDB,
         test_service_with_accepted_offer: ServiceInDB
     ) -> None:
-        accepted_user_client = create_authorized_client(user=user_tyrell)
+        accepted_user_client = create_authorized_client(user=user_client_two)
 
         response = await accepted_user_client.put(
             app.url_path_for(
@@ -392,10 +368,10 @@ class TestCancelOffers:
         self,
         app: FastAPI,
         create_authorized_client: Callable,
-        user_mr_robot: UserInDB,
+        user_client_one: UserInDB,
         test_service_with_accepted_offer: ServiceInDB
     ) -> None:
-        accepted_user_client = create_authorized_client(user=user_mr_robot)
+        accepted_user_client = create_authorized_client(user=user_client_one)
 
         response = await accepted_user_client.put(
             app.url_path_for(
@@ -413,7 +389,7 @@ class TestCancelOffers:
         )
 
         for offer in offers:
-            if offer.user_id == user_mr_robot.id:
+            if offer.user_id == user_client_one.id:
                 assert offer.status == "cancelled"
             else:
                 assert offer.status == "pending"
@@ -424,13 +400,11 @@ class TestRescindOffers:
         self,
         app: FastAPI,
         create_authorized_client: Callable,
-        user_tyrell: UserInDB,
-        test_user_list: List[UserInDB],
+        user_client_two: UserInDB,
+        test_client_list: List[UserInDB],
         test_service_with_offers: ServiceInDB
     ) -> None:
-        authorized_client = create_authorized_client(
-            user=user_tyrell
-        )
+        authorized_client = create_authorized_client(user=user_client_two)
 
         response = await authorized_client.delete(
             app.url_path_for(
@@ -447,22 +421,20 @@ class TestRescindOffers:
             service=test_service_with_offers
         )
 
-        user_ids = [user.id for user in test_user_list]
+        user_ids = [user.id for user in test_client_list]
 
         for offer in offers:
             assert offer.user_id in user_ids
-            assert offer.user_id != user_tyrell.id
+            assert offer.user_id != user_client_two.id
 
     async def test_users_cannot_rescind_accepted_offers(
         self,
         app: FastAPI,
         create_authorized_client: Callable,
-        user_mr_robot: UserInDB,
+        user_client_one: UserInDB,
         test_service_with_accepted_offer: ServiceInDB
     ) -> None:
-        authorized_client = create_authorized_client(
-            user=user_mr_robot
-        )
+        authorized_client = create_authorized_client(user=user_client_one)
 
         response = await authorized_client.delete(
             app.url_path_for(
@@ -477,12 +449,10 @@ class TestRescindOffers:
         self,
         app: FastAPI,
         create_authorized_client: Callable,
-        user_mr_robot: UserInDB,
+        user_client_one: UserInDB,
         test_service_with_accepted_offer: ServiceInDB
     ) -> None:
-        authorized_client = create_authorized_client(
-            user=user_mr_robot
-        )
+        authorized_client = create_authorized_client(user=user_client_one)
 
         response = await authorized_client.put(
             app.url_path_for(
@@ -506,12 +476,10 @@ class TestRescindOffers:
         self,
         app: FastAPI,
         create_authorized_client: Callable,
-        user_tyrell: UserInDB,
+        user_client_two: UserInDB,
         test_service_with_accepted_offer: ServiceInDB
     ) -> None:
-        authorized_client = create_authorized_client(
-            user=user_tyrell
-        )
+        authorized_client = create_authorized_client(user=user_client_two)
 
         response = await authorized_client.delete(
             app.url_path_for(

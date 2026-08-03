@@ -80,7 +80,7 @@ class UsersRepository(BaseRepository):
 
             return user
 
-    async def register_new_user(self, *, new_user: UserCreate) -> UserInDB:
+    async def register_new_user(self, *, new_user: UserCreate, role: UserRole = UserRole.client) -> UserInDB:
         if await self.get_user_by_email(email=new_user.email) is not None:
             raise HTTPException(
                 status_code=HTTP_400_BAD_REQUEST,
@@ -97,14 +97,13 @@ class UsersRepository(BaseRepository):
             plaintext_password=new_user.password
         )
 
-        # Build query parameters directly without relying on pydantic.copy()
         user_params = {
             "id": str(uuid4()),
             "username": new_user.username,
             "email": new_user.email,
             "password": user_password_update.password,
             "salt": user_password_update.salt,
-            "role": UserRole.client.value,
+            "role": role.value,
         }
 
         created_user = await self.db.fetch_one(
