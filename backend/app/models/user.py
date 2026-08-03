@@ -69,5 +69,5 @@ class UserInDB(IDModelMixin, DateTimeModelMixin, UserBase):
 
 
 class UserPublic(IDModelMixin, DateTimeModelMixin, UserBase):
-    access_token: Optional[AccessToken]
+    access_token: Optional[AccessToken] = None
     profile: Optional[ProfilePublic]

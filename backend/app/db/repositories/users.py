@@ -13,7 +13,6 @@ from app.services import auth_service
 from app.db.repositories.profiles import ProfilesRepository
 from app.models.profile import ProfileCreate, ProfilePublic
 
-
 GET_USER_BY_EMAIL_QUERY = """
     SELECT id, username, email, email_verified, password, salt, is_active, is_superuser, created_at, updated_at
     FROM users
@@ -93,11 +92,26 @@ class UsersRepository(BaseRepository):
             )
 
         user_password_update = self.auth_service.create_salt_and_hashed_password(
-            plaintext_password=new_user.password)
-        new_user_params = new_user.copy(update=user_password_update.dict())
-        created_user = await self.db.fetch_one(query=REGISTER_NEW_USER_QUERY, values={**new_user_params.dict(), "id": str(uuid4())})
+            plaintext_password=new_user.password
+        )
 
-        await self.profiles_repo.create_profile_for_user(profile_create=ProfileCreate(user_id=created_user["id"]))
+        # Build query parameters directly without relying on pydantic.copy()
+        user_params = {
+            "id": str(uuid4()),
+            "username": new_user.username,
+            "email": new_user.email,
+            "password": user_password_update.password,
+            "salt": user_password_update.salt,
+        }
+
+        created_user = await self.db.fetch_one(
+            query=REGISTER_NEW_USER_QUERY,
+            values=user_params
+        )
+
+        await self.profiles_repo.create_profile_for_user(
+            profile_create=ProfileCreate(user_id=created_user["id"])
+        )
 
         return await self.populate_user(user=UserInDB(**created_user))
 
