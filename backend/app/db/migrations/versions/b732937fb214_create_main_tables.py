@@ -200,6 +200,27 @@ def create_cleaner_evaluations_table() -> None:
     )
 
 
+def create_pets_table() -> None:
+    op.create_table(
+        "pets",
+        sa.Column("id", sa.CHAR(36), primary_key=True),
+        sa.Column("name", sa.Text, nullable=False),
+        sa.Column("species", sa.Text, nullable=True),
+        sa.Column("breed", sa.Text, nullable=True),
+        sa.Column("birth_date", sa.Date, nullable=True),
+        sa.Column("notes", sa.Text, nullable=True),
+        sa.Column("image", sa.Text, nullable=True),
+        sa.Column("owner", sa.CHAR(36), sa.ForeignKey("users.id", ondelete="CASCADE"), index=True),
+        *timestamps(),
+    )
+    op.execute("""
+            CREATE TRIGGER update_pets_modtime
+                BEFORE UPDATE ON pets
+                FOR EACH ROW
+            EXECUTE PROCEDURE update_updated_at_column();
+        """)
+
+
 def upgrade() -> None:
     create_updated_at_trigger()
     create_users_table()
@@ -207,9 +228,11 @@ def upgrade() -> None:
     create_services_table()
     create_offers_table()
     create_cleaner_evaluations_table()
+    create_pets_table()
 
 
 def downgrade() -> None:
+    op.drop_table("pets")
     op.drop_table("service_to_cleaner_evaluations")
     op.drop_table("user_offers_for_services")
     op.drop_table("services")
