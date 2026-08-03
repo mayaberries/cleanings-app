@@ -63,7 +63,7 @@ class TestCreatecleaning:
         self, app: FastAPI, elliots_authorized_client: AsyncClient, new_cleaning: CleaningCreate, user_elliot: UserInDB
     ) -> None:
         response = await elliots_authorized_client.post(
-            app.url_path_for("cleanings:create-cleaning"), json=new_cleaning.dict()
+            app.url_path_for("cleanings:create-cleaning"), json=new_cleaning.model_dump()
         )
 
         assert response.status_code == status.HTTP_201_CREATED
@@ -80,7 +80,7 @@ class TestCreatecleaning:
     ) -> None:
         response = await client.post(
             app.url_path_for("cleanings:create-cleaning"),
-            json=new_cleaning.dict()
+            json=new_cleaning.model_dump()
         )
 
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
@@ -119,9 +119,9 @@ class TestGetcleaning:
 
         response = await elliots_authorized_client.get(app.url_path_for("cleanings:get-cleaning-by-id", cleaning_id=test_cleaning.id))
         assert response.status_code == status.HTTP_200_OK
-        cleaning = CleaningPublic(**response.json()).dict(exclude={"owner"})
+        cleaning = CleaningPublic(**response.json()).model_dump(exclude={"owner"})
 
-        assert cleaning == test_cleaning.dict(exclude={"owner", "updated_at", "created_at"})
+        assert cleaning == test_cleaning.model_dump(exclude={"owner", "updated_at", "created_at"})
 
     async def test_unauthorized_users_cant_access_cleanings(
         self, app: FastAPI, client: AsyncClient, test_cleaning: CleaningInDB
@@ -222,7 +222,7 @@ class TestUpdatecleaning:
             assert attr_to_change != getattr(test_cleaning, attrs_to_change[i])
             assert attr_to_change == values[i]
         # make sure that no other attributes' values have changed
-        for attr, value in updated_cleaning.dict(exclude={"created_at", "updated_at"}).items():
+        for attr, value in updated_cleaning.model_dump(exclude={"created_at", "updated_at"}).items():
             if attr not in attrs_to_change:
                 assert getattr(test_cleaning, attr) == value
 

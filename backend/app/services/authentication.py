@@ -5,7 +5,7 @@ import bcrypt
 import jwt
 from fastapi.exceptions import HTTPException
 from passlib.context import CryptContext
-from pydantic.error_wrappers import ValidationError
+from pydantic import ValidationError
 from starlette import status
 
 from app.core.config import SECRET_KEY, JWT_ALGORITHM, JWT_AUDIENCE, ACCESS_TOKEN_EXPIRE_MINUTES
@@ -61,12 +61,12 @@ class AuthService:
         jwt_creds = JWTCreds(sub=user.email, username=user.username)
 
         token_payload = JWTPayload(
-            **jwt_meta.dict(),
-            **jwt_creds.dict(),
+            **jwt_meta.model_dump(),
+            **jwt_creds.model_dump(),
         )
 
         access_token = jwt.encode(
-            token_payload.dict(), secret_key, algorithm=JWT_ALGORITHM)
+            token_payload.model_dump(), secret_key, algorithm=JWT_ALGORITHM)
 
         return access_token
 

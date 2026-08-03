@@ -15,8 +15,8 @@ router = APIRouter()
 
 @router.post("/", response_model=UserPublic, name="users:register-new-user", status_code=HTTP_201_CREATED)
 async def register_new_user(
-    new_user: UserCreate = Body(..., embed=False),
-    user_repo: UsersRepository = Depends(get_repository(UsersRepository)),
+        new_user: UserCreate = Body(..., embed=False),
+        user_repo: UsersRepository = Depends(get_repository(UsersRepository)),
 ) -> UserPublic:
     created_user = await user_repo.register_new_user(new_user=new_user)
 
@@ -26,13 +26,13 @@ async def register_new_user(
         token_type="bearer"
     )
 
-    return created_user.copy(update={"access_token": access_token})
+    return created_user.model_copy(update={"access_token": access_token})
 
 
 @router.post("/login/token", response_model=AccessToken, name="users:login-email-and-password")
 async def user_login_with_email_and_password(
-    user_repo: UsersRepository = Depends(get_repository(UsersRepository)),
-    form_data: OAuth2PasswordRequestForm = Depends(OAuth2PasswordRequestForm),
+        user_repo: UsersRepository = Depends(get_repository(UsersRepository)),
+        form_data: OAuth2PasswordRequestForm = Depends(OAuth2PasswordRequestForm),
 ) -> AccessToken:
     user = await user_repo.authenticate_user(email=form_data.username, password=form_data.password)
 

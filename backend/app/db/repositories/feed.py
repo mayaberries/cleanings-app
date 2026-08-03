@@ -1,10 +1,11 @@
-from typing import List
 import datetime
+from typing import List
+
 from databases import Database
+
 from app.db.repositories.base import BaseRepository
 from app.db.repositories.users import UsersRepository
 from app.models.feed import CleaningFeedItem
-from asyncpg import Record
 
 FETCH_CLEANING_JOBS_FOR_FEED_QUERY = """
     SELECT  id,
@@ -78,6 +79,6 @@ class FeedRepository(BaseRepository):
 
     async def populate_cleaning_feed_item(self, *, cleaning_feed_item: CleaningFeedItem) -> CleaningFeedItem:
         return CleaningFeedItem(
-            **cleaning_feed_item.dict(exclude={"owner"}),
+            **cleaning_feed_item.model_dump(exclude={"owner"}),
             owner=await self.users_repo.get_user_by_id(user_id=cleaning_feed_item.owner)
         )

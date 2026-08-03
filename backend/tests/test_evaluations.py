@@ -59,7 +59,7 @@ Though the cleaner took their time, I would definitely hire them again for the q
                 cleaning_id=test_cleaning_with_accepted_offer.id,
                 username=user_mr_robot.username
             ),
-            json=evaluation_create.dict()
+            json=evaluation_create.model_dump()
         )
 
         assert response.status_code == status.HTTP_201_CREATED

@@ -78,12 +78,12 @@ class OffersRepository(BaseRepository):
     async def create_offer_for_cleaning(self, *, new_offer: OfferCreate) -> OfferInDB:
         created_offer = await self.db.fetch_one(
             query=CREATE_OFFER_FOR_CLEANING_QUERY,
-            values={**new_offer.dict(), "status": "pending"}
+            values={**new_offer.model_dump(), "status": "pending"}
         )
         return OfferInDB(**created_offer)
 
     async def list_offers_for_cleaning(
-        self, *, cleaning: CleaningInDB, populate: bool = True
+            self, *, cleaning: CleaningInDB, populate: bool = True
     ) -> List[Union[OfferInDB, OfferPublic]]:
         offer_records = await self.db.fetch_all(
             query=LIST_OFFERS_FOR_CLEANING_QUERY,
@@ -160,7 +160,7 @@ class OffersRepository(BaseRepository):
 
     async def populate_offer(self, *, offer: OfferInDB) -> OfferPublic:
         return OfferPublic(
-            **offer.dict(),
+            **offer.model_dump(),
             user=await self.users_repo.get_user_by_id(
                 user_id=offer.user_id
             )

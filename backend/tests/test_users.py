@@ -1,27 +1,24 @@
-from databases.core import Database
-from fastapi.exceptions import HTTPException
-import pytest
+from typing import Union, Type, Optional
+
 import jwt
+import pytest
+from databases.core import Database
+from fastapi import FastAPI
+from fastapi.exceptions import HTTPException
+from httpx import AsyncClient
 from pydantic import ValidationError
 from starlette.datastructures import Secret
-from fastapi import FastAPI
-from httpx import AsyncClient
-from typing import List, Union, Type, Optional
 from starlette.status import (
     HTTP_200_OK,
     HTTP_201_CREATED,
-    HTTP_400_BAD_REQUEST,
     HTTP_401_UNAUTHORIZED,
     HTTP_404_NOT_FOUND,
-    HTTP_422_UNPROCESSABLE_ENTITY
 )
 
-from app.services import auth_service
+from app.core.config import SECRET_KEY, JWT_ALGORITHM, JWT_AUDIENCE, ACCESS_TOKEN_EXPIRE_MINUTES
 from app.db.repositories.users import UsersRepository
-from app.models.user import UserCreate, UserInDB, UserPublic
-from app.core.config import SECRET_KEY, JWT_ALGORITHM, JWT_AUDIENCE, JWT_TOKEN_PREFIX, ACCESS_TOKEN_EXPIRE_MINUTES
-from app.models.token import JWTMeta, JWTCreds, JWTPayload
-
+from app.models.user import UserInDB, UserPublic
+from app.services import auth_service
 
 pytestmark = pytest.mark.asyncio
 
@@ -62,8 +59,8 @@ class TestUsersRegistration:
         assert user_in_db.username == new_user["username"]
 
         created_user = UserPublic(
-            **response.json()).dict(exclude={"access_token", "profile"})
-        assert created_user == user_in_db.dict(exclude={"password", "salt"})
+            **response.json()).model_dump(exclude={"access_token", "profile"})
+        assert created_user == user_in_db.model_dump(exclude={"password", "salt"})
 
     @pytest.mark.parametrize(
         "attr, value, status_code",
@@ -260,7 +257,7 @@ class TestUserLogin:
         self, app: FastAPI, client: AsyncClient, user_elliot: UserInDB, credential: str, wrong_value: str, status_code: int,
     ) -> None:
         client.headers["content-type"] = "application/x-www-form-urlencoded"
-        user_data = user_elliot.dict()
+        user_data = user_elliot.model_dump()
         user_data["password"] = "password123"
         user_data[credential] = wrong_value
         login_data = {
