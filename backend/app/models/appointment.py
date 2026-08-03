@@ -5,34 +5,34 @@ from app.models.user import UserPublic
 from app.models.service import ServicePublic
 
 
-class OfferStatus(str, Enum):
-    accepted = "accepted"
-    rejected = "rejected"
-    pending = "pending"
+class AppointmentStatus(str, Enum):
+    requested = "requested"
+    confirmed = "confirmed"
+    declined = "declined"
     cancelled = "cancelled"
     completed = "completed"
 
 
-class OfferBase(CoreModel):
+class AppointmentBase(CoreModel):
     user_id: Optional[str] = None
     service_id: Optional[str] = None
-    status: Optional[OfferStatus] = OfferStatus.pending
+    status: Optional[AppointmentStatus] = AppointmentStatus.requested
 
 
-class OfferCreate(OfferBase):
+class AppointmentCreate(AppointmentBase):
     user_id: str
     service_id: str
 
 
-class OfferUpdate(CoreModel):
-    status: OfferStatus
+class AppointmentUpdate(CoreModel):
+    status: AppointmentStatus
 
 
-class OfferInDB(DateTimeModelMixin, OfferBase):
+class AppointmentInDB(DateTimeModelMixin, AppointmentBase):
     user_id: str
     service_id: str
 
 
-class OfferPublic(OfferInDB):
+class AppointmentPublic(AppointmentInDB):
     user: Optional[UserPublic] = None
     service: Optional[ServicePublic] = None

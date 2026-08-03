@@ -1,7 +1,7 @@
 from typing import List
 from databases.core import Database
 from app.db.repositories.base import BaseRepository
-from app.db.repositories.offers import OffersRepository
+from app.db.repositories.appointments import AppointmentsRepository
 from app.models.service import ServiceInDB
 from app.models.evaluation import EvaluationAggregate, EvaluationCreate, EvaluationInDB
 from app.models.user import UserInDB
@@ -95,7 +95,7 @@ GET_CLEANER_AGGREGATE_RATINGS_QUERY = """
 class EvaluationsRepository(BaseRepository):
     def __init__(self, db: Database) -> None:
         super().__init__(db)
-        self.offers_repo = OffersRepository(db)
+        self.offers_repo = AppointmentsRepository(db)
 
     async def create_evaluation_for_cleaner(
             self, *, evaluation_create: EvaluationCreate, cleaner: ServiceInDB, service: UserInDB

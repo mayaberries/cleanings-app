@@ -7,8 +7,8 @@ import random
 
 from app.models.service import ServiceCreate, ServiceInDB
 from app.models.user import UserInDB
-from app.models.offer import OfferCreate, OfferUpdate, OfferInDB, OfferPublic
-from app.db.repositories.offers import OffersRepository
+from app.models.appointment import AppointmentCreate, OfferUpdate, AppointmentInDB, AppointmentPublic
+from app.db.repositories.appointments import OffersRepository
 
 pytestmark = pytest.mark.asyncio
 
@@ -47,7 +47,7 @@ class TestCreateOffers:
         )
         assert response.status_code == status.HTTP_201_CREATED
 
-        offer = OfferPublic(**response.json())
+        offer = AppointmentPublic(**response.json())
         assert offer.user_id == user_client_one.id
         assert offer.service_id == test_service.id
         assert offer.status == "pending"
@@ -124,7 +124,7 @@ class TestGetOffers:
 
         assert response.status_code == status.HTTP_200_OK
 
-        offer = OfferPublic(**response.json())
+        offer = AppointmentPublic(**response.json())
 
         assert offer.user_id == selected_user.id
 
@@ -150,7 +150,7 @@ class TestGetOffers:
 
         assert response.status_code == status.HTTP_200_OK
 
-        offer = OfferPublic(**response.json())
+        offer = AppointmentPublic(**response.json())
 
         assert offer.user_id == first_test_user.id
 
@@ -230,7 +230,7 @@ class TestAcceptOffers:
 
         assert response.status_code == status.HTTP_200_OK
 
-        accepted_offer = OfferPublic(**response.json())
+        accepted_offer = AppointmentPublic(**response.json())
 
         assert accepted_offer.status == "accepted"
         assert accepted_offer.user_id == selected_user.id
@@ -312,7 +312,7 @@ class TestAcceptOffers:
 
         assert response.status_code == status.HTTP_200_OK
 
-        offers = [OfferPublic(**o) for o in response.json()]
+        offers = [AppointmentPublic(**o) for o in response.json()]
 
         for offer in offers:
             if offer.user_id == selected_user.id:
@@ -340,7 +340,7 @@ class TestCancelOffers:
 
         assert response.status_code == status.HTTP_200_OK
 
-        cancelled_offer = OfferPublic(**response.json())
+        cancelled_offer = AppointmentPublic(**response.json())
 
         assert cancelled_offer.status == "cancelled"
         assert cancelled_offer.user_id == user_client_one.id

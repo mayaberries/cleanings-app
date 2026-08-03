@@ -5,10 +5,10 @@ import pytest_asyncio
 from databases import Database
 
 from app.db.repositories.evaluations import EvaluationsRepository
-from app.db.repositories.offers import OffersRepository
+from app.db.repositories.appointments import AppointmentsRepository
 from app.db.repositories.services import ServicesRepository
 from app.models.evaluation import EvaluationCreate
-from app.models.offer import OfferCreate
+from app.models.appointment import AppointmentCreate
 from app.models.service import ServiceCreate, ServiceInDB, ServiceUpdate
 from app.models.user import UserInDB
 
@@ -32,7 +32,7 @@ async def test_service_with_offers(
         test_client_list: List[UserInDB]
 ) -> ServiceInDB:
     service_repo = ServicesRepository(db)
-    offers_repo = OffersRepository(db)
+    offers_repo = AppointmentsRepository(db)
 
     new_service = ServiceCreate(
         name="service with offers", description="lorem ipsum", price=9.99, category="dental_cleaning"
@@ -44,7 +44,7 @@ async def test_service_with_offers(
 
     for user in test_client_list:
         await offers_repo.create_offer_for_service(
-            new_offer=OfferCreate(
+            new_offer=AppointmentCreate(
                 service_id=created_service.id, user_id=user.id
             )
         )
@@ -60,7 +60,7 @@ async def test_service_with_accepted_offer(
         test_client_list: List[UserInDB]
 ) -> ServiceInDB:
     service_repo = ServicesRepository(db)
-    offers_repo = OffersRepository(db)
+    offers_repo = AppointmentsRepository(db)
 
     new_service = ServiceCreate(
         name="service with offers",
@@ -78,7 +78,7 @@ async def test_service_with_accepted_offer(
     for user in test_client_list:
         offers.append(
             await offers_repo.create_offer_for_service(
-                new_offer=OfferCreate(
+                new_offer=AppointmentCreate(
                     service_id=created_service.id,
                     user_id=user.id
                 )
@@ -100,7 +100,7 @@ async def create_service_with_evaluated_offer_helper(
         eval_create: EvaluationCreate
 ) -> ServiceInDB:
     service_repo = ServicesRepository(db)
-    offers_repo = OffersRepository(db)
+    offers_repo = AppointmentsRepository(db)
     eval_repo = EvaluationsRepository(db)
 
     created_service = await service_repo.create_service(
@@ -109,7 +109,7 @@ async def create_service_with_evaluated_offer_helper(
     )
 
     offer = await offers_repo.create_offer_for_service(
-        new_offer=OfferCreate(
+        new_offer=AppointmentCreate(
             service_id=created_service.id,
             user_id=cleaner.id
         )
