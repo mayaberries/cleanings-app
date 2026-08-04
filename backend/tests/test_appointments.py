@@ -54,7 +54,7 @@ class TestCreateappointments:
         offer = AppointmentPublic(**response.json())
         assert offer.user_id == user_client_one.id
         assert offer.service_id == test_service.id
-        assert offer.status == "pending"
+        assert offer.status == "requested"
 
     async def test_user_cant_create_duplicate_appointments(
             self, app: FastAPI, create_authorized_client: Callable, test_service: ServiceInDB,
@@ -229,7 +229,7 @@ class TestAcceptappointments:
 
         response = await clinic_a_admin_client.put(
             app.url_path_for(
-                "appointments:accept-offer-from-user",
+                "appointments:confirm-appointment-from-user",
                 service_id=test_service_with_appointments.id,
                 username=selected_user.username
             )
@@ -239,7 +239,7 @@ class TestAcceptappointments:
 
         accepted_offer = AppointmentPublic(**response.json())
 
-        assert accepted_offer.status == "accepted"
+        assert accepted_offer.status == "confirmed"
         assert accepted_offer.user_id == selected_user.id
         assert accepted_offer.service_id == test_service_with_appointments.id
 
@@ -256,7 +256,7 @@ class TestAcceptappointments:
 
         response = await authorized_client.put(
             app.url_path_for(
-                "appointments:accept-offer-from-user",
+                "appointments:confirm-appointment-from-user",
                 service_id=test_service_with_appointments.id,
                 username=selected_user.username
             )
@@ -273,7 +273,7 @@ class TestAcceptappointments:
     ) -> None:
         response = await clinic_a_admin_client.put(
             app.url_path_for(
-                "appointments:accept-offer-from-user",
+                "appointments:confirm-appointment-from-user",
                 service_id=test_service_with_appointments.id,
                 username=test_client_list[0].username
             )
@@ -283,7 +283,7 @@ class TestAcceptappointments:
 
         response = await clinic_a_admin_client.put(
             app.url_path_for(
-                "appointments:accept-offer-from-user",
+                "appointments:confirm-appointment-from-user",
                 service_id=test_service_with_appointments.id,
                 username=test_client_list[1].username
             )
@@ -302,7 +302,7 @@ class TestAcceptappointments:
 
         response = await clinic_a_admin_client.put(
             app.url_path_for(
-                "appointments:accept-offer-from-user",
+                "appointments:confirm-appointment-from-user",
                 service_id=test_service_with_appointments.id,
                 username=selected_user.username
             )
@@ -323,12 +323,12 @@ class TestAcceptappointments:
 
         for appt in appointments:
             if appt.user_id == selected_user.id:
-                assert appt.status == "accepted"
+                assert appt.status == "confirmed"
             else:
-                assert appt.status == "rejected"
+                assert appt.status == "declined"
 
 
-class TestCancelappointments:
+class TestCancelAppointments:
     async def test_user_can_cancel_offer_after_it_has_been_accepted(
             self,
             app: FastAPI,
@@ -399,10 +399,10 @@ class TestCancelappointments:
             if appt.user_id == user_client_one.id:
                 assert appt.status == "cancelled"
             else:
-                assert appt.status == "pending"
+                assert appt.status == "requested"
 
 
-class TestRescindappointments:
+class TestRescindAppointments:
     async def test_user_can_successfully_rescind_pending_appt(
             self,
             app: FastAPI,

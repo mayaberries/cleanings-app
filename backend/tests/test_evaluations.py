@@ -71,7 +71,7 @@ class TestCreateEvaluations:
 
         response = await authorized_client.get(
             app.url_path_for(
-                "offers:get-offer-from-user",
+                "appointments:get-appointment-from-user",
                 service_id=test_service_with_accepted_appointment.id,
                 username=user_client_one.username
             ),
