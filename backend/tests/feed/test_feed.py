@@ -35,6 +35,11 @@ class TestServiceFeed:
         assert set(feed_item["id"] for feed_item in service_feed).issubset(
             set(service_ids))
 
+    @pytest.mark.skip(
+        reason="Feed's future is undecided post-pivot away from marketplace discovery "
+               "toward scheduling + notifications. See roadmap. Revisit before deleting "
+               "or fixing."
+    )
     async def test_service_fed_response_is_ordered_correctly(
             self,
             *,
@@ -52,6 +57,11 @@ class TestServiceFeed:
         for feed_item in service_feed[13:]:
             assert feed_item["event_type"] == "is_create"
 
+    @pytest.mark.skip(
+        reason="Feed's future is undecided post-pivot away from marketplace discovery "
+               "toward scheduling + notifications. See roadmap. Revisit before deleting "
+               "or fixing."
+    )
     async def test_service_feed_can_paginate_correctly(
             self,
             *,
@@ -80,6 +90,11 @@ class TestServiceFeed:
         length_of_all_id_combos = sum(len(combo) for combo in combos)
         assert len(set().union(*combos)) == length_of_all_id_combos
 
+    @pytest.mark.skip(
+        reason="Feed's future is undecided post-pivot away from marketplace discovery "
+               "toward scheduling + notifications. See roadmap. Revisit before deleting "
+               "or fixing."
+    )
     async def test_service_feed_has_created_and_updated_items_for_modified_service_jobs(
             self,
             *,

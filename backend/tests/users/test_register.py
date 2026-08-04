@@ -7,7 +7,7 @@ from starlette.status import (
 )
 
 from app.db.repositories.users import UsersRepository
-from app.models.user import UserPublic
+from app.models.user import UserPublic, UserCreate
 from app.services import auth_service
 
 pytestmark = pytest.mark.asyncio
@@ -59,6 +59,18 @@ class TestUsersRegistration:
             value: str,
             status_code: int,
     ) -> None:
+        # Seed the "taken" credentials directly — this test can no longer
+        # rely on test_users_can_register_succesfully having run first,
+        # since each test now gets a rolled-back, isolated DB state.
+        users_repo = UsersRepository(db)
+        await users_repo.register_new_user(
+            new_user=UserCreate(
+                email="shakira@shakira.io",
+                username="shakirashakira",
+                password="chantaje123",
+            )
+        )
+
         new_user = {"email": "nottaken@email.io",
                     "username": "not_taken_username", "password": "freepassword"}
         new_user[attr] = value
