@@ -6,9 +6,9 @@ from fastapi import FastAPI
 from httpx import AsyncClient, ASGITransport
 
 pytest_plugins = [
-    "tests.fixtures.users",
-    "tests.fixtures.database",
-    "tests.fixtures.services"
+    "tests._fixtures.users",
+    "tests._fixtures.database",
+    "tests._fixtures.services"
 ]
 
 
