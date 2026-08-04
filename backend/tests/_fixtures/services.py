@@ -13,6 +13,15 @@ from app.models.appointment import AppointmentCreate
 from app.models.service import ServiceCreate, ServiceInDB, ServiceUpdate
 from app.models.user import UserInDB
 
+def _unique_future_base_time() -> datetime.datetime:
+    """
+    Anchored far enough into a random future window that concurrent/adjacent
+    test runs sharing the same (non-reset) test DB won't collide on
+    overlapping confirmed appointments for the same provider.
+    """
+    return datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(
+        days=random.randint(2, 3650), hours=random.randint(0, 23)
+    )
 
 @pytest_asyncio.fixture
 async def test_service(db: Database, user_clinic_a_admin: UserInDB) -> ServiceInDB:
@@ -43,7 +52,7 @@ async def test_service_with_appointments(
         new_service=new_service, requesting_user=user_clinic_a_admin
     )
 
-    base_time = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=1)
+    base_time = _unique_future_base_time()
 
     for i, user in enumerate(test_client_list):
         await appts_repo.create_appointment_for_service(
@@ -79,7 +88,7 @@ async def test_service_with_accepted_appointment(
         new_service=new_service, requesting_user=user_clinic_a_admin
     )
 
-    base_time = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=1)
+    base_time = _unique_future_base_time()
 
     appointments = []
 
