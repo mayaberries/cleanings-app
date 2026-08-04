@@ -38,10 +38,10 @@ class TestUserRoutes:
 
 class TestUsersRegistration:
     async def test_users_can_register_succesfully(
-        self,
-        app: FastAPI,
-        client: AsyncClient,
-        db: Database
+            self,
+            app: FastAPI,
+            client: AsyncClient,
+            db: Database
     ) -> None:
         user_repo = UsersRepository(db)
         new_user = {"email": "shakira@shakira.io",
@@ -65,22 +65,22 @@ class TestUsersRegistration:
     @pytest.mark.parametrize(
         "attr, value, status_code",
         (
-            ("email", "shakira@shakira.io", 400),
-            ("username", "shakirashakira", 400),
-            ("email", "invalid_email@one@two.io", 422),
-            ("password", "short", 422),
-            ("username", "shakira@#$%^<>", 422),
-            ("username", "ab", 422),
+                ("email", "shakira@shakira.io", 400),
+                ("username", "shakirashakira", 400),
+                ("email", "invalid_email@one@two.io", 422),
+                ("password", "short", 422),
+                ("username", "shakira@#$%^<>", 422),
+                ("username", "ab", 422),
         )
     )
     async def test_user_registration_fails_when_credentials_are_taken(
-        self,
-        app: FastAPI,
-        client: AsyncClient,
-        db: Database,
-        attr: str,
-        value: str,
-        status_code: int,
+            self,
+            app: FastAPI,
+            client: AsyncClient,
+            db: Database,
+            attr: str,
+            value: str,
+            status_code: int,
     ) -> None:
         new_user = {"email": "nottaken@email.io",
                     "username": "not_taken_username", "password": "freepassword"}
@@ -89,10 +89,10 @@ class TestUsersRegistration:
         assert res.status_code == status_code
 
     async def test_users_saved_password_is_hashed_and_has_salt(
-        self,
-        app: FastAPI,
-        client: AsyncClient,
-        db: Database
+            self,
+            app: FastAPI,
+            client: AsyncClient,
+            db: Database
     ) -> None:
         user_repo = UsersRepository(db)
 
@@ -117,7 +117,7 @@ class TestUsersRegistration:
 
 class TestAuthTokens:
     async def test_can_create_access_token_succesfully(
-        self, app: FastAPI, client: AsyncClient, user_client_one: UserInDB
+            self, app: FastAPI, client: AsyncClient, user_client_one: UserInDB
     ) -> None:
         access_token = auth_service.create_access_token_for_user(
             user=user_client_one,
@@ -148,20 +148,20 @@ class TestAuthTokens:
     @pytest.mark.parametrize(
         "secret_key, jwt_audience, exception",
         (
-            ("wrong-secret", JWT_AUDIENCE, jwt.InvalidSignatureError),
-            (None, JWT_AUDIENCE, jwt.InvalidSignatureError),
-            (SECRET_KEY, "othersite:auth", jwt.InvalidAudienceError),
-            (SECRET_KEY, None, ValidationError),
+                ("wrong-secret", JWT_AUDIENCE, jwt.InvalidSignatureError),
+                (None, JWT_AUDIENCE, jwt.InvalidSignatureError),
+                (SECRET_KEY, "othersite:auth", jwt.InvalidAudienceError),
+                (SECRET_KEY, None, ValidationError),
         )
     )
     async def test_invalid_token_content_raises_error(
-        self,
-        app: FastAPI,
-        client: AsyncClient,
-        user_client_one: UserInDB,
-        secret_key: Union[str, Secret],
-        jwt_audience: str,
-        exception: Type[BaseException],
+            self,
+            app: FastAPI,
+            client: AsyncClient,
+            user_client_one: UserInDB,
+            secret_key: Union[str, Secret],
+            jwt_audience: str,
+            exception: Type[BaseException],
 
     ) -> None:
         with pytest.raises(exception):
@@ -176,7 +176,7 @@ class TestAuthTokens:
                        audience=JWT_AUDIENCE, algorithms=[JWT_ALGORITHM])
 
     async def test_can_retrieve_username_from_token(
-        self, app: FastAPI, client: AsyncClient, user_client_one: UserInDB
+            self, app: FastAPI, client: AsyncClient, user_client_one: UserInDB
     ) -> None:
         token = auth_service.create_access_token_for_user(
             user=user_client_one, secret_key=str(SECRET_KEY))
@@ -189,19 +189,19 @@ class TestAuthTokens:
     @pytest.mark.parametrize(
         "secret, wrong_token",
         (
-            (SECRET_KEY, "asdf"),  # use wrong token
-            (SECRET_KEY, ""),  # use wrong token
-            (SECRET_KEY, None),  # use wrong token
-            ("ABC123", "use correct token"),  # use wrong secret
+                (SECRET_KEY, "asdf"),  # use wrong token
+                (SECRET_KEY, ""),  # use wrong token
+                (SECRET_KEY, None),  # use wrong token
+                ("ABC123", "use correct token"),  # use wrong secret
         ),
     )
     async def test_error_when_token_or_secret_is_wrong(
-        self,
-        app: FastAPI,
-        client: AsyncClient,
-        user_client_one: UserInDB,
-        secret: Union[Secret, str],
-        wrong_token: Optional[str]
+            self,
+            app: FastAPI,
+            client: AsyncClient,
+            user_client_one: UserInDB,
+            secret: Union[Secret, str],
+            wrong_token: Optional[str]
     ) -> None:
         token = auth_service.create_access_token_for_user(
             user=user_client_one, secret_key=str(SECRET_KEY))
@@ -216,7 +216,7 @@ class TestAuthTokens:
 
 class TestUserLogin:
     async def test_user_can_login_successfully_and_receives_valid_token(
-        self, app: FastAPI, client: AsyncClient, user_client_one: UserInDB
+            self, app: FastAPI, client: AsyncClient, user_client_one: UserInDB
     ) -> None:
         client.headers["content-type"] = "application/x-www-form-urlencoded"
 
@@ -246,15 +246,16 @@ class TestUserLogin:
     @pytest.mark.parametrize(
         "credential, wrong_value, status_code",
         (
-            ("email", "wrong@email.com", 401),
-            ("email", None, 422),
-            ("email", "notemail", 401),
-            ("password", "wrongpassword", 401),
-            ("password", None, 422),
+                ("email", "wrong@email.com", 401),
+                ("email", None, 422),
+                ("email", "notemail", 401),
+                ("password", "wrongpassword", 401),
+                ("password", None, 422),
         ),
     )
     async def test_user_with_wrong_creds_doesnt_receive_token(
-        self, app: FastAPI, client: AsyncClient, user_client_one: UserInDB, credential: str, wrong_value: str, status_code: int,
+            self, app: FastAPI, client: AsyncClient, user_client_one: UserInDB, credential: str, wrong_value: str,
+            status_code: int,
     ) -> None:
         client.headers["content-type"] = "application/x-www-form-urlencoded"
         user_data = user_client_one.model_dump()
@@ -273,7 +274,7 @@ class TestUserLogin:
 
 class TestUserMe:
     async def test_authenticated_user_can_retrieve_own_data(
-        self, app: FastAPI, create_authorized_client, user_client_one: UserInDB,
+            self, app: FastAPI, create_authorized_client, user_client_one: UserInDB,
     ) -> None:
         authorized_client = create_authorized_client(user=user_client_one)
 
@@ -288,7 +289,7 @@ class TestUserMe:
         assert user.id == user_client_one.id
 
     async def test_user_cannot_access_own_data_if_not_authenticated(
-        self, app: FastAPI, client: AsyncClient, user_client_one: UserInDB
+            self, app: FastAPI, client: AsyncClient, user_client_one: UserInDB
     ) -> None:
         response = await client.get(app.url_path_for("users:get-current-user"))
 
@@ -296,7 +297,7 @@ class TestUserMe:
 
     @pytest.mark.parametrize("jwt_prefix", (("",), ("value",), ("Token",), ("JWT",), ("Swearer",),))
     async def test_user_cannot_access_own_data_with_incorrect_jwt_prefix(
-        self, app: FastAPI, client: AsyncClient, user_client_one: UserInDB, jwt_prefix: str,
+            self, app: FastAPI, client: AsyncClient, user_client_one: UserInDB, jwt_prefix: str,
     ) -> None:
         token = auth_service.create_access_token_for_user(
             user=user_client_one, secret_key=str(SECRET_KEY))

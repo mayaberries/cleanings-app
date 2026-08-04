@@ -26,16 +26,16 @@ async def test_service(db: Database, user_clinic_a_admin: UserInDB) -> ServiceIn
 
 
 @pytest_asyncio.fixture
-async def test_service_with_offers(
+async def test_service_with_appointments(
         db: Database,
         user_clinic_a_admin: UserInDB,
         test_client_list: List[UserInDB]
 ) -> ServiceInDB:
     service_repo = ServicesRepository(db)
-    offers_repo = AppointmentsRepository(db)
+    appts_repo = AppointmentsRepository(db)
 
     new_service = ServiceCreate(
-        name="service with offers", description="lorem ipsum", price=9.99, category="dental_cleaning"
+        name="service with appointments", description="lorem ipsum", price=9.99, category="dental_cleaning"
     )
 
     created_service = await service_repo.create_service(
@@ -43,8 +43,8 @@ async def test_service_with_offers(
     )
 
     for user in test_client_list:
-        await offers_repo.create_offer_for_service(
-            new_offer=AppointmentCreate(
+        await appts_repo.create_appointment_for_service(
+            new_appointment=AppointmentCreate(
                 service_id=created_service.id, user_id=user.id
             )
         )
@@ -53,17 +53,17 @@ async def test_service_with_offers(
 
 
 @pytest_asyncio.fixture
-async def test_service_with_accepted_offer(
+async def test_service_with_accepted_appointment(
         db: Database,
         user_clinic_a_admin: UserInDB,
         user_client_one: UserInDB,
         test_client_list: List[UserInDB]
 ) -> ServiceInDB:
     service_repo = ServicesRepository(db)
-    offers_repo = AppointmentsRepository(db)
+    appts_repo = AppointmentsRepository(db)
 
     new_service = ServiceCreate(
-        name="service with offers",
+        name="service with appointments",
         description="lorem ipsum",
         price=9.99,
         category="dental_cleaning"
@@ -73,26 +73,26 @@ async def test_service_with_accepted_offer(
         new_service=new_service, requesting_user=user_clinic_a_admin
     )
 
-    offers = []
+    appointments = []
 
     for user in test_client_list:
-        offers.append(
-            await offers_repo.create_offer_for_service(
-                new_offer=AppointmentCreate(
+        appointments.append(
+            await appts_repo.create_appointment_for_service(
+                new_appointment=AppointmentCreate(
                     service_id=created_service.id,
                     user_id=user.id
                 )
             )
         )
 
-    await offers_repo.accept_offer(
-        offer=[o for o in offers if o.user_id == user_client_one.id][0],
+    await appts_repo.confirm_appointment(
+        appointment=[o for o in appointments if o.user_id == user_client_one.id][0],
     )
 
     return created_service
 
 
-async def create_service_with_evaluated_offer_helper(
+async def create_service_with_evaluated_appointment_helper(
         db: Database,
         owner: UserInDB,
         cleaner: UserInDB,
@@ -100,7 +100,7 @@ async def create_service_with_evaluated_offer_helper(
         eval_create: EvaluationCreate
 ) -> ServiceInDB:
     service_repo = ServicesRepository(db)
-    offers_repo = AppointmentsRepository(db)
+    appts_repo = AppointmentsRepository(db)
     eval_repo = EvaluationsRepository(db)
 
     created_service = await service_repo.create_service(
@@ -108,14 +108,14 @@ async def create_service_with_evaluated_offer_helper(
         requesting_user=owner
     )
 
-    offer = await offers_repo.create_offer_for_service(
-        new_offer=AppointmentCreate(
+    appointment = await appts_repo.create_appointment_for_service(
+        new_appointment=AppointmentCreate(
             service_id=created_service.id,
             user_id=cleaner.id
         )
     )
 
-    await offers_repo.accept_offer(offer=offer)
+    await appts_repo.confirm_appointment(appointment=appointment)
 
     await eval_repo.create_evaluation_for_cleaner(
         evaluation_create=eval_create,
@@ -127,13 +127,13 @@ async def create_service_with_evaluated_offer_helper(
 
 
 @pytest_asyncio.fixture
-async def test_list_of_services_with_evaluated_offer(
+async def test_list_of_services_with_evaluated_appointment(
         db: Database,
         user_clinic_a_admin: UserInDB,
         user_client_one: UserInDB,
 ) -> List[ServiceInDB]:
     return [
-        await create_service_with_evaluated_offer_helper(
+        await create_service_with_evaluated_appointment_helper(
             db=db,
             owner=user_clinic_a_admin,
             cleaner=user_client_one,

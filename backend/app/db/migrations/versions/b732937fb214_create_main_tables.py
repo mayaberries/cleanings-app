@@ -121,9 +121,9 @@ def create_profiles_table() -> None:
     )
 
 
-def create_offers_table() -> None:
+def create_appointments_table() -> None:
     op.create_table(
-        "user_offers_for_services",
+        "appointments",
         sa.Column(
             "user_id",  # 'user' is a reserved word in postgres, so going with user_id instead
             sa.CHAR(36),
@@ -139,16 +139,16 @@ def create_offers_table() -> None:
             index=True,
         ),
         sa.Column("status", sa.Text, nullable=False,
-                  server_default="pending", index=True),
+                  server_default="requested", index=True),
         *timestamps(),
     )
-    op.create_primary_key("pk_user_offers_for_services",
-                          "user_offers_for_services", ["user_id", "service_id"])
+    op.create_primary_key("pk_appointments",
+                          "appointments", ["user_id", "service_id"])
     op.execute(
         """
-        CREATE TRIGGER update_user_offers_for_services_modtime
+        CREATE TRIGGER update_appointments_modtime
             BEFORE UPDATE
-            ON user_offers_for_services
+            ON appointments
             FOR EACH ROW
         EXECUTE PROCEDURE update_updated_at_column();
         """
@@ -223,7 +223,7 @@ def upgrade() -> None:
     create_users_table()
     create_profiles_table()
     create_services_table()
-    create_offers_table()
+    create_appointments_table()
     create_cleaner_evaluations_table()
     create_pets_table()
 
@@ -231,7 +231,7 @@ def upgrade() -> None:
 def downgrade() -> None:
     op.drop_table("pets")
     op.drop_table("service_to_cleaner_evaluations")
-    op.drop_table("user_offers_for_services")
+    op.drop_table("appointments")
     op.drop_table("services")
     op.drop_table("profiles")
     op.drop_table("users")

@@ -38,7 +38,7 @@ class TestCreateEvaluations:
             create_authorized_client: Callable,
             user_clinic_a_admin: UserInDB,
             user_client_one: UserInDB,
-            test_service_with_accepted_offer: ServiceInDB,
+            test_service_with_accepted_appointment: ServiceInDB,
     ) -> None:
         evaluation_create = EvaluationCreate(
             no_show=False,
@@ -55,7 +55,7 @@ class TestCreateEvaluations:
         response = await authorized_client.post(
             app.url_path_for(
                 "evaluations:create-evaluation-for-cleaner",
-                service_id=test_service_with_accepted_offer.id,
+                service_id=test_service_with_accepted_appointment.id,
                 username=user_client_one.username
             ),
             json=evaluation_create.model_dump()
@@ -72,7 +72,7 @@ class TestCreateEvaluations:
         response = await authorized_client.get(
             app.url_path_for(
                 "offers:get-offer-from-user",
-                service_id=test_service_with_accepted_offer.id,
+                service_id=test_service_with_accepted_appointment.id,
                 username=user_client_one.username
             ),
         )
@@ -86,14 +86,14 @@ class TestCreateEvaluations:
             create_authorized_client: Callable,
             user_client_one: UserInDB,
             user_client_two: UserInDB,
-            test_service_with_accepted_offer: ServiceInDB,
+            test_service_with_accepted_appointment: ServiceInDB,
     ) -> None:
         authorized_client = create_authorized_client(user=user_client_two)
 
         response = await authorized_client.post(
             app.url_path_for(
                 "evaluations:create-evaluation-for-cleaner",
-                service_id=test_service_with_accepted_offer.id,
+                service_id=test_service_with_accepted_appointment.id,
                 username=user_client_one.username
             ),
             json={"overall_rating": 2}
@@ -107,14 +107,14 @@ class TestCreateEvaluations:
             create_authorized_client: Callable,
             user_clinic_a_admin: UserInDB,
             user_client_two: UserInDB,
-            test_service_with_accepted_offer: ServiceInDB,
+            test_service_with_accepted_appointment: ServiceInDB,
     ) -> None:
         authorized_client = create_authorized_client(user=user_clinic_a_admin)
 
         response = await authorized_client.post(
             app.url_path_for(
                 "evaluations:create-evaluation-for-cleaner",
-                service_id=test_service_with_accepted_offer.id,
+                service_id=test_service_with_accepted_appointment.id,
                 username=user_client_two.username
             ),
             json={"overall_rating": 2}
@@ -128,14 +128,14 @@ class TestCreateEvaluations:
             create_authorized_client: Callable,
             user_clinic_a_admin: UserInDB,
             user_client_one: UserInDB,
-            test_service_with_accepted_offer: ServiceInDB,
+            test_service_with_accepted_appointment: ServiceInDB,
     ) -> None:
         authorized_client = create_authorized_client(user=user_clinic_a_admin)
 
         response = await authorized_client.post(
             app.url_path_for(
                 "evaluations:create-evaluation-for-cleaner",
-                service_id=test_service_with_accepted_offer.id,
+                service_id=test_service_with_accepted_appointment.id,
                 username=user_client_one.username
             ),
             json={"overall_rating": 2}
@@ -146,7 +146,7 @@ class TestCreateEvaluations:
         response = await authorized_client.post(
             app.url_path_for(
                 "evaluations:create-evaluation-for-cleaner",
-                service_id=test_service_with_accepted_offer.id,
+                service_id=test_service_with_accepted_appointment.id,
                 username=user_client_one.username
             ),
             json={"overall_rating": 1}
@@ -162,14 +162,14 @@ class TestGetEvaluations:
             create_authorized_client: Callable,
             user_client_one: UserInDB,
             user_client_two: UserInDB,
-            test_list_of_services_with_evaluated_offer: List[ServiceInDB]
+            test_list_of_services_with_evaluated_appointment: List[ServiceInDB]
     ) -> None:
         authorized_client = create_authorized_client(user=user_client_two)
 
         response = await authorized_client.get(
             app.url_path_for(
                 "evaluations:get-evaluation-for-cleaner",
-                service_id=test_list_of_services_with_evaluated_offer[0].id,
+                service_id=test_list_of_services_with_evaluated_appointment[0].id,
                 username=user_client_one.username
             )
         )
@@ -178,7 +178,7 @@ class TestGetEvaluations:
 
         evaluation = EvaluationPublic(**response.json())
 
-        assert evaluation.service_id == test_list_of_services_with_evaluated_offer[0].id
+        assert evaluation.service_id == test_list_of_services_with_evaluated_appointment[0].id
         assert evaluation.cleaner_id == user_client_one.id
 
         assert "test headline" in evaluation.headline
@@ -194,7 +194,7 @@ class TestGetEvaluations:
             create_authorized_client: Callable,
             user_client_one: UserInDB,
             user_client_two: UserInDB,
-            test_list_of_services_with_evaluated_offer: List[ServiceInDB]
+            test_list_of_services_with_evaluated_appointment: List[ServiceInDB]
     ) -> None:
         authorized_client = create_authorized_client(user=user_client_two)
 
@@ -221,7 +221,7 @@ class TestGetEvaluations:
             create_authorized_client: Callable,
             user_client_one: UserInDB,
             user_client_two: UserInDB,
-            test_list_of_services_with_evaluated_offer: List[ServiceInDB]
+            test_list_of_services_with_evaluated_appointment: List[ServiceInDB]
     ) -> None:
         authorized_client = create_authorized_client(user=user_client_two)
 
@@ -266,12 +266,12 @@ class TestGetEvaluations:
             app: FastAPI,
             client: AsyncClient,
             user_client_one: UserInDB,
-            test_list_of_services_with_evaluated_offer: List[ServiceInDB]
+            test_list_of_services_with_evaluated_appointment: List[ServiceInDB]
     ) -> None:
         response = await client.get(
             app.url_path_for(
                 "evaluations:get-evaluation-for-cleaner",
-                service_id=test_list_of_services_with_evaluated_offer[0].id,
+                service_id=test_list_of_services_with_evaluated_appointment[0].id,
                 username=user_client_one.username,
             )
         )

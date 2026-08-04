@@ -19,7 +19,7 @@ async def check_evaluation_create_permissions(
     current_user: UserInDB = Depends(get_current_active_user),
     service: ServiceInDB = Depends(get_service_by_id_from_path),
     cleaner: UserInDB = Depends(get_user_by_username_from_path),
-    offer: AppointmentInDB = Depends(get_appointment_for_service_from_user_by_path()),
+    offer: AppointmentInDB = Depends(get_appointment_for_service_from_user_by_path),
     evals_repo: EvaluationsRepository = Depends(
         get_repository(EvaluationsRepository))
 ) -> None:
