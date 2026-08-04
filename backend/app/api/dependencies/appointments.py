@@ -1,8 +1,11 @@
-from fastapi import HTTPException, Depends, Path, status
+from datetime import timedelta
+
+from fastapi import HTTPException, Depends, Path, status, Body
 
 from app.models.user import UserInDB
 from app.models.service import ServiceInDB
-from app.models.appointment import AppointmentInDB, AppointmentStatus
+from app.models.appointment import AppointmentInDB, AppointmentStatus, DEFAULT_APPOINTMENT_DURATION_MINUTES, \
+    AppointmentRequestIn
 
 from app.db.repositories.appointments import AppointmentsRepository
 
@@ -46,14 +49,28 @@ async def get_appointment_by_id_from_path(
     return appointment
 
 
-def check_appointment_create_permissions(
+async def check_appointment_create_permissions(
+        appointment_in: AppointmentRequestIn = Body(..., embed=False),
         current_user: UserInDB = Depends(get_current_active_user),
         service: ServiceInDB = Depends(get_service_by_id_from_path),
+        appointments_repo: AppointmentsRepository = Depends(get_repository(AppointmentsRepository)),
 ) -> None:
     if user_owns_service(user=current_user, service=service):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Users are unable to request appointments for services they own.",
+        )
+
+    owner_id = service.owner if isinstance(service.owner, str) else service.owner.id
+    duration = service.duration_minutes or DEFAULT_APPOINTMENT_DURATION_MINUTES
+    end_time = appointment_in.start_time + timedelta(minutes=duration)
+
+    if await appointments_repo.has_overlapping_confirmed_appointment(  # note: needs `await` — see below
+            owner=owner_id, start_time=appointment_in.start_time, end_time=end_time
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This time is already booked.",
         )
 
 
@@ -94,7 +111,12 @@ async def check_appointment_confirmation_permissions(
 
     owner_id = service.owner if isinstance(service.owner, str) else service.owner.id
 
-    if await appointments_repo.has_overlapping_confirmed_appointment(owner=owner_id, appointment=appointment):
+    if await appointments_repo.has_overlapping_confirmed_appointment(
+            owner=owner_id,
+            start_time=appointment.start_time,
+            end_time=appointment.end_time,
+            exclude_id=appointment.id,
+    ):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="This time conflicts with another confirmed appointment.",

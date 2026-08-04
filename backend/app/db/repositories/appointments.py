@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import timedelta, datetime
 from typing import List, Optional, Union
 from uuid import uuid4
 from databases.core import Database
@@ -10,12 +10,10 @@ from app.models.appointment import (
     AppointmentCreate,
     AppointmentPublic,
     AppointmentInDB,
-    AppointmentStatus,
+    AppointmentStatus, DEFAULT_APPOINTMENT_DURATION_MINUTES,
 )
 from app.models.service import ServiceInDB
 from app.models.user import UserInDB
-
-DEFAULT_APPOINTMENT_DURATION_MINUTES = 30
 
 CREATE_APPOINTMENT_FOR_SERVICE_QUERY = """
     INSERT INTO appointments (id, service_id, user_id, status, start_time, end_time)
@@ -53,7 +51,7 @@ CHECK_OVERLAPPING_CONFIRMED_APPOINTMENT_QUERY = """
     INNER JOIN services s ON a.service_id = s.id
     WHERE s.owner = :owner
       AND a.status = 'confirmed'
-      AND a.id != :exclude_id
+      AND (CAST(:exclude_id AS CHAR(36)) IS NULL OR a.id != CAST(:exclude_id AS CHAR(36)))
       AND a.start_time < :end_time
       AND a.end_time > :start_time
     LIMIT 1;
@@ -92,7 +90,7 @@ class AppointmentsRepository(BaseRepository):
         self.users_repo = UsersRepository(db)
 
     async def create_appointment_for_service(
-        self, *, new_appointment: AppointmentCreate, service: ServiceInDB
+            self, *, new_appointment: AppointmentCreate, service: ServiceInDB
     ) -> AppointmentInDB:
         duration = service.duration_minutes or DEFAULT_APPOINTMENT_DURATION_MINUTES
         start_time = new_appointment.start_time
@@ -117,7 +115,7 @@ class AppointmentsRepository(BaseRepository):
             return AppointmentInDB(**appointment_record)
 
     async def list_appointments_for_service(
-        self, *, service: ServiceInDB, populate: bool = True
+            self, *, service: ServiceInDB, populate: bool = True
     ) -> List[Union[AppointmentInDB, AppointmentPublic]]:
         appointment_records = await self.db.fetch_all(
             query=LIST_APPOINTMENTS_FOR_SERVICE_QUERY, values={"service_id": service.id}
@@ -129,7 +127,7 @@ class AppointmentsRepository(BaseRepository):
         return appointments
 
     async def list_appointments_for_service_from_user(
-        self, *, service: ServiceInDB, user: UserInDB
+            self, *, service: ServiceInDB, user: UserInDB
     ) -> List[AppointmentInDB]:
         records = await self.db.fetch_all(
             query=LIST_APPOINTMENTS_FOR_SERVICE_FROM_USER_QUERY,
@@ -138,15 +136,15 @@ class AppointmentsRepository(BaseRepository):
         return [AppointmentInDB(**r) for r in records]
 
     async def has_overlapping_confirmed_appointment(
-        self, *, owner: str, appointment: AppointmentInDB
+            self, *, owner: str, start_time: datetime, end_time: datetime, exclude_id: Optional[str] = None
     ) -> bool:
         conflict = await self.db.fetch_one(
             query=CHECK_OVERLAPPING_CONFIRMED_APPOINTMENT_QUERY,
             values={
                 "owner": owner,
-                "exclude_id": appointment.id,
-                "start_time": appointment.start_time,
-                "end_time": appointment.end_time,
+                "exclude_id": exclude_id,
+                "start_time": start_time,
+                "end_time": end_time,
             },
         )
         return conflict is not None

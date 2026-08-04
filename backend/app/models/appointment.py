@@ -1,6 +1,9 @@
 import datetime
 from enum import Enum
 from typing import Optional
+
+from pydantic import field_validator
+
 from app.models.core import CoreModel, DateTimeModelMixin, IDModelMixin
 from app.models.user import UserPublic
 from app.models.service import ServicePublic
@@ -22,12 +25,18 @@ class AppointmentBase(CoreModel):
     status: Optional[AppointmentStatus] = AppointmentStatus.requested
 
 
-# What the client sends: just when they want it. service_id/user_id are
-# supplied server-side from path + auth, not client input.
 class AppointmentCreate(CoreModel):
     user_id: str
     service_id: str
     start_time: datetime.datetime
+
+    @field_validator("start_time")
+    @classmethod
+    def start_time_must_be_in_the_future(cls, value: datetime.datetime) -> datetime.datetime:
+        now = datetime.datetime.now(datetime.timezone.utc)
+        if value <= now:
+            raise ValueError("start_time must be in the future")
+        return value
 
 
 class AppointmentUpdate(CoreModel):
@@ -44,3 +53,18 @@ class AppointmentInDB(IDModelMixin, DateTimeModelMixin, AppointmentBase):
 class AppointmentPublic(AppointmentInDB):
     user: Optional[UserPublic] = None
     service: Optional[ServicePublic] = None
+
+
+DEFAULT_APPOINTMENT_DURATION_MINUTES = 30
+
+
+class AppointmentRequestIn(CoreModel):
+    start_time: datetime.datetime
+
+    @field_validator("start_time")
+    @classmethod
+    def start_time_must_be_in_the_future(cls, value: datetime.datetime) -> datetime.datetime:
+        now = datetime.datetime.now(datetime.timezone.utc)
+        if value <= now:
+            raise ValueError("start_time must be in the future")
+        return value
