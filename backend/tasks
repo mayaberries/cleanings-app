@@ -1,0 +1,201 @@
+#!/usr/bin/env python
+
+"""
+CLI for exporting and documenting the FastAPI OpenAPI schema.
+
+Usage (from backend/):
+    python -m scripts.openapi_cli export
+    python -m scripts.openapi_cli render
+    python -m scripts.openapi_cli generate
+"""
+import json
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
+import typer
+
+app = typer.Typer(help="Export and document the API's OpenAPI schema.")
+
+DEFAULT_JSON_PATH = Path("../docs/openapi.json")
+DEFAULT_MARKDOWN_PATH = Path("openapi.md")
+METHOD_ORDER = ["get", "post", "put", "patch", "delete", "options", "head"]
+
+
+# --------------------------------------------------------------------------
+# Export
+# --------------------------------------------------------------------------
+
+def _load_app():
+    # Imported lazily so `render`/`--help` don't need the app (and its DB
+    # settings, env vars, etc.) importable just to run.
+    from app.api.server import app as fastapi_app  # adjust if you use a
+                                                     # get_application() factory
+    return fastapi_app
+
+
+@app.command()
+def export(
+    output: Path = typer.Option(DEFAULT_JSON_PATH, "--output", "-o", help="Where to write the JSON schema."),
+) -> None:
+    """Export the FastAPI app's OpenAPI schema to a JSON file."""
+    fastapi_app = _load_app()
+    schema = fastapi_app.openapi()
+    output.write_text(json.dumps(schema, indent=2))
+    typer.echo(f"OpenAPI schema written to {output}")
+
+
+# --------------------------------------------------------------------------
+# Render
+# --------------------------------------------------------------------------
+
+def _resolve_ref(ref: str, schema: Dict[str, Any]) -> Dict[str, Any]:
+    parts = ref.lstrip("#/").split("/")
+    node = schema
+    for part in parts:
+        node = node[part]
+    return node
+
+
+def _describe_schema(node: Dict[str, Any], schema: Dict[str, Any], depth: int = 0) -> List[str]:
+    lines: List[str] = []
+    indent = "  " * depth
+
+    if "$ref" in node:
+        return _describe_schema(_resolve_ref(node["$ref"], schema), schema, depth)
+
+    node_type = node.get("type")
+
+    if node_type == "object" or "properties" in node:
+        required = set(node.get("required", []))
+        for prop_name, prop_schema in node.get("properties", {}).items():
+            resolved_prop = prop_schema
+            if "$ref" in prop_schema:
+                resolved_prop = _resolve_ref(prop_schema["$ref"], schema)
+            prop_type = resolved_prop.get("type", "object" if "$ref" in prop_schema else "any")
+            marker = "**required**" if prop_name in required else "optional"
+            desc = resolved_prop.get("description", "")
+            lines.append(f"{indent}- `{prop_name}` ({prop_type}, {marker}){': ' + desc if desc else ''}")
+    elif node_type == "array":
+        lines.append(f"{indent}- array of:")
+        lines.extend(_describe_schema(node.get("items", {}), schema, depth + 1))
+    else:
+        lines.append(f"{indent}- type: {node_type or 'any'}")
+
+    return lines
+
+
+def _render_parameters(parameters: List[Dict[str, Any]]) -> List[str]:
+    if not parameters:
+        return []
+    lines = ["**Parameters**", "", "| Name | Located in | Required | Type | Description |",
+             "|---|---|---|---|---|"]
+    for param in parameters:
+        lines.append(
+            f"| `{param.get('name', '')}` | {param.get('in', '')} | "
+            f"{'yes' if param.get('required') else 'no'} | "
+            f"{param.get('schema', {}).get('type', '')} | {param.get('description', '')} |"
+        )
+    lines.append("")
+    return lines
+
+
+def _render_request_body(request_body: Dict[str, Any], schema: Dict[str, Any]) -> List[str]:
+    if not request_body:
+        return []
+    lines = ["**Request body**", ""]
+    for media_type, media_schema in request_body.get("content", {}).items():
+        lines.append(f"_{media_type}_")
+        lines.extend(_describe_schema(media_schema.get("schema", {}), schema))
+        lines.append("")
+    return lines
+
+
+def _render_responses(responses: Dict[str, Any], schema: Dict[str, Any]) -> List[str]:
+    if not responses:
+        return []
+    lines = ["**Responses**", ""]
+    for status_code, response in responses.items():
+        lines.append(f"- `{status_code}` — {response.get('description', '')}")
+        for media_type, media_schema in response.get("content", {}).items():
+            lines.extend(_describe_schema(media_schema.get("schema", {}), schema, depth=1))
+    lines.append("")
+    return lines
+
+
+def _render_markdown(schema: Dict[str, Any]) -> str:
+    info = schema.get("info", {})
+    lines = [f"# {info.get('title', 'API')}", ""]
+    if info.get("version"):
+        lines += [f"**Version:** {info['version']}", ""]
+    if info.get("description"):
+        lines += [info["description"], ""]
+
+    grouped: Dict[str, List[Dict[str, Any]]] = {}
+    for path, path_item in schema.get("paths", {}).items():
+        for method in METHOD_ORDER:
+            operation = path_item.get(method)
+            if not operation:
+                continue
+            for tag in operation.get("tags") or ["untagged"]:
+                grouped.setdefault(tag, []).append(
+                    {"path": path, "method": method.upper(), "operation": operation}
+                )
+
+    for tag in sorted(grouped.keys()):
+        lines += [f"## {tag}", ""]
+        for entry in grouped[tag]:
+            operation = entry["operation"]
+            lines.append(f"### `{entry['method']} {entry['path']}`")
+            lines.append("")
+            summary = operation.get("summary") or operation.get("operationId", "")
+            if summary:
+                lines += [f"**{summary}**", ""]
+            if operation.get("description"):
+                lines += [operation["description"], ""]
+
+            lines += _render_parameters(operation.get("parameters", []))
+            lines += _render_request_body(operation.get("requestBody", {}), schema)
+            lines += _render_responses(operation.get("responses", {}), schema)
+            lines += ["---", ""]
+
+    return "\n".join(lines)
+
+
+@app.command()
+def render(
+    input: Path = typer.Option(DEFAULT_JSON_PATH, "--input", "-i", help="Path to the OpenAPI JSON schema."),
+    output: Path = typer.Option(DEFAULT_MARKDOWN_PATH, "--output", "-o", help="Where to write the Markdown docs."),
+) -> None:
+    """Render an existing OpenAPI JSON file into human-readable Markdown."""
+    if not input.exists():
+        typer.echo(f"Input file not found: {input}", err=True)
+        raise typer.Exit(code=1)
+
+    schema = json.loads(input.read_text())
+    output.write_text(_render_markdown(schema))
+    typer.echo(f"Markdown docs written to {output}")
+
+
+# --------------------------------------------------------------------------
+# Convenience: do both in one shot
+# --------------------------------------------------------------------------
+
+@app.command()
+def generate(
+    json_output: Path = typer.Option(DEFAULT_JSON_PATH, "--json-output", help="Where to write the JSON schema."),
+    markdown_output: Path = typer.Option(
+        DEFAULT_MARKDOWN_PATH, "--markdown-output", help="Where to write the Markdown docs."
+    ),
+) -> None:
+    """Export the OpenAPI schema and render it to Markdown in one step."""
+    fastapi_app = _load_app()
+    schema = fastapi_app.openapi()
+    json_output.write_text(json.dumps(schema, indent=2))
+    typer.echo(f"OpenAPI schema written to {json_output}")
+
+    markdown_output.write_text(_render_markdown(schema))
+    typer.echo(f"Markdown docs written to {markdown_output}")
+
+
+if __name__ == "__main__":
+    app()
