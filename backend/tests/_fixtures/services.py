@@ -1,3 +1,4 @@
+import datetime
 import random
 from typing import List
 
@@ -42,11 +43,16 @@ async def test_service_with_appointments(
         new_service=new_service, requesting_user=user_clinic_a_admin
     )
 
-    for user in test_client_list:
+    base_time = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=1)
+
+    for i, user in enumerate(test_client_list):
         await appts_repo.create_appointment_for_service(
             new_appointment=AppointmentCreate(
-                service_id=created_service.id, user_id=user.id
-            )
+                service_id=created_service.id,
+                user_id=user.id,
+                start_time=base_time + datetime.timedelta(hours=i),
+            ),
+            service=created_service,
         )
 
     return created_service
@@ -73,20 +79,26 @@ async def test_service_with_accepted_appointment(
         new_service=new_service, requesting_user=user_clinic_a_admin
     )
 
+    base_time = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=1)
+
     appointments = []
 
-    for user in test_client_list:
+    for i, user in enumerate(test_client_list):
         appointments.append(
             await appts_repo.create_appointment_for_service(
                 new_appointment=AppointmentCreate(
                     service_id=created_service.id,
-                    user_id=user.id
-                )
+                    user_id=user.id,
+                    # non-overlapping slots so confirming user_client_one's
+                    # appointment never conflicts with the others
+                    start_time=base_time + datetime.timedelta(hours=i),
+                ),
+                service=created_service,
             )
         )
 
     await appts_repo.confirm_appointment(
-        appointment=[o for o in appointments if o.user_id == user_client_one.id][0],
+        appointment=[a for a in appointments if a.user_id == user_client_one.id][0],
     )
 
     return created_service
@@ -111,16 +123,17 @@ async def create_service_with_evaluated_appointment_helper(
     appointment = await appts_repo.create_appointment_for_service(
         new_appointment=AppointmentCreate(
             service_id=created_service.id,
-            user_id=cleaner.id
-        )
+            user_id=cleaner.id,
+            start_time=datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=1),
+        ),
+        service=created_service,
     )
 
-    await appts_repo.confirm_appointment(appointment=appointment)
+    confirmed_appointment = await appts_repo.confirm_appointment(appointment=appointment)
 
-    await eval_repo.create_evaluation_for_cleaner(
+    await eval_repo.create_evaluation_for_appointment(
         evaluation_create=eval_create,
-        service=created_service,
-        cleaner=cleaner
+        appointment=confirmed_appointment,
     )
 
     return created_service

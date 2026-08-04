@@ -1,3 +1,4 @@
+import datetime
 import random
 import uuid
 from typing import List, Callable
@@ -16,6 +17,10 @@ pytestmark = pytest.mark.asyncio
 FAKE_ID = str(uuid.uuid4())
 
 
+def future_time(hours: int = 1) -> str:
+    return (datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=hours)).isoformat()
+
+
 class TestAppointmentRoutes:
     async def test_routes_exist(self, app: FastAPI, client: AsyncClient) -> None:
         response = await client.post(app.url_path_for("appointments:create-appointment", service_id=1))
@@ -25,17 +30,19 @@ class TestAppointmentRoutes:
         assert response.status_code != status.HTTP_404_NOT_FOUND
 
         response = await client.get(
-            app.url_path_for("appointments:get-appointment-from-user", service_id=1, username="bradpitt"))
+            app.url_path_for("appointments:get-appointment-by-id", service_id=1, appointment_id=1))
         assert response.status_code != status.HTTP_404_NOT_FOUND
 
         response = await client.put(
-            app.url_path_for("appointments:confirm-appointment-from-user", service_id=1, username="braddpit"))
+            app.url_path_for("appointments:confirm-appointment", service_id=1, appointment_id=1))
         assert response.status_code != status.HTTP_404_NOT_FOUND
 
-        response = await client.put(app.url_path_for("appointments:cancel-appointment-from-user", service_id=1))
+        response = await client.put(
+            app.url_path_for("appointments:cancel-appointment", service_id=1, appointment_id=1))
         assert response.status_code != status.HTTP_404_NOT_FOUND
 
-        response = await client.delete(app.url_path_for("appointments:withdraw-appointment-from-user", service_id=1))
+        response = await client.delete(
+            app.url_path_for("appointments:withdraw-appointment", service_id=1, appointment_id=1))
         assert response.status_code != status.HTTP_404_NOT_FOUND
 
 
@@ -47,7 +54,8 @@ class TestCreateappointments:
         authorized_client = create_authorized_client(user=user_client_one)
 
         response = await authorized_client.post(
-            app.url_path_for("appointments:create-appointment", service_id=test_service.id)
+            app.url_path_for("appointments:create-appointment", service_id=test_service.id),
+            json={"start_time": future_time()},
         )
         assert response.status_code == status.HTTP_201_CREATED
 
@@ -56,28 +64,32 @@ class TestCreateappointments:
         assert offer.service_id == test_service.id
         assert offer.status == "requested"
 
-    async def test_user_cant_create_duplicate_appointments(
+    async def test_user_can_create_multiple_appointments_for_same_service(
             self, app: FastAPI, create_authorized_client: Callable, test_service: ServiceInDB,
             user_client_two: UserInDB,
     ) -> None:
         authorized_client = create_authorized_client(user=user_client_two)
 
-        response = await authorized_client.post(
-            app.url_path_for("appointments:create-appointment", service_id=test_service.id)
+        response_one = await authorized_client.post(
+            app.url_path_for("appointments:create-appointment", service_id=test_service.id),
+            json={"start_time": future_time(hours=1)},
         )
-        assert response.status_code == status.HTTP_201_CREATED
+        assert response_one.status_code == status.HTTP_201_CREATED
 
-        response = await authorized_client.post(
-            app.url_path_for("appointments:create-appointment", service_id=test_service.id)
+        response_two = await authorized_client.post(
+            app.url_path_for("appointments:create-appointment", service_id=test_service.id),
+            json={"start_time": future_time(hours=5)},
         )
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert response_two.status_code == status.HTTP_201_CREATED
+        assert response_two.json()["id"] != response_one.json()["id"]
 
     async def test_user_unable_to_create_offer_for_their_own_service_job(
             self, app: FastAPI, clinic_a_admin_client: AsyncClient, user_clinic_a_admin: UserInDB,
             test_service: ServiceInDB
     ) -> None:
         response = await clinic_a_admin_client.post(
-            app.url_path_for("appointments:create-appointment", service_id=test_service.id)
+            app.url_path_for("appointments:create-appointment", service_id=test_service.id),
+            json={"start_time": future_time()},
         )
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -86,7 +98,8 @@ class TestCreateappointments:
             self, app: FastAPI, client: AsyncClient, test_service: ServiceInDB,
     ) -> None:
         response = await client.post(
-            app.url_path_for("appointments:create-appointment", service_id=test_service.id)
+            app.url_path_for("appointments:create-appointment", service_id=test_service.id),
+            json={"start_time": future_time()},
         )
 
         assert response.status_code == status.HTTP_401_UNAUTHORIZED
@@ -105,7 +118,8 @@ class TestCreateappointments:
         authorized_client = create_authorized_client(user=user_client_three)
 
         response = await authorized_client.post(
-            app.url_path_for("appointments:create-appointment", service_id=id)
+            app.url_path_for("appointments:create-appointment", service_id=id),
+            json={"start_time": future_time()},
         )
 
         assert response.status_code == status_code
@@ -116,16 +130,17 @@ class TestGetappointments:
             self,
             app: FastAPI,
             clinic_a_admin_client: AsyncClient,
-            test_client_list: List[UserInDB],
             test_service_with_appointments: ServiceInDB,
     ) -> None:
-        selected_user = random.choice(test_client_list)
+        appts_repo = AppointmentsRepository(app.state._db)
+        appointments = await appts_repo.list_appointments_for_service(service=test_service_with_appointments)
+        selected = random.choice(appointments)
 
         response = await clinic_a_admin_client.get(
             app.url_path_for(
-                "appointments:get-appointment-from-user",
+                "appointments:get-appointment-by-id",
                 service_id=test_service_with_appointments.id,
-                username=selected_user.username,
+                appointment_id=selected.id,
             )
         )
 
@@ -133,7 +148,7 @@ class TestGetappointments:
 
         offer = AppointmentPublic(**response.json())
 
-        assert offer.user_id == selected_user.id
+        assert offer.id == selected.id
 
     async def test_offer_owner_can_get_own_offer(
             self,
@@ -147,11 +162,15 @@ class TestGetappointments:
 
         authorized_client = create_authorized_client(user=first_test_user)
 
+        appts_repo = AppointmentsRepository(app.state._db)
+        appointments = await appts_repo.list_appointments_for_service(service=test_service_with_appointments)
+        own_appointment = [a for a in appointments if a.user_id == first_test_user.id][0]
+
         response = await authorized_client.get(
             app.url_path_for(
-                "appointments:get-appointment-from-user",
+                "appointments:get-appointment-by-id",
                 service_id=test_service_with_appointments.id,
-                username=first_test_user.username
+                appointment_id=own_appointment.id,
             )
         )
 
@@ -173,11 +192,15 @@ class TestGetappointments:
 
         authorized_client = create_authorized_client(user=first_test_user)
 
+        appts_repo = AppointmentsRepository(app.state._db)
+        appointments = await appts_repo.list_appointments_for_service(service=test_service_with_appointments)
+        other_appointment = [a for a in appointments if a.user_id == second_test_user.id][0]
+
         response = await authorized_client.get(
             app.url_path_for(
-                "appointments:get-appointment-from-user",
+                "appointments:get-appointment-by-id",
                 service_id=test_service_with_appointments.id,
-                username=second_test_user.username,
+                appointment_id=other_appointment.id,
             )
         )
         assert response.status_code == status.HTTP_403_FORBIDDEN
@@ -225,13 +248,15 @@ class TestAcceptappointments:
             test_client_list: List[UserInDB],
             test_service_with_appointments: ServiceInDB
     ) -> None:
-        selected_user = random.choice(test_client_list)
+        appts_repo = AppointmentsRepository(app.state._db)
+        appointments = await appts_repo.list_appointments_for_service(service=test_service_with_appointments)
+        selected = random.choice(appointments)
 
         response = await clinic_a_admin_client.put(
             app.url_path_for(
-                "appointments:confirm-appointment-from-user",
+                "appointments:confirm-appointment",
                 service_id=test_service_with_appointments.id,
-                username=selected_user.username
+                appointment_id=selected.id,
             )
         )
 
@@ -240,7 +265,7 @@ class TestAcceptappointments:
         accepted_offer = AppointmentPublic(**response.json())
 
         assert accepted_offer.status == "confirmed"
-        assert accepted_offer.user_id == selected_user.id
+        assert accepted_offer.id == selected.id
         assert accepted_offer.service_id == test_service_with_appointments.id
 
     async def test_non_owner_forbidden_from_accepting_offer_for_service(
@@ -252,59 +277,78 @@ class TestAcceptappointments:
             test_service_with_appointments: ServiceInDB
     ) -> None:
         authorized_client = create_authorized_client(user=user_client_one)
-        selected_user = random.choice(test_client_list)
+
+        appts_repo = AppointmentsRepository(app.state._db)
+        appointments = await appts_repo.list_appointments_for_service(service=test_service_with_appointments)
+        selected = random.choice(appointments)
 
         response = await authorized_client.put(
             app.url_path_for(
-                "appointments:confirm-appointment-from-user",
+                "appointments:confirm-appointment",
                 service_id=test_service_with_appointments.id,
-                username=selected_user.username
+                appointment_id=selected.id,
             )
         )
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
-    async def test_service_owner_cant_accept_multiple_appointments(
+    async def test_service_owner_cant_confirm_overlapping_appointment(
             self,
             app: FastAPI,
             clinic_a_admin_client: AsyncClient,
             test_client_list: List[UserInDB],
             test_service_with_appointments: ServiceInDB
     ) -> None:
+        appts_repo = AppointmentsRepository(app.state._db)
+        appointments = await appts_repo.list_appointments_for_service(service=test_service_with_appointments)
+
+        # confirm the first one
         response = await clinic_a_admin_client.put(
             app.url_path_for(
-                "appointments:confirm-appointment-from-user",
+                "appointments:confirm-appointment",
                 service_id=test_service_with_appointments.id,
-                username=test_client_list[0].username
+                appointment_id=appointments[0].id,
             )
         )
-
         assert response.status_code == status.HTTP_200_OK
+
+        # manufacture a second appointment that overlaps the first, then try
+        # to confirm it too
+        overlapping = await appts_repo.create_appointment_for_service(
+            new_appointment=__import__("app.models.appointment", fromlist=["AppointmentCreate"]).AppointmentCreate(
+                service_id=test_service_with_appointments.id,
+                user_id=test_client_list[0].id,
+                start_time=appointments[0].start_time,
+            ),
+            service=test_service_with_appointments,
+        )
 
         response = await clinic_a_admin_client.put(
             app.url_path_for(
-                "appointments:confirm-appointment-from-user",
+                "appointments:confirm-appointment",
                 service_id=test_service_with_appointments.id,
-                username=test_client_list[1].username
+                appointment_id=overlapping.id,
             )
         )
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
-    async def test_accepting_one_offer_rejects_all_other_appointments(
+    async def test_confirming_one_offer_does_not_affect_others(
             self,
             app: FastAPI,
             clinic_a_admin_client: AsyncClient,
             test_client_list: List[UserInDB],
             test_service_with_appointments: ServiceInDB
     ) -> None:
-        selected_user = random.choice(test_client_list)
+        appts_repo = AppointmentsRepository(app.state._db)
+        appointments = await appts_repo.list_appointments_for_service(service=test_service_with_appointments)
+        selected = random.choice(appointments)
 
         response = await clinic_a_admin_client.put(
             app.url_path_for(
-                "appointments:confirm-appointment-from-user",
+                "appointments:confirm-appointment",
                 service_id=test_service_with_appointments.id,
-                username=selected_user.username
+                appointment_id=selected.id,
             )
         )
 
@@ -319,16 +363,17 @@ class TestAcceptappointments:
 
         assert response.status_code == status.HTTP_200_OK
 
-        appointments = [AppointmentPublic(**o) for o in response.json()]
+        refreshed = [AppointmentPublic(**o) for o in response.json()]
 
-        for appt in appointments:
-            if appt.user_id == selected_user.id:
+        for appt in refreshed:
+            if appt.id == selected.id:
                 assert appt.status == "confirmed"
             else:
-                assert appt.status == "declined"
+                # non-overlapping requests are left untouched, not auto-declined
+                assert appt.status == "requested"
 
 
-class TestCancelAppointments:
+class TestCancelappointments:
     async def test_user_can_cancel_offer_after_it_has_been_accepted(
             self,
             app: FastAPI,
@@ -338,10 +383,15 @@ class TestCancelAppointments:
     ) -> None:
         accepted_user_client = create_authorized_client(user=user_client_one)
 
+        appts_repo = AppointmentsRepository(app.state._db)
+        appointments = await appts_repo.list_appointments_for_service(service=test_service_with_accepted_appointment)
+        own_appointment = [a for a in appointments if a.user_id == user_client_one.id][0]
+
         response = await accepted_user_client.put(
             app.url_path_for(
-                "appointments:cancel-appointment-from-user",
-                service_id=test_service_with_accepted_appointment.id
+                "appointments:cancel-appointment",
+                service_id=test_service_with_accepted_appointment.id,
+                appointment_id=own_appointment.id,
             )
         )
 
@@ -362,16 +412,21 @@ class TestCancelAppointments:
     ) -> None:
         accepted_user_client = create_authorized_client(user=user_client_two)
 
+        appts_repo = AppointmentsRepository(app.state._db)
+        appointments = await appts_repo.list_appointments_for_service(service=test_service_with_accepted_appointment)
+        own_appointment = [a for a in appointments if a.user_id == user_client_two.id][0]
+
         response = await accepted_user_client.put(
             app.url_path_for(
-                "appointments:cancel-appointment-from-user",
-                service_id=test_service_with_accepted_appointment.id
+                "appointments:cancel-appointment",
+                service_id=test_service_with_accepted_appointment.id,
+                appointment_id=own_appointment.id,
             )
         )
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
-    async def test_canceling_offer_sets_all_others_to_pending(
+    async def test_canceling_offer_does_not_affect_others(
             self,
             app: FastAPI,
             create_authorized_client: Callable,
@@ -380,16 +435,19 @@ class TestCancelAppointments:
     ) -> None:
         accepted_user_client = create_authorized_client(user=user_client_one)
 
+        appts_repo = AppointmentsRepository(app.state._db)
+        appointments = await appts_repo.list_appointments_for_service(service=test_service_with_accepted_appointment)
+        own_appointment = [a for a in appointments if a.user_id == user_client_one.id][0]
+
         response = await accepted_user_client.put(
             app.url_path_for(
-                "appointments:cancel-appointment-from-user",
-                service_id=test_service_with_accepted_appointment.id
+                "appointments:cancel-appointment",
+                service_id=test_service_with_accepted_appointment.id,
+                appointment_id=own_appointment.id,
             )
         )
 
         assert response.status_code == status.HTTP_200_OK
-
-        appts_repo = AppointmentsRepository(app.state._db)
 
         appointments = await appts_repo.list_appointments_for_service(
             service=test_service_with_accepted_appointment
@@ -402,7 +460,7 @@ class TestCancelAppointments:
                 assert appt.status == "requested"
 
 
-class TestRescindAppointments:
+class TestRescindappointments:
     async def test_user_can_successfully_rescind_pending_appt(
             self,
             app: FastAPI,
@@ -413,26 +471,26 @@ class TestRescindAppointments:
     ) -> None:
         authorized_client = create_authorized_client(user=user_client_two)
 
+        appts_repo = AppointmentsRepository(app.state._db)
+        appointments = await appts_repo.list_appointments_for_service(service=test_service_with_appointments)
+        own_appointment = [a for a in appointments if a.user_id == user_client_two.id][0]
+
         response = await authorized_client.delete(
             app.url_path_for(
-                "appointments:withdraw-appointment-from-user",
-                service_id=test_service_with_appointments.id
+                "appointments:withdraw-appointment",
+                service_id=test_service_with_appointments.id,
+                appointment_id=own_appointment.id,
             )
         )
 
         assert response.status_code == status.HTTP_200_OK
 
-        appointments_repo = AppointmentsRepository(app.state._db)
-
-        appointments = await appointments_repo.list_appointments_for_service(
+        remaining = await appts_repo.list_appointments_for_service(
             service=test_service_with_appointments
         )
 
-        user_ids = [user.id for user in test_client_list]
-
-        for offer in appointments:
-            assert offer.user_id in user_ids
-            assert offer.user_id != user_client_two.id
+        remaining_ids = [a.id for a in remaining]
+        assert own_appointment.id not in remaining_ids
 
     async def test_users_cannot_rescind_accepted_appointments(
             self,
@@ -443,10 +501,15 @@ class TestRescindAppointments:
     ) -> None:
         authorized_client = create_authorized_client(user=user_client_one)
 
+        appts_repo = AppointmentsRepository(app.state._db)
+        appointments = await appts_repo.list_appointments_for_service(service=test_service_with_accepted_appointment)
+        own_appointment = [a for a in appointments if a.user_id == user_client_one.id][0]
+
         response = await authorized_client.delete(
             app.url_path_for(
-                "appointments:withdraw-appointment-from-user",
-                service_id=test_service_with_accepted_appointment.id
+                "appointments:withdraw-appointment",
+                service_id=test_service_with_accepted_appointment.id,
+                appointment_id=own_appointment.id,
             )
         )
 
@@ -461,10 +524,15 @@ class TestRescindAppointments:
     ) -> None:
         authorized_client = create_authorized_client(user=user_client_one)
 
+        appts_repo = AppointmentsRepository(app.state._db)
+        appointments = await appts_repo.list_appointments_for_service(service=test_service_with_accepted_appointment)
+        own_appointment = [a for a in appointments if a.user_id == user_client_one.id][0]
+
         response = await authorized_client.put(
             app.url_path_for(
-                "appointments:cancel-appointment-from-user",
-                service_id=test_service_with_accepted_appointment.id
+                "appointments:cancel-appointment",
+                service_id=test_service_with_accepted_appointment.id,
+                appointment_id=own_appointment.id,
             )
         )
 
@@ -472,14 +540,15 @@ class TestRescindAppointments:
 
         response = await authorized_client.delete(
             app.url_path_for(
-                "appointments:withdraw-appointment-from-user",
-                service_id=test_service_with_accepted_appointment.id
+                "appointments:withdraw-appointment",
+                service_id=test_service_with_accepted_appointment.id,
+                appointment_id=own_appointment.id,
             )
         )
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
-    async def test_users_cannot_rescind_rejected_appointments(
+    async def test_users_cannot_rescind_confirmed_appointments_of_others(
             self,
             app: FastAPI,
             create_authorized_client: Callable,
@@ -488,11 +557,16 @@ class TestRescindAppointments:
     ) -> None:
         authorized_client = create_authorized_client(user=user_client_two)
 
+        appts_repo = AppointmentsRepository(app.state._db)
+        appointments = await appts_repo.list_appointments_for_service(service=test_service_with_accepted_appointment)
+        others_appointment = [a for a in appointments if a.user_id != user_client_two.id][0]
+
         response = await authorized_client.delete(
             app.url_path_for(
-                "appointments:withdraw-appointment-from-user",
-                service_id=test_service_with_accepted_appointment.id
+                "appointments:withdraw-appointment",
+                service_id=test_service_with_accepted_appointment.id,
+                appointment_id=others_appointment.id,
             )
         )
 
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert response.status_code == status.HTTP_403_FORBIDDEN

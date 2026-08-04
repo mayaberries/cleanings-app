@@ -4,9 +4,10 @@ import pytest
 import uuid
 from httpx import AsyncClient
 from fastapi import FastAPI, status
+
+from app.db.repositories.appointments import AppointmentsRepository
 from app.models.service import ServiceInDB
 from app.models.evaluation import EvaluationAggregate, EvaluationCreate, EvaluationInDB, EvaluationPublic
-
 from app.models.user import UserInDB
 
 pytestmark = pytest.mark.asyncio
@@ -14,14 +15,26 @@ pytestmark = pytest.mark.asyncio
 FAKE_ID = str(uuid.uuid4())
 
 
+async def get_appointment_for(app: FastAPI, service: ServiceInDB, user: UserInDB):
+    appts_repo = AppointmentsRepository(app.state._db)
+    appointments = await appts_repo.list_appointments_for_service(service=service)
+    return [a for a in appointments if a.user_id == user.id][0]
+
+
 class TestEvaluationRoutes:
     async def test_routes_exist(self, app: FastAPI, client: AsyncClient) -> None:
         response = await client.post(
-            app.url_path_for("evaluations:create-evaluation-for-cleaner", service_id=FAKE_ID, username="braddpit"))
+            app.url_path_for(
+                "evaluations:create-evaluation-for-appointment", service_id=FAKE_ID, appointment_id=FAKE_ID
+            )
+        )
         assert response.status_code != status.HTTP_404_NOT_FOUND
 
         response = await client.get(
-            app.url_path_for("evaluations:get-evaluation-for-cleaner", service_id=FAKE_ID, username="braddpit"))
+            app.url_path_for(
+                "evaluations:get-evaluation-for-appointment", service_id=FAKE_ID, appointment_id=FAKE_ID
+            )
+        )
         assert response.status_code != status.HTTP_404_NOT_FOUND
 
         response = await client.get(app.url_path_for("evaluations:list-evaluations-for-cleaner", username="bradpitt"))
@@ -51,12 +64,13 @@ class TestCreateEvaluations:
         )
 
         authorized_client = create_authorized_client(user=user_clinic_a_admin)
+        appointment = await get_appointment_for(app, test_service_with_accepted_appointment, user_client_one)
 
         response = await authorized_client.post(
             app.url_path_for(
-                "evaluations:create-evaluation-for-cleaner",
+                "evaluations:create-evaluation-for-appointment",
                 service_id=test_service_with_accepted_appointment.id,
-                username=user_client_one.username
+                appointment_id=appointment.id,
             ),
             json=evaluation_create.model_dump()
         )
@@ -65,15 +79,16 @@ class TestCreateEvaluations:
 
         evaluation = EvaluationInDB(**response.json())
 
+        assert evaluation.appointment_id == appointment.id
         assert evaluation.no_show == evaluation_create.no_show
         assert evaluation.headline == evaluation_create.headline
         assert evaluation.overall_rating == evaluation_create.overall_rating
 
         response = await authorized_client.get(
             app.url_path_for(
-                "appointments:get-appointment-from-user",
+                "appointments:get-appointment-by-id",
                 service_id=test_service_with_accepted_appointment.id,
-                username=user_client_one.username
+                appointment_id=appointment.id,
             ),
         )
 
@@ -89,38 +104,18 @@ class TestCreateEvaluations:
             test_service_with_accepted_appointment: ServiceInDB,
     ) -> None:
         authorized_client = create_authorized_client(user=user_client_two)
+        appointment = await get_appointment_for(app, test_service_with_accepted_appointment, user_client_one)
 
         response = await authorized_client.post(
             app.url_path_for(
-                "evaluations:create-evaluation-for-cleaner",
+                "evaluations:create-evaluation-for-appointment",
                 service_id=test_service_with_accepted_appointment.id,
-                username=user_client_one.username
+                appointment_id=appointment.id,
             ),
             json={"overall_rating": 2}
         )
 
         assert response.status_code == status.HTTP_403_FORBIDDEN
-
-    async def test_owner_cant_leave_evaluation_for_wrong_user(
-            self,
-            app: FastAPI,
-            create_authorized_client: Callable,
-            user_clinic_a_admin: UserInDB,
-            user_client_two: UserInDB,
-            test_service_with_accepted_appointment: ServiceInDB,
-    ) -> None:
-        authorized_client = create_authorized_client(user=user_clinic_a_admin)
-
-        response = await authorized_client.post(
-            app.url_path_for(
-                "evaluations:create-evaluation-for-cleaner",
-                service_id=test_service_with_accepted_appointment.id,
-                username=user_client_two.username
-            ),
-            json={"overall_rating": 2}
-        )
-
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     async def test_owner_cant_leave_multiple_evaluation(
             self,
@@ -131,12 +126,13 @@ class TestCreateEvaluations:
             test_service_with_accepted_appointment: ServiceInDB,
     ) -> None:
         authorized_client = create_authorized_client(user=user_clinic_a_admin)
+        appointment = await get_appointment_for(app, test_service_with_accepted_appointment, user_client_one)
 
         response = await authorized_client.post(
             app.url_path_for(
-                "evaluations:create-evaluation-for-cleaner",
+                "evaluations:create-evaluation-for-appointment",
                 service_id=test_service_with_accepted_appointment.id,
-                username=user_client_one.username
+                appointment_id=appointment.id,
             ),
             json={"overall_rating": 2}
         )
@@ -145,9 +141,9 @@ class TestCreateEvaluations:
 
         response = await authorized_client.post(
             app.url_path_for(
-                "evaluations:create-evaluation-for-cleaner",
+                "evaluations:create-evaluation-for-appointment",
                 service_id=test_service_with_accepted_appointment.id,
-                username=user_client_one.username
+                appointment_id=appointment.id,
             ),
             json={"overall_rating": 1}
         )
@@ -165,12 +161,14 @@ class TestGetEvaluations:
             test_list_of_services_with_evaluated_appointment: List[ServiceInDB]
     ) -> None:
         authorized_client = create_authorized_client(user=user_client_two)
+        service = test_list_of_services_with_evaluated_appointment[0]
+        appointment = await get_appointment_for(app, service, user_client_one)
 
         response = await authorized_client.get(
             app.url_path_for(
-                "evaluations:get-evaluation-for-cleaner",
-                service_id=test_list_of_services_with_evaluated_appointment[0].id,
-                username=user_client_one.username
+                "evaluations:get-evaluation-for-appointment",
+                service_id=service.id,
+                appointment_id=appointment.id,
             )
         )
 
@@ -178,7 +176,8 @@ class TestGetEvaluations:
 
         evaluation = EvaluationPublic(**response.json())
 
-        assert evaluation.service_id == test_list_of_services_with_evaluated_appointment[0].id
+        assert evaluation.appointment_id == appointment.id
+        assert evaluation.service_id == service.id
         assert evaluation.cleaner_id == user_client_one.id
 
         assert "test headline" in evaluation.headline
@@ -268,11 +267,14 @@ class TestGetEvaluations:
             user_client_one: UserInDB,
             test_list_of_services_with_evaluated_appointment: List[ServiceInDB]
     ) -> None:
+        service = test_list_of_services_with_evaluated_appointment[0]
+        appointment = await get_appointment_for(app, service, user_client_one)
+
         response = await client.get(
             app.url_path_for(
-                "evaluations:get-evaluation-for-cleaner",
-                service_id=test_list_of_services_with_evaluated_appointment[0].id,
-                username=user_client_one.username,
+                "evaluations:get-evaluation-for-appointment",
+                service_id=service.id,
+                appointment_id=appointment.id,
             )
         )
 

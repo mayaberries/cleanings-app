@@ -25,9 +25,10 @@ class EvaluationUpdate(EvaluationBase):
 
 
 class EvaluationInDB(DateTimeModelMixin, EvaluationBase):
+    appointment_id: str
     cleaner_id: str
     service_id: str
-
+   
 
 class EvaluationAggregate(CoreModel):
     avg_professionalism: confloat(ge=0, le=5)
