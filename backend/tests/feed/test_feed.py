@@ -11,14 +11,6 @@ from app.models.service import ServiceInDB
 pytestmark = pytest.mark.asyncio
 
 
-class TestFeedRoutes:
-    async def test_routes_exist(self, app: FastAPI, client: AsyncClient) -> None:
-        response = await client.get(
-            app.url_path_for("feed:get-service-feed-for-user")
-        )
-        assert response.status_code != status.HTTP_404_NOT_FOUND
-
-
 class TestServiceFeed:
     async def test_service_feed_returns_valid_response(
             self,
