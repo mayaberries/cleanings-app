@@ -3,7 +3,7 @@ from typing import Optional
 from pydantic import field_validator
 
 from app.models.core import IDModelMixin, CoreModel, DateTimeModelMixin
-from app.models.user import UserPublic
+from app.models.owner_profile import OwnerProfilePublic
 
 
 class PetProfileBase(CoreModel):
@@ -24,6 +24,8 @@ class PetProfileBase(CoreModel):
 
 class PetProfileCreate(PetProfileBase):
     name: str
+    # owner_profile_id intentionally NOT here — it's resolved server-side
+    # from the requesting owner's own profile, not supplied by the client.
 
 
 class PetProfileUpdate(PetProfileBase):
@@ -32,8 +34,8 @@ class PetProfileUpdate(PetProfileBase):
 
 class PetProfileInDB(IDModelMixin, PetProfileBase, DateTimeModelMixin):
     name: str
-    owner: str
+    owner_profile_id: str
 
 
 class PetProfilePublic(PetProfileInDB):
-    owner: Optional["str | UserPublic"] = None
+    owner_profile_id: Optional["str | OwnerProfilePublic"] = None

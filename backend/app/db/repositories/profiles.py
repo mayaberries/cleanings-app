@@ -4,10 +4,16 @@ from app.db.repositories.base import BaseRepository
 from app.models.owner_profile import OwnerProfileCreate, OwnerProfileUpdate, OwnerProfileInDB
 from app.models.user import UserInDB
 
-CREATE_PROFILE_FOR_USER_QUERY = """
+CREATE_OWNER_PROFILE_QUERY = """
     INSERT INTO owner_profiles (id, full_name, phone_number, bio, image, user_id)
     VALUES (:id, :full_name, :phone_number, :bio, :image, :user_id)
     RETURNING id, full_name, phone_number, bio, image, user_id, created_at, updated_at;
+"""
+
+GET_PROFILE_BY_ID_QUERY = """
+    SELECT id, full_name, phone_number, bio, image, user_id, created_at, updated_at
+    FROM owner_profiles
+    WHERE id = :id;
 """
 
 GET_PROFILE_BY_USER_ID_QUERY = """
@@ -43,20 +49,36 @@ UPDATE_PROFILE_QUERY = """
     RETURNING id, full_name, phone_number, bio, image, user_id, created_at, updated_at;
 """
 
+LINK_USER_TO_PROFILE_QUERY = """
+    UPDATE owner_profiles
+    SET user_id = :user_id
+    WHERE id = :id AND user_id IS NULL
+    RETURNING id, full_name, phone_number, bio, image, user_id, created_at, updated_at;
+"""
+
 
 class OwnerProfilesRepository(BaseRepository):
-    async def create_profile_for_user(self, *, profile_create: OwnerProfileCreate) -> OwnerProfileInDB:
+    async def create_owner_profile(self, *, profile_create: OwnerProfileCreate) -> OwnerProfileInDB:
+        """Creates an owner profile. profile_create.user_id may be None —
+        that's a valid, account-less owner (e.g. added by a clinic, or via
+        a public booking form) who can be linked to a User later."""
         values = {**profile_create.model_dump(), "id": str(uuid4())}
 
         if values.get("image") is not None:
             values["image"] = str(values["image"])
 
         created_profile = await self.db.fetch_one(
-            query=CREATE_PROFILE_FOR_USER_QUERY,
+            query=CREATE_OWNER_PROFILE_QUERY,
             values=values,
         )
 
-        return created_profile
+        return OwnerProfileInDB(**created_profile)
+
+    async def get_profile_by_id(self, *, id: str) -> OwnerProfileInDB:
+        profile_record = await self.db.fetch_one(query=GET_PROFILE_BY_ID_QUERY, values={"id": id})
+
+        if profile_record:
+            return OwnerProfileInDB(**profile_record)
 
     async def get_profile_by_user_id(self, *, user_id: str) -> OwnerProfileInDB:
         profile_record = await self.db.fetch_one(query=GET_PROFILE_BY_USER_ID_QUERY, values={"user_id": user_id})
@@ -89,5 +111,17 @@ class OwnerProfilesRepository(BaseRepository):
             query=UPDATE_PROFILE_QUERY,
             values=values,
         )
+
+        return OwnerProfileInDB(**updated_profile)
+
+    async def link_user_to_profile(self, *, profile_id: str, user_id: str) -> OwnerProfileInDB:
+        # Attaches a user_id to an existing (account-less) owner profile.
+        updated_profile = await self.db.fetch_one(
+            query=LINK_USER_TO_PROFILE_QUERY,
+            values={"id": profile_id, "user_id": user_id},
+        )
+
+        if not updated_profile:
+            return None
 
         return OwnerProfileInDB(**updated_profile)

@@ -129,8 +129,13 @@ def create_owner_profiles_table() -> None:
         sa.Column("phone_number", sa.Text, nullable=True),
         sa.Column("bio", sa.Text, nullable=True, server_default=""),
         sa.Column("image", sa.Text, nullable=True),
-        sa.Column("user_id", sa.CHAR(36), sa.ForeignKey(
-            "users.id", ondelete="CASCADE")),
+        sa.Column(
+            "user_id",
+            sa.CHAR(36),
+            sa.ForeignKey("users.id", ondelete="SET NULL"),
+            nullable=True,
+            index=True,
+        ),
         *timestamps(),
     )
     op.execute(
@@ -230,7 +235,13 @@ def create_pet_profiles_table() -> None:
         sa.Column("birth_date", sa.Date, nullable=True),
         sa.Column("notes", sa.Text, nullable=True),
         sa.Column("image", sa.Text, nullable=True),
-        sa.Column("owner", sa.CHAR(36), sa.ForeignKey("users.id", ondelete="CASCADE"), index=True),
+        sa.Column(
+            "owner_profile_id",
+            sa.CHAR(36),
+            sa.ForeignKey("owner_profiles.id", ondelete="CASCADE"),
+            nullable=False,
+            index=True,
+        ),
         *timestamps(),
     )
     op.execute("""

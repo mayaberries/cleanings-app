@@ -12,7 +12,7 @@ class OwnerProfileBase(CoreModel):
 
 
 class OwnerProfileCreate(OwnerProfileBase):
-    user_id: str
+    user_id: Optional[str] = None
 
 
 class OwnerProfileUpdate(OwnerProfileBase):
@@ -20,7 +20,7 @@ class OwnerProfileUpdate(OwnerProfileBase):
 
 
 class OwnerProfileInDB(IDModelMixin, DateTimeModelMixin, OwnerProfileBase):
-    user_id: str
+    user_id: Optional[str] = None
     username: Optional[str] = None
     email: Optional[EmailStr] = None
 

@@ -10,6 +10,7 @@ from app.api.dependencies.database import get_repository
 from app.api.dependencies.auth import get_current_active_user
 from app.api.dependencies.pets import (
     get_pet_by_id_from_path,
+    get_owner_profile_id_for_user,
     check_pet_access_permissions,
     check_pet_modification_permissions,
 )
@@ -24,7 +25,8 @@ async def create_new_pet(
     current_user: UserInDB = Depends(get_current_active_user),
     pets_repo: PetProfilesRepository = Depends(get_repository(PetProfilesRepository)),
 ) -> PetProfilePublic:
-    return await pets_repo.create_pet(new_pet=new_pet, requesting_user=current_user)
+    owner_profile_id = get_owner_profile_id_for_user(user=current_user)
+    return await pets_repo.create_pet(new_pet=new_pet, owner_profile_id=owner_profile_id)
 
 
 @router.get("/", response_model=List[PetProfilePublic], name="pets:list-all-user-pets")
@@ -32,7 +34,8 @@ async def get_all_pets(
     current_user: UserInDB = Depends(get_current_active_user),
     pets_repo: PetProfilesRepository = Depends(get_repository(PetProfilesRepository)),
 ) -> List[PetProfilePublic]:
-    return await pets_repo.list_all_user_pets(requesting_user=current_user)
+    owner_profile_id = get_owner_profile_id_for_user(user=current_user)
+    return await pets_repo.list_pet_profiles_for_owner(owner_profile_id=owner_profile_id)
 
 
 @router.get(
@@ -79,4 +82,5 @@ async def delete_pet_by_id(
     current_user: UserInDB = Depends(get_current_active_user),
     pets_repo: PetProfilesRepository = Depends(get_repository(PetProfilesRepository)),
 ) -> str:
-    return await pets_repo.delete_pet_by_id(id=pet_id, requesting_user=current_user)
+    owner_profile_id = get_owner_profile_id_for_user(user=current_user)
+    return await pets_repo.delete_pet_by_id(id=pet_id, owner_profile_id=owner_profile_id)

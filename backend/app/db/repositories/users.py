@@ -4,7 +4,7 @@ from uuid import uuid4
 from databases import Database
 from fastapi import HTTPException
 from pydantic import EmailStr
-from starlette.status import HTTP_400_BAD_REQUEST
+from starlette.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 
 from app.db.repositories.base import BaseRepository
 from app.db.repositories.profiles import OwnerProfilesRepository
@@ -79,7 +79,7 @@ class UsersRepository(BaseRepository):
 
             return user
 
-    async def register_new_user(self, *, new_user: UserCreate, role: UserRole = UserRole.client) -> UserInDB:
+    async def _create_user_record(self, *, new_user: UserCreate, role: UserRole) -> dict:
         if await self.get_user_by_email(email=new_user.email) is not None:
             raise HTTPException(
                 status_code=HTTP_400_BAD_REQUEST,
@@ -105,14 +105,45 @@ class UsersRepository(BaseRepository):
             "role": role.value,
         }
 
-        created_user = await self.db.fetch_one(
-            query=REGISTER_NEW_USER_QUERY,
-            values=user_params
-        )
+        return await self.db.fetch_one(query=REGISTER_NEW_USER_QUERY, values=user_params)
 
-        await self.profiles_repo.create_profile_for_user(
+    async def register_new_user(self, *, new_user: UserCreate, role: UserRole = UserRole.client) -> UserInDB:
+        created_user = await self._create_user_record(new_user=new_user, role=role)
+
+        await self.profiles_repo.create_owner_profile(
             profile_create=OwnerProfileCreate(user_id=created_user["id"])
         )
+
+        return await self.populate_user(user=UserInDB(**created_user))
+
+    async def register_user_for_existing_profile(
+            self, *, new_user: UserCreate, existing_profile_id: str, role: UserRole = UserRole.client
+    ) -> UserInDB:
+        profile = await self.profiles_repo.get_profile_by_id(id=existing_profile_id)
+
+        if not profile:
+            raise HTTPException(
+                status_code=HTTP_404_NOT_FOUND,
+                detail="No owner profile found with that id."
+            )
+
+        if profile.user_id is not None:
+            raise HTTPException(
+                status_code=HTTP_400_BAD_REQUEST,
+                detail="This profile is already linked to an account."
+            )
+
+        created_user = await self._create_user_record(new_user=new_user, role=role)
+
+        linked_profile = await self.profiles_repo.link_user_to_profile(
+            profile_id=existing_profile_id, user_id=created_user["id"]
+        )
+
+        if not linked_profile:
+            raise HTTPException(
+                status_code=HTTP_400_BAD_REQUEST,
+                detail="This profile was just claimed by another account. Please try again."
+            )
 
         return await self.populate_user(user=UserInDB(**created_user))
 
