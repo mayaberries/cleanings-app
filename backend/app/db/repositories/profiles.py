@@ -1,19 +1,18 @@
 from uuid import uuid4
 
-from sqlalchemy.sql.expression import true
 from app.db.repositories.base import BaseRepository
 from app.models.owner_profile import OwnerProfileCreate, OwnerProfileUpdate, OwnerProfileInDB
 from app.models.user import UserInDB
 
 CREATE_PROFILE_FOR_USER_QUERY = """
-    INSERT INTO profiles (id, full_name, phone_number, bio, image, user_id)
+    INSERT INTO owner_profiles (id, full_name, phone_number, bio, image, user_id)
     VALUES (:id, :full_name, :phone_number, :bio, :image, :user_id)
     RETURNING id, full_name, phone_number, bio, image, user_id, created_at, updated_at;
 """
 
 GET_PROFILE_BY_USER_ID_QUERY = """
     SELECT id, full_name, phone_number, bio, image, user_id, created_at, updated_at
-    FROM profiles
+    FROM owner_profiles
     WHERE user_id = :user_id;
 """
 
@@ -28,14 +27,14 @@ GET_PROFILE_BY_USERNAME_QUERY = """
            user_id,
            p.created_at,
            p.updated_at
-    FROM profiles p
-        INNER JOIN users u 
+    FROM owner_profiles p
+        INNER JOIN users u
         ON p.user_id = u.id
     WHERE user_id = (SELECT id FROM users WHERE username = :username);
 """
 
 UPDATE_PROFILE_QUERY = """
-    UPDATE profiles
+    UPDATE owner_profiles
     SET full_name    = :full_name,
         phone_number = :phone_number,
         bio          = :bio,
@@ -45,7 +44,7 @@ UPDATE_PROFILE_QUERY = """
 """
 
 
-class ProfilesRepository(BaseRepository):
+class OwnerProfilesRepository(BaseRepository):
     async def create_profile_for_user(self, *, profile_create: OwnerProfileCreate) -> OwnerProfileInDB:
         values = {**profile_create.model_dump(), "id": str(uuid4())}
 
@@ -73,7 +72,8 @@ class ProfilesRepository(BaseRepository):
         if profile_record:
             return OwnerProfileInDB(**profile_record)
 
-    async def update_profile(self, *, profile_update: OwnerProfileUpdate, requesting_user: UserInDB) -> OwnerProfileInDB:
+    async def update_profile(self, *, profile_update: OwnerProfileUpdate,
+                             requesting_user: UserInDB) -> OwnerProfileInDB:
         profile = await self.get_profile_by_user_id(user_id=requesting_user.id)
 
         update_params = profile.model_copy(

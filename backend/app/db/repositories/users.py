@@ -7,7 +7,7 @@ from pydantic import EmailStr
 from starlette.status import HTTP_400_BAD_REQUEST
 
 from app.db.repositories.base import BaseRepository
-from app.db.repositories.profiles import ProfilesRepository
+from app.db.repositories.profiles import OwnerProfilesRepository
 from app.models.owner_profile import OwnerProfileCreate, OwnerProfilePublic
 from app.models.user import UserCreate, UserPublic, UserInDB, UserRole
 from app.services import auth_service
@@ -41,7 +41,7 @@ class UsersRepository(BaseRepository):
     def __init__(self, db: Database) -> None:
         super().__init__(db)
         self.auth_service = auth_service
-        self.profiles_repo = ProfilesRepository(db)
+        self.profiles_repo = OwnerProfilesRepository(db)
 
     async def get_user_by_email(self, *, email: EmailStr, populate: bool = True) -> UserInDB:
         user_record = await self.db.fetch_one(query=GET_USER_BY_EMAIL_QUERY, values={"email": email})

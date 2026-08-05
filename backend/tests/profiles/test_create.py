@@ -3,7 +3,7 @@ from databases import Database
 from fastapi import FastAPI, status
 from httpx import AsyncClient
 
-from app.db.repositories.profiles import ProfilesRepository
+from app.db.repositories.profiles import OwnerProfilesRepository
 from app.models.owner_profile import OwnerProfileInDB
 from app.models.user import UserPublic
 
@@ -12,7 +12,7 @@ pytestmark = pytest.mark.asyncio
 
 class TestProfileCreate:
     async def test_profile_created_for_new_users(self, app: FastAPI, client: AsyncClient, db: Database) -> None:
-        profiles_repo = ProfilesRepository(db)
+        profiles_repo = OwnerProfilesRepository(db)
 
         new_user = {"email": "dwayne@johnson.io",
                     "username": "therock", "password": "dwaynetherockjohnson"}

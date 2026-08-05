@@ -121,9 +121,9 @@ def create_users_table() -> None:
     )
 
 
-def create_profiles_table() -> None:
+def create_owner_profiles_table() -> None:
     op.create_table(
-        "profiles",
+        "owner_profiles",
         sa.Column("id", sa.CHAR(36), primary_key=True),
         sa.Column("full_name", sa.Text, nullable=True),
         sa.Column("phone_number", sa.Text, nullable=True),
@@ -135,9 +135,9 @@ def create_profiles_table() -> None:
     )
     op.execute(
         """
-        CREATE TRIGGER update_profiles_modtime
+        CREATE TRIGGER update_owner_profiles_modtime
             BEFORE UPDATE
-            ON profiles
+            ON owner_profiles
             FOR EACH ROW
         EXECUTE PROCEDURE update_updated_at_column();
         """
@@ -220,9 +220,9 @@ def create_cleaner_evaluations_table() -> None:
     )
 
 
-def create_pets_table() -> None:
+def create_pet_profiles_table() -> None:
     op.create_table(
-        "pets",
+        "pet_profiles",
         sa.Column("id", sa.CHAR(36), primary_key=True),
         sa.Column("name", sa.Text, nullable=False),
         sa.Column("species", sa.Text, nullable=True),
@@ -234,8 +234,8 @@ def create_pets_table() -> None:
         *timestamps(),
     )
     op.execute("""
-            CREATE TRIGGER update_pets_modtime
-                BEFORE UPDATE ON pets
+            CREATE TRIGGER update_pet_profiles_modtime
+                BEFORE UPDATE ON pet_profiles
                 FOR EACH ROW
             EXECUTE PROCEDURE update_updated_at_column();
         """)
@@ -245,11 +245,11 @@ def upgrade() -> None:
     create_updated_at_trigger()
     create_clinics_table()
     create_users_table()
-    create_profiles_table()
+    create_owner_profiles_table()
     create_services_table()
     create_appointments_table()
     create_cleaner_evaluations_table()
-    create_pets_table()
+    create_pet_profiles_table()
 
 
 def downgrade() -> None:

@@ -3,7 +3,7 @@ from fastapi import HTTPException, Depends, Path, status
 from app.models.user import UserInDB
 from app.models.pet_profile import PetProfileInDB
 
-from app.db.repositories.pets import PetsRepository
+from app.db.repositories.pets import PetProfilesRepository
 
 from app.api.dependencies.database import get_repository
 from app.api.dependencies.auth import get_current_active_user
@@ -12,7 +12,7 @@ from app.api.dependencies.auth import get_current_active_user
 async def get_pet_by_id_from_path(
     pet_id: str = Path(...),
     current_user: UserInDB = Depends(get_current_active_user),
-    pets_repo: PetsRepository = Depends(get_repository(PetsRepository)),
+    pets_repo: PetProfilesRepository = Depends(get_repository(PetProfilesRepository)),
 ) -> PetProfileInDB:
     pet = await pets_repo.get_pet_by_id(id=pet_id, requesting_user=current_user)
 

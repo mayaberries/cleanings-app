@@ -6,7 +6,7 @@ from starlette import status
 from app.models.owner_profile import OwnerProfileUpdate, OwnerProfilePublic
 from app.models.user import UserInDB
 from app.api.dependencies.auth import get_current_active_user
-from app.db.repositories.profiles import ProfilesRepository
+from app.db.repositories.profiles import OwnerProfilesRepository
 from app.api.dependencies.database import get_repository
 
 router = APIRouter()
@@ -17,8 +17,8 @@ async def get_profile_by_username(
         *,
         username: str = Path(..., min_length=3, pattern="^[a-zA-Z0-9_-]+$"),
         current_user: UserInDB = Depends(get_current_active_user),
-        profiles_repo: ProfilesRepository = Depends(
-            get_repository(ProfilesRepository)),
+        profiles_repo: OwnerProfilesRepository = Depends(
+            get_repository(OwnerProfilesRepository)),
 ) -> OwnerProfilePublic:
     profile = await profiles_repo.get_profile_by_username(username=username)
 
@@ -35,8 +35,8 @@ async def get_profile_by_username(
 async def update_own_profile(
         profile_update: OwnerProfileUpdate = Body(..., embed=False),
         current_user: UserInDB = Depends(get_current_active_user),
-        profiles_repo: ProfilesRepository = Depends(
-            get_repository(ProfilesRepository))
+        profiles_repo: OwnerProfilesRepository = Depends(
+            get_repository(OwnerProfilesRepository))
 ) -> OwnerProfilePublic:
     updated_profile = await profiles_repo.update_profile(profile_update=profile_update, requesting_user=current_user)
     return updated_profile

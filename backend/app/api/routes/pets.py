@@ -4,7 +4,7 @@ from starlette.status import HTTP_201_CREATED, HTTP_404_NOT_FOUND
 
 from app.models.pet_profile import PetProfileCreate, PetProfileInDB, PetProfilePublic, PetProfileUpdate
 from app.models.user import UserInDB
-from app.db.repositories.pets import PetsRepository
+from app.db.repositories.pets import PetProfilesRepository
 
 from app.api.dependencies.database import get_repository
 from app.api.dependencies.auth import get_current_active_user
@@ -22,7 +22,7 @@ router = APIRouter()
 async def create_new_pet(
     new_pet: PetProfileCreate = Body(..., embed=False),
     current_user: UserInDB = Depends(get_current_active_user),
-    pets_repo: PetsRepository = Depends(get_repository(PetsRepository)),
+    pets_repo: PetProfilesRepository = Depends(get_repository(PetProfilesRepository)),
 ) -> PetProfilePublic:
     return await pets_repo.create_pet(new_pet=new_pet, requesting_user=current_user)
 
@@ -30,7 +30,7 @@ async def create_new_pet(
 @router.get("/", response_model=List[PetProfilePublic], name="pets:list-all-user-pets")
 async def get_all_pets(
     current_user: UserInDB = Depends(get_current_active_user),
-    pets_repo: PetsRepository = Depends(get_repository(PetsRepository)),
+    pets_repo: PetProfilesRepository = Depends(get_repository(PetProfilesRepository)),
 ) -> List[PetProfilePublic]:
     return await pets_repo.list_all_user_pets(requesting_user=current_user)
 
@@ -56,7 +56,7 @@ async def get_pet_by_id(
 async def update_pet_by_id(
     pet: PetProfileInDB = Depends(get_pet_by_id_from_path),
     pet_update: PetProfileUpdate = Body(..., embed=False),
-    pets_repo: PetsRepository = Depends(get_repository(PetsRepository)),
+    pets_repo: PetProfilesRepository = Depends(get_repository(PetProfilesRepository)),
 ) -> PetProfilePublic:
     updated_pet = await pets_repo.update_pet(pet=pet, pet_update=pet_update)
 
@@ -77,6 +77,6 @@ async def update_pet_by_id(
 async def delete_pet_by_id(
     pet_id: str = Path(..., title="The ID of the pet to delete."),
     current_user: UserInDB = Depends(get_current_active_user),
-    pets_repo: PetsRepository = Depends(get_repository(PetsRepository)),
+    pets_repo: PetProfilesRepository = Depends(get_repository(PetProfilesRepository)),
 ) -> str:
     return await pets_repo.delete_pet_by_id(id=pet_id, requesting_user=current_user)

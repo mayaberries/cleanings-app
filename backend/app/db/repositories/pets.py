@@ -7,27 +7,26 @@ from app.db.repositories.base import BaseRepository
 from app.models.pet_profile import PetProfileCreate, PetProfileUpdate, PetProfileInDB
 from app.models.user import UserInDB
 
-
 CREATE_PET_QUERY = """
-    INSERT INTO pets (id, name, species, breed, birth_date, notes, image, owner)
+    INSERT INTO pet_profiles (id, name, species, breed, birth_date, notes, image, owner)
     VALUES (:id, :name, :species, :breed, :birth_date, :notes, :image, :owner)
     RETURNING id, name, species, breed, birth_date, notes, image, owner, created_at, updated_at;
 """
 
 GET_PET_BY_ID_QUERY = """
     SELECT id, name, species, breed, birth_date, notes, image, owner, created_at, updated_at
-    FROM pets
+    FROM pet_profiles
     WHERE id = :id;
 """
 
 LIST_ALL_USER_PETS_QUERY = """
     SELECT id, name, species, breed, birth_date, notes, image, owner, created_at, updated_at
-    FROM pets
+    FROM pet_profiles
     WHERE owner = :owner;
 """
 
 UPDATE_PET_BY_ID_QUERY = """
-    UPDATE pets
+    UPDATE pet_profiles
     SET name       = :name,
         species    = :species,
         breed      = :breed,
@@ -39,15 +38,15 @@ UPDATE_PET_BY_ID_QUERY = """
 """
 
 DELETE_PET_BY_ID_QUERY = """
-    DELETE FROM pets
+    DELETE FROM pet_profiles
     WHERE id = :id AND owner = :owner
     RETURNING id;
 """
 
 
-class PetsRepository(BaseRepository):
+class PetProfilesRepository(BaseRepository):
     """
-    All database actions associated with the pet resource
+    All database actions associated with the pet profile resource
     """
 
     def __init__(self, db: Database) -> None:
@@ -67,29 +66,36 @@ class PetsRepository(BaseRepository):
     async def get_pet_by_id(self, *, id: str, requesting_user: UserInDB) -> PetProfileInDB:
         pet_record = await self.db.fetch_one(query=GET_PET_BY_ID_QUERY, values={"id": id})
 
-        if pet_record:
-            return PetProfileInDB(**pet_record)
+        if not pet_record:
+            return None
 
-    async def list_all_user_pets(self, requesting_user: UserInDB) -> List[PetProfileInDB]:
+        return PetProfileInDB(**pet_record)
+
+    async def list_all_user_pets(self, *, requesting_user: UserInDB) -> List[PetProfileInDB]:
         pet_records = await self.db.fetch_all(
             query=LIST_ALL_USER_PETS_QUERY, values={"owner": requesting_user.id}
         )
-
-        return [PetProfileInDB(**p) for p in pet_records]
+        return [PetProfileInDB(**pet_record) for pet_record in pet_records]
 
     async def update_pet(self, *, pet: PetProfileInDB, pet_update: PetProfileUpdate) -> PetProfileInDB:
-        pet_update_params = pet.model_copy(update=pet_update.dict(exclude_unset=True))
+        update_params = pet.model_copy(update=pet_update.model_dump(exclude_unset=True))
 
         updated_pet = await self.db.fetch_one(
             query=UPDATE_PET_BY_ID_QUERY,
-            values=pet_update_params.model_dump(
-                exclude={"owner", "created_at", "updated_at"})
+            values=update_params.model_dump(exclude={"owner", "created_at", "updated_at"}),
         )
+
+        if not updated_pet:
+            return None
 
         return PetProfileInDB(**updated_pet)
 
-    async def delete_pet_by_id(self, *, id: str, requesting_user: UserInDB) -> int:
-        return await self.db.execute(
-            query=DELETE_PET_BY_ID_QUERY,
-            values={"id": id, "owner": requesting_user.id},
+    async def delete_pet_by_id(self, *, id: str, requesting_user: UserInDB) -> str:
+        deleted_pet = await self.db.fetch_one(
+            query=DELETE_PET_BY_ID_QUERY, values={"id": id, "owner": requesting_user.id}
         )
+
+        if not deleted_pet:
+            return None
+
+        return deleted_pet["id"]
