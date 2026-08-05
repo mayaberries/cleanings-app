@@ -1,0 +1,16 @@
+fastapi==0.141.1
+uvicorn==0.52.1
+sqlalchemy  # if you import it directly anywhere; otherwise omit, alembic/databases pull it in
+alembic==1.18.5
+asyncpg==0.31.0
+psycopg2-binary==2.9.12
+databases==0.9.0
+asgi-lifespan==2.1.0
+bcrypt==5.0.0
+passlib==1.7.4
+PyJWT==2.13.0
+email-validator==2.3.0
+python-multipart==0.0.32
+httpx==0.28.1
+pytest==9.1.1
+pytest-asyncio==1.4.0
