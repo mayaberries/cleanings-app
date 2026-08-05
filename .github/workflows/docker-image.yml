@@ -16,30 +16,14 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: "3.13"
-
-    - name: Install dependencies
-      run: |
-        cd backend
-        pip install -r requirements.txt
-
-    - name: Start database container
+    - name: Prepare environment files
       run: |
         cp docker-compose.yml.dist docker-compose.yml
         cp ./backend/.env.template ./backend/.env
-        docker compose up -d db
-
-    - name: Wait for database to be ready
-      run: |
-        for i in {1..30}; do
-          docker compose exec -T db pg_isready -U postgres && break
-          sleep 1
-        done
 
     - name: Run tests
-      run: |
-        cd backend
-        pytest -v
+      run: docker compose --profile test run --rm backend
+
+    - name: Tear down
+      if: always()
+      run: docker compose down -v
