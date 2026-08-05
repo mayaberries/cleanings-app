@@ -2,7 +2,7 @@ from uuid import uuid4
 
 from sqlalchemy.sql.expression import true
 from app.db.repositories.base import BaseRepository
-from app.models.profile import ProfileCreate, ProfileUpdate, ProfileInDB
+from app.models.owner_profile import OwnerProfileCreate, OwnerProfileUpdate, OwnerProfileInDB
 from app.models.user import UserInDB
 
 CREATE_PROFILE_FOR_USER_QUERY = """
@@ -46,7 +46,7 @@ UPDATE_PROFILE_QUERY = """
 
 
 class ProfilesRepository(BaseRepository):
-    async def create_profile_for_user(self, *, profile_create: ProfileCreate) -> ProfileInDB:
+    async def create_profile_for_user(self, *, profile_create: OwnerProfileCreate) -> OwnerProfileInDB:
         values = {**profile_create.model_dump(), "id": str(uuid4())}
 
         if values.get("image") is not None:
@@ -59,21 +59,21 @@ class ProfilesRepository(BaseRepository):
 
         return created_profile
 
-    async def get_profile_by_user_id(self, *, user_id: str) -> ProfileInDB:
+    async def get_profile_by_user_id(self, *, user_id: str) -> OwnerProfileInDB:
         profile_record = await self.db.fetch_one(query=GET_PROFILE_BY_USER_ID_QUERY, values={"user_id": user_id})
 
         if not profile_record:
             return None
 
-        return ProfileInDB(**profile_record)
+        return OwnerProfileInDB(**profile_record)
 
-    async def get_profile_by_username(self, *, username: str) -> ProfileInDB:
+    async def get_profile_by_username(self, *, username: str) -> OwnerProfileInDB:
         profile_record = await self.db.fetch_one(query=GET_PROFILE_BY_USERNAME_QUERY, values={"username": username})
 
         if profile_record:
-            return ProfileInDB(**profile_record)
+            return OwnerProfileInDB(**profile_record)
 
-    async def update_profile(self, *, profile_update: ProfileUpdate, requesting_user: UserInDB) -> ProfileInDB:
+    async def update_profile(self, *, profile_update: OwnerProfileUpdate, requesting_user: UserInDB) -> OwnerProfileInDB:
         profile = await self.get_profile_by_user_id(user_id=requesting_user.id)
 
         update_params = profile.model_copy(
@@ -90,4 +90,4 @@ class ProfilesRepository(BaseRepository):
             values=values,
         )
 
-        return ProfileInDB(**updated_profile)
+        return OwnerProfileInDB(**updated_profile)

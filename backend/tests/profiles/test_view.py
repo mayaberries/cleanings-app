@@ -3,7 +3,7 @@ from fastapi import FastAPI, status
 from httpx import AsyncClient
 from starlette.status import HTTP_200_OK
 
-from app.models.profile import ProfilePublic
+from app.models.owner_profile import OwnerProfilePublic
 from app.models.user import UserInDB
 
 pytestmark = pytest.mark.asyncio
@@ -19,7 +19,7 @@ class TestProfileView:
                              username=user_client_two.username)
         )
         assert response.status_code == HTTP_200_OK
-        profile = ProfilePublic(**response.json())
+        profile = OwnerProfilePublic(**response.json())
         assert profile.username == user_client_two.username
 
     async def test_unregistered_users_cannot_access_other_users_profile(

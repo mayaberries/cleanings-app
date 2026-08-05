@@ -8,7 +8,7 @@ from starlette.status import HTTP_400_BAD_REQUEST
 
 from app.db.repositories.base import BaseRepository
 from app.db.repositories.profiles import ProfilesRepository
-from app.models.profile import ProfileCreate, ProfilePublic
+from app.models.owner_profile import OwnerProfileCreate, OwnerProfilePublic
 from app.models.user import UserCreate, UserPublic, UserInDB, UserRole
 from app.services import auth_service
 
@@ -111,7 +111,7 @@ class UsersRepository(BaseRepository):
         )
 
         await self.profiles_repo.create_profile_for_user(
-            profile_create=ProfileCreate(user_id=created_user["id"])
+            profile_create=OwnerProfileCreate(user_id=created_user["id"])
         )
 
         return await self.populate_user(user=UserInDB(**created_user))
@@ -132,5 +132,5 @@ class UsersRepository(BaseRepository):
 
         return UserPublic(
             **user.model_dump(),
-            profile=ProfilePublic(**profile.model_dump()) if profile else None,
+            profile=OwnerProfilePublic(**profile.model_dump()) if profile else None,
         )

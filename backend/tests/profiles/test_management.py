@@ -2,7 +2,7 @@ import pytest
 from fastapi import FastAPI, status
 from pydantic import HttpUrl
 
-from app.models.profile import ProfilePublic
+from app.models.owner_profile import OwnerProfilePublic
 from app.models.user import UserInDB
 
 pytestmark = pytest.mark.asyncio
@@ -32,7 +32,7 @@ class TestProfileManagement:
 
         assert response.status_code == status.HTTP_200_OK
 
-        profile = ProfilePublic(**response.json())
+        profile = OwnerProfilePublic(**response.json())
 
         actual = getattr(profile, attr)
         if isinstance(actual, HttpUrl):

@@ -6,7 +6,7 @@ from app.models.core import IDModelMixin, CoreModel, DateTimeModelMixin
 from app.models.user import UserPublic
 
 
-class PetBase(CoreModel):
+class PetProfileBase(CoreModel):
     name: Optional[str] = None
     species: Optional[str] = None
     breed: Optional[str] = None
@@ -22,18 +22,18 @@ class PetBase(CoreModel):
         return value
 
 
-class PetCreate(PetBase):
+class PetProfileCreate(PetProfileBase):
     name: str
 
 
-class PetUpdate(PetBase):
+class PetProfileUpdate(PetProfileBase):
     pass
 
 
-class PetInDB(IDModelMixin, PetBase, DateTimeModelMixin):
+class PetProfileInDB(IDModelMixin, PetProfileBase, DateTimeModelMixin):
     name: str
     owner: str
 
 
-class PetPublic(PetInDB):
+class PetProfilePublic(PetProfileInDB):
     owner: Optional["str | UserPublic"] = None

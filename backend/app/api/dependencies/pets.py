@@ -1,7 +1,7 @@
 from fastapi import HTTPException, Depends, Path, status
 
 from app.models.user import UserInDB
-from app.models.pet import PetInDB
+from app.models.pet_profile import PetProfileInDB
 
 from app.db.repositories.pets import PetsRepository
 
@@ -13,7 +13,7 @@ async def get_pet_by_id_from_path(
     pet_id: str = Path(...),
     current_user: UserInDB = Depends(get_current_active_user),
     pets_repo: PetsRepository = Depends(get_repository(PetsRepository)),
-) -> PetInDB:
+) -> PetProfileInDB:
     pet = await pets_repo.get_pet_by_id(id=pet_id, requesting_user=current_user)
 
     if not pet:
@@ -24,13 +24,13 @@ async def get_pet_by_id_from_path(
     return pet
 
 
-def user_owns_pet(*, user: UserInDB, pet: PetInDB) -> bool:
+def user_owns_pet(*, user: UserInDB, pet: PetProfileInDB) -> bool:
     return pet.owner == user.id
 
 
 async def check_pet_access_permissions(
     current_user: UserInDB = Depends(get_current_active_user),
-    pet: PetInDB = Depends(get_pet_by_id_from_path),
+    pet: PetProfileInDB = Depends(get_pet_by_id_from_path),
 ) -> None:
     if not user_owns_pet(user=current_user, pet=pet):
         raise HTTPException(
@@ -41,7 +41,7 @@ async def check_pet_access_permissions(
 
 async def check_pet_modification_permissions(
     current_user: UserInDB = Depends(get_current_active_user),
-    pet: PetInDB = Depends(get_pet_by_id_from_path),
+    pet: PetProfileInDB = Depends(get_pet_by_id_from_path),
 ) -> None:
     if not user_owns_pet(user=current_user, pet=pet):
         raise HTTPException(

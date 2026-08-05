@@ -4,7 +4,7 @@ from fastapi import FastAPI, status
 from httpx import AsyncClient
 
 from app.db.repositories.profiles import ProfilesRepository
-from app.models.profile import ProfileInDB
+from app.models.owner_profile import OwnerProfileInDB
 from app.models.user import UserPublic
 
 pytestmark = pytest.mark.asyncio
@@ -22,4 +22,4 @@ class TestProfileCreate:
         created_user = UserPublic(**response.json())
         user_profile = await profiles_repo.get_profile_by_user_id(user_id=created_user.id)
         assert user_profile is not None
-        assert isinstance(user_profile, ProfileInDB)
+        assert isinstance(user_profile, OwnerProfileInDB)

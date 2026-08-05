@@ -4,7 +4,7 @@ from uuid import uuid4
 from databases.core import Database
 
 from app.db.repositories.base import BaseRepository
-from app.models.pet import PetCreate, PetUpdate, PetInDB
+from app.models.pet_profile import PetProfileCreate, PetProfileUpdate, PetProfileInDB
 from app.models.user import UserInDB
 
 
@@ -53,7 +53,7 @@ class PetsRepository(BaseRepository):
     def __init__(self, db: Database) -> None:
         super().__init__(db)
 
-    async def create_pet(self, *, new_pet: PetCreate, requesting_user: UserInDB) -> PetInDB:
+    async def create_pet(self, *, new_pet: PetProfileCreate, requesting_user: UserInDB) -> PetProfileInDB:
         pet = await self.db.fetch_one(
             query=CREATE_PET_QUERY,
             values={
@@ -62,22 +62,22 @@ class PetsRepository(BaseRepository):
                 "owner": requesting_user.id
             }
         )
-        return PetInDB(**pet)
+        return PetProfileInDB(**pet)
 
-    async def get_pet_by_id(self, *, id: str, requesting_user: UserInDB) -> PetInDB:
+    async def get_pet_by_id(self, *, id: str, requesting_user: UserInDB) -> PetProfileInDB:
         pet_record = await self.db.fetch_one(query=GET_PET_BY_ID_QUERY, values={"id": id})
 
         if pet_record:
-            return PetInDB(**pet_record)
+            return PetProfileInDB(**pet_record)
 
-    async def list_all_user_pets(self, requesting_user: UserInDB) -> List[PetInDB]:
+    async def list_all_user_pets(self, requesting_user: UserInDB) -> List[PetProfileInDB]:
         pet_records = await self.db.fetch_all(
             query=LIST_ALL_USER_PETS_QUERY, values={"owner": requesting_user.id}
         )
 
-        return [PetInDB(**p) for p in pet_records]
+        return [PetProfileInDB(**p) for p in pet_records]
 
-    async def update_pet(self, *, pet: PetInDB, pet_update: PetUpdate) -> PetInDB:
+    async def update_pet(self, *, pet: PetProfileInDB, pet_update: PetProfileUpdate) -> PetProfileInDB:
         pet_update_params = pet.model_copy(update=pet_update.dict(exclude_unset=True))
 
         updated_pet = await self.db.fetch_one(
@@ -86,7 +86,7 @@ class PetsRepository(BaseRepository):
                 exclude={"owner", "created_at", "updated_at"})
         )
 
-        return PetInDB(**updated_pet)
+        return PetProfileInDB(**updated_pet)
 
     async def delete_pet_by_id(self, *, id: str, requesting_user: UserInDB) -> int:
         return await self.db.execute(
