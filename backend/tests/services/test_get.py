@@ -38,6 +38,7 @@ async def clinic_b_services_list(db: Database, user_clinic_b_admin: UserInDB) ->
         for i in range(5)
     ]
 
+
 class TestGetService:
     async def test_get_service_by_id(
             self, app: FastAPI, clinic_a_admin_client: AsyncClient, test_service: ServiceInDB
@@ -45,9 +46,9 @@ class TestGetService:
         response = await clinic_a_admin_client.get(
             app.url_path_for("services:get-service-by-id", service_id=test_service.id))
         assert response.status_code == status.HTTP_200_OK
-        service = ServicePublic(**response.json()).model_dump(exclude={"owner"})
+        service = ServicePublic(**response.json()).model_dump(exclude={"clinic"})
 
-        assert service == test_service.model_dump(exclude={"owner", "updated_at", "created_at"})
+        assert service == test_service.model_dump(exclude={"clinic", "updated_at", "created_at"})
 
     async def test_unauthorized_users_cant_access_services(
             self, app: FastAPI, client: AsyncClient, test_service: ServiceInDB
@@ -89,9 +90,9 @@ class TestGetService:
         assert isinstance(response.json(), list)
         assert len(response.json()) > 0
 
-        services = [ServiceInDB(**l) for l in response.json()]
+        services = [ServicePublic(**l) for l in response.json()]
 
         for service in services:
-            assert service.owner == user_clinic_a_admin.id
+            assert service.clinic.id == user_clinic_a_admin.clinic_id
 
         assert all(c not in services for c in clinic_b_services_list)

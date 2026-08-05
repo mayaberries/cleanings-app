@@ -69,15 +69,17 @@ class TestUpdateService:
         )
 
         assert res.status_code == status.HTTP_200_OK
-        updated_service = ServiceInDB(**res.json())
+        updated_service = ServicePublic(**res.json())
+
         assert updated_service.id == test_service.id
         for i in range(len(attrs_to_change)):
             attr_to_change = getattr(updated_service, attrs_to_change[i])
             assert attr_to_change != getattr(test_service, attrs_to_change[i])
             assert attr_to_change == values[i]
+        test_service_dumped = test_service.model_dump(exclude={"created_at", "updated_at"})
         for attr, value in updated_service.model_dump(exclude={"created_at", "updated_at"}).items():
             if attr not in attrs_to_change:
-                assert getattr(test_service, attr) == value
+                assert test_service_dumped[attr] == value
 
     async def test_user_receives_error_if_updating_other_users_services(
             self,
@@ -117,7 +119,7 @@ class TestUpdateService:
 
         service = ServicePublic(**response.json())
 
-        assert service.owner == user_clinic_a_admin.id
+        assert service.clinic.id == user_clinic_a_admin.clinic_id
 
     @pytest.mark.parametrize(
         "id, payload, status_code",

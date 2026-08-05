@@ -17,7 +17,7 @@ FAKE_ID = str(uuid.uuid4())
 
 
 class TestGetAppointments:
-    async def test_service_owner_can_get_offer_from_user(
+    async def test_service_owner_can_get_appointment_from_user(
             self,
             app: FastAPI,
             clinic_a_admin_client: AsyncClient,
@@ -37,11 +37,11 @@ class TestGetAppointments:
 
         assert response.status_code == status.HTTP_200_OK
 
-        offer = AppointmentPublic(**response.json())
+        appointment = AppointmentPublic(**response.json())
 
-        assert offer.id == selected.id
+        assert appointment.id == selected.id
 
-    async def test_offer_owner_can_get_own_offer(
+    async def test_appointment_owner_can_get_own_appointment(
             self,
             app: FastAPI,
             create_authorized_client: Callable,
@@ -71,7 +71,7 @@ class TestGetAppointments:
 
         assert appointment.user_id == first_test_user.id
 
-    async def test_other_authenticated_users_cant_view_offer_from_user(
+    async def test_other_authenticated_users_cant_view_appointment_from_user(
             self,
             app: FastAPI,
             create_authorized_client: Callable,
@@ -109,8 +109,8 @@ class TestGetAppointments:
 
         assert response.status_code == status.HTTP_200_OK
 
-        for offer in response.json():
-            assert offer["user_id"] in [user.id for user in test_client_list]
+        for appointment in response.json():
+            assert appointment["user_id"] in [user.id for user in test_client_list]
 
     async def test_non_owners_forbidden_from_fetching_all_appointments_for_service(
             self,

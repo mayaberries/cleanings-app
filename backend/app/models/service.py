@@ -2,7 +2,7 @@ from typing import Optional
 from pydantic import field_validator
 
 from app.models.core import IDModelMixin, CoreModel, DateTimeModelMixin
-from app.models.user import UserPublic
+from app.models.clinic import ClinicPublic
 from app.models.service_categories import normalize_category
 
 
@@ -35,8 +35,8 @@ class ServiceInDB(IDModelMixin, ServiceBase, DateTimeModelMixin):
     name: str
     price: float
     category: str
-    owner: str
+    clinic_id: str
 
 
 class ServicePublic(IDModelMixin, ServiceBase):
-    owner: "str | UserPublic"
+    clinic: "str | ClinicPublic"

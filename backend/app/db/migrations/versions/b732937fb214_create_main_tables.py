@@ -48,6 +48,27 @@ def timestamps(indexed: bool = False) -> Tuple[sa.Column, sa.Column]:
     )
 
 
+def create_clinics_table() -> None:
+    op.create_table(
+        "clinics",
+        sa.Column("id", sa.CHAR(36), primary_key=True),
+        sa.Column("name", sa.Text, nullable=False, index=True),
+        sa.Column("email", sa.Text, nullable=True),
+        sa.Column("phone_number", sa.Text, nullable=True),
+        sa.Column("address", sa.Text, nullable=True),
+        *timestamps(),
+    )
+    op.execute(
+        """
+        CREATE TRIGGER update_clinics_modtime
+            BEFORE UPDATE
+            ON clinics
+            FOR EACH ROW
+        EXECUTE PROCEDURE update_updated_at_column();
+        """
+    )
+
+
 def create_services_table() -> None:
     op.create_table(
         "services",
@@ -57,8 +78,8 @@ def create_services_table() -> None:
         sa.Column("category", sa.Text, nullable=False, index=True),
         sa.Column("duration_minutes", sa.Integer, nullable=True),
         sa.Column("price", sa.Numeric(10, 2), nullable=False),
-        sa.Column("owner", sa.CHAR(36), sa.ForeignKey(
-            "users.id", ondelete="CASCADE")),
+        sa.Column("clinic_id", sa.CHAR(36), sa.ForeignKey(
+            "clinics.id", ondelete="CASCADE"), nullable=False),
         *timestamps(),
     )
 
@@ -81,6 +102,8 @@ def create_users_table() -> None:
         sa.Column("email", sa.Text, unique=True, nullable=False, index=True),
         sa.Column("email_verified", sa.Boolean, nullable=False, server_default="False"),
         sa.Column("role", sa.Text, nullable=False, server_default="client", index=True),
+        sa.Column("clinic_id", sa.CHAR(36), sa.ForeignKey("clinics.id", ondelete="SET NULL"), nullable=True,
+                  index=True),
         sa.Column("salt", sa.Text, nullable=False),
         sa.Column("password", sa.Text, nullable=False),
         sa.Column("is_active", sa.Boolean(), nullable=False, server_default="True"),
@@ -220,6 +243,7 @@ def create_pets_table() -> None:
 
 def upgrade() -> None:
     create_updated_at_trigger()
+    create_clinics_table()
     create_users_table()
     create_profiles_table()
     create_services_table()
@@ -235,4 +259,5 @@ def downgrade() -> None:
     op.drop_table("services")
     op.drop_table("profiles")
     op.drop_table("users")
+    op.drop_table("clinics")
     op.execute("DROP FUNCTION update_updated_at_column")

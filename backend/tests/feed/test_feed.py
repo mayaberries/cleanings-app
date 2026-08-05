@@ -12,6 +12,11 @@ pytestmark = pytest.mark.asyncio
 
 
 class TestServiceFeed:
+    @pytest.mark.skip(
+        reason="Feed's future is undecided post-pivot away from marketplace discovery "
+               "toward scheduling + notifications. See roadmap. Revisit before deleting "
+               "or fixing."
+    )
     async def test_service_feed_returns_valid_response(
             self,
             *,

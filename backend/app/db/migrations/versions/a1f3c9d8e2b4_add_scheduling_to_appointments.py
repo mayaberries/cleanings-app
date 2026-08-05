@@ -46,11 +46,11 @@ def upgrade() -> None:
 
     # 4. Support overlap-checking queries
     op.create_index("ix_appointments_service_id_start_time", "appointments", ["service_id", "start_time"])
-    op.create_index("ix_services_owner", "services", ["owner"])
+    op.create_index("ix_services_clinic_id", "services", ["clinic_id"])
 
 
 def downgrade() -> None:
-    op.drop_index("ix_services_owner", table_name="services")
+    op.drop_index("ix_services_clinic_id", table_name="services")
     op.drop_index("ix_appointments_service_id_start_time", table_name="appointments")
     op.drop_constraint("pk_appointments", "appointments", type_="primary")
     op.create_primary_key("pk_appointments", "appointments", ["user_id", "service_id"])

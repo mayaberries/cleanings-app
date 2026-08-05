@@ -11,7 +11,7 @@ from app.db.repositories.appointments import AppointmentsRepository
 
 from app.api.dependencies.database import get_repository
 from app.api.dependencies.auth import get_current_active_user
-from app.api.dependencies.services import get_service_by_id_from_path, user_owns_service
+from app.api.dependencies.services import get_service_by_id_from_path, user_can_manage_service, get_service_clinic_id
 from app.api.dependencies.users import get_user_by_username_from_path
 
 
@@ -55,18 +55,18 @@ async def check_appointment_create_permissions(
         service: ServiceInDB = Depends(get_service_by_id_from_path),
         appointments_repo: AppointmentsRepository = Depends(get_repository(AppointmentsRepository)),
 ) -> None:
-    if user_owns_service(user=current_user, service=service):
+    if user_can_manage_service(user=current_user, service=service):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Users are unable to request appointments for services they own.",
         )
 
-    owner_id = service.owner if isinstance(service.owner, str) else service.owner.id
+    clinic_id = get_service_clinic_id(service)
     duration = service.duration_minutes or DEFAULT_APPOINTMENT_DURATION_MINUTES
     end_time = appointment_in.start_time + timedelta(minutes=duration)
 
-    if await appointments_repo.has_overlapping_confirmed_appointment(  # note: needs `await` — see below
-            owner=owner_id, start_time=appointment_in.start_time, end_time=end_time
+    if await appointments_repo.has_overlapping_confirmed_appointment(
+            clinic_id=clinic_id, start_time=appointment_in.start_time, end_time=end_time
     ):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -78,7 +78,7 @@ def check_appointment_list_permissions(
         current_user: UserInDB = Depends(get_current_active_user),
         service: ServiceInDB = Depends(get_service_by_id_from_path),
 ) -> None:
-    if not user_owns_service(user=current_user, service=service):
+    if not user_can_manage_service(user=current_user, service=service):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Unable to access appointments.")
 
 
@@ -87,7 +87,7 @@ def check_appointment_get_permissions(
         service: ServiceInDB = Depends(get_service_by_id_from_path),
         appointment: AppointmentInDB = Depends(get_appointment_by_id_from_path),
 ) -> None:
-    if not user_owns_service(user=current_user, service=service) and appointment.user_id != current_user.id:
+    if not user_can_manage_service(user=current_user, service=service) and appointment.user_id != current_user.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Unable to access appointment.")
 
 
@@ -97,10 +97,10 @@ async def check_appointment_confirmation_permissions(
         appointment: AppointmentInDB = Depends(get_appointment_by_id_from_path),
         appointments_repo: AppointmentsRepository = Depends(get_repository(AppointmentsRepository)),
 ) -> None:
-    if not user_owns_service(user=current_user, service=service):
+    if not user_can_manage_service(user=current_user, service=service):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only the owner of the service may confirm appointments.",
+            detail="Only staff of the clinic that owns this service may confirm appointments.",
         )
 
     if appointment.status != AppointmentStatus.requested:
@@ -109,10 +109,10 @@ async def check_appointment_confirmation_permissions(
             detail="Can only confirm appointments that are currently requested",
         )
 
-    owner_id = service.owner if isinstance(service.owner, str) else service.owner.id
+    clinic_id = get_service_clinic_id(service)
 
     if await appointments_repo.has_overlapping_confirmed_appointment(
-            owner=owner_id,
+            clinic_id=clinic_id,
             start_time=appointment.start_time,
             end_time=appointment.end_time,
             exclude_id=appointment.id,

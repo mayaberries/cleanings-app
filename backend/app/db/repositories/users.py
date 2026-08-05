@@ -1,26 +1,25 @@
 from typing import Optional
 from uuid import uuid4
-from pydantic import EmailStr
-from fastapi import HTTPException, status
-from sqlalchemy.sql.elements import False_
-from sqlalchemy.sql.expression import false
-from starlette.status import HTTP_400_BAD_REQUEST
+
 from databases import Database
+from fastapi import HTTPException
+from pydantic import EmailStr
+from starlette.status import HTTP_400_BAD_REQUEST
 
 from app.db.repositories.base import BaseRepository
-from app.models.user import UserCreate, UserPublic, UserUpdate, UserInDB, UserRole
-from app.services import auth_service
 from app.db.repositories.profiles import ProfilesRepository
 from app.models.profile import ProfileCreate, ProfilePublic
+from app.models.user import UserCreate, UserPublic, UserInDB, UserRole
+from app.services import auth_service
 
 GET_USER_BY_EMAIL_QUERY = """
-    SELECT id, username, email, email_verified, role, password, salt, is_active, is_superuser, created_at, updated_at
+    SELECT id, username, email, email_verified, role, clinic_id, password, salt, is_active, is_superuser, created_at, updated_at
     FROM users
     WHERE email = :email;
 """
 
 GET_USER_BY_USERNAME_QUERY = """
-    SELECT id, username, email, email_verified, role, password, salt, is_active, is_superuser, created_at, updated_at
+    SELECT id, username, email, email_verified, role, clinic_id, password, salt, is_active, is_superuser, created_at, updated_at
     FROM users
     WHERE username = :username;
 """
@@ -28,11 +27,11 @@ GET_USER_BY_USERNAME_QUERY = """
 REGISTER_NEW_USER_QUERY = """
     INSERT INTO users (id, username, email, password, salt, role)
     VALUES (:id, :username, :email, :password, :salt, :role)
-    RETURNING id, username, email, email_verified, role, password, salt, is_active, is_superuser, created_at, updated_at;
+    RETURNING id, username, email, email_verified, role, clinic_id, password, salt, is_active, is_superuser, created_at, updated_at;
 """
 
 GET_USER_BY_ID_QUERY = """
-    SELECT id, username, email, email_verified, role, password, salt, is_active, is_superuser, created_at, updated_at
+    SELECT id, username, email, email_verified, role, clinic_id, password, salt, is_active, is_superuser, created_at, updated_at
     FROM users
     WHERE id = :id;
 """

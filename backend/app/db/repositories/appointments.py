@@ -49,7 +49,7 @@ CHECK_OVERLAPPING_CONFIRMED_APPOINTMENT_QUERY = """
     SELECT a.id
     FROM appointments a
     INNER JOIN services s ON a.service_id = s.id
-    WHERE s.owner = :owner
+    WHERE s.clinic_id = :clinic_id
       AND a.status = 'confirmed'
       AND (CAST(:exclude_id AS CHAR(36)) IS NULL OR a.id != CAST(:exclude_id AS CHAR(36)))
       AND a.start_time < :end_time
@@ -136,12 +136,12 @@ class AppointmentsRepository(BaseRepository):
         return [AppointmentInDB(**r) for r in records]
 
     async def has_overlapping_confirmed_appointment(
-            self, *, owner: str, start_time: datetime, end_time: datetime, exclude_id: Optional[str] = None
+            self, *, clinic_id: str, start_time: datetime, end_time: datetime, exclude_id: Optional[str] = None
     ) -> bool:
         conflict = await self.db.fetch_one(
             query=CHECK_OVERLAPPING_CONFIRMED_APPOINTMENT_QUERY,
             values={
-                "owner": owner,
+                "clinic_id": clinic_id,
                 "exclude_id": exclude_id,
                 "start_time": start_time,
                 "end_time": end_time,

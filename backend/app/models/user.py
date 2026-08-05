@@ -26,6 +26,7 @@ class UserBase(CoreModel):
     username: Optional[str] = None
     email_verified: bool = False
     role: UserRole = UserRole.client
+    clinic_id: Optional[str] = None
     is_active: bool = True
     is_superuser: bool = False
 

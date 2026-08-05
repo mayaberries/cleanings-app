@@ -40,8 +40,8 @@ class TestCreateService:
         assert created_service.name == new_service.name
         assert created_service.price == new_service.price
         assert created_service.category == new_service.category
-        assert created_service.owner == user_clinic_a_admin.id
-
+        assert created_service.clinic.id == user_clinic_a_admin.clinic_id
+        
     async def test_unauthorized_user_unable_to_create_service(
             self, app: FastAPI, client: AsyncClient, new_service: ServiceCreate
     ) -> None:
