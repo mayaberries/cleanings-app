@@ -3,13 +3,14 @@ from fastapi.exceptions import HTTPException
 from fastapi.param_functions import Depends
 from starlette import status
 
-from app.api.dependencies.roles import require_role
+from app.api.dependencies.auth import get_current_active_user
+from app.api.dependencies.clinic_owner_profiles import get_current_clinic_staff
+from app.api.dependencies.database import get_repository
+from app.db.repositories.clinic_owner_profiles import ClinicOwnerProfilesRepository
+from app.db.repositories.profiles import OwnerProfilesRepository
 from app.models.owner_profile import OwnerProfileUpdate, OwnerProfilePublic
 from app.models.token import ProfileClaimTokenResponse
-from app.models.user import UserInDB, UserRole
-from app.api.dependencies.auth import get_current_active_user
-from app.db.repositories.profiles import OwnerProfilesRepository
-from app.api.dependencies.database import get_repository
+from app.models.user import UserInDB
 from app.services import auth_service
 
 router = APIRouter()
@@ -44,23 +45,33 @@ async def update_own_profile(
     updated_profile = await profiles_repo.update_profile(profile_update=profile_update, requesting_user=current_user)
     return updated_profile
 
+
 @router.post(
     "/{profile_id}/claim-token/",
     response_model=ProfileClaimTokenResponse,
     name="profiles:create-claim-token",
-    dependencies=[Depends(require_role(UserRole.clinic_admin, UserRole.clinic_aux))],
 )
 async def create_profile_claim_token(
         profile_id: str = Path(...),
+        current_user: UserInDB = Depends(get_current_clinic_staff),
         profiles_repo: OwnerProfilesRepository = Depends(get_repository(OwnerProfilesRepository)),
+        pivots_repo: ClinicOwnerProfilesRepository = Depends(get_repository(ClinicOwnerProfilesRepository)),
 ) -> ProfileClaimTokenResponse:
     profile = await profiles_repo.get_profile_by_id(id=profile_id)
 
+    not_found = HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail="No profile found with that id at your clinic.",
+    )
+
     if not profile:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No profile found with that id.",
-        )
+        raise not_found
+
+    pivot = await pivots_repo.get_pivot_for_clinic_and_owner(
+        clinic_id=current_user.clinic_id, owner_profile_id=profile_id
+    )
+    if not pivot:
+        raise not_found
 
     if profile.user_id is not None:
         raise HTTPException(
