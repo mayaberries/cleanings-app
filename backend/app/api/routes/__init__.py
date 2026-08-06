@@ -7,6 +7,7 @@ from app.api.routes.evaluations import evaluation_router, evaluations_router
 from app.api.routes.feed import router as feed_router
 from app.api.routes.clinics import router as clinics_router
 from app.api.routes.clinic_owner_profiles import router as clinic_owner_profiles_router
+from app.api.routes.clinic_pets import router as clinic_pets_router
 
 router = APIRouter()
 
@@ -26,3 +27,4 @@ router.include_router(
 router.include_router(feed_router, prefix="/feed", tags=["feed"])
 router.include_router(clinics_router, prefix="/clinics", tags=["clinics"])
 router.include_router(clinic_owner_profiles_router, prefix="/clinic/owners", tags=["clinic_owners"])
+router.include_router(clinic_pets_router, prefix="/clinic/pets", tags=["clinic_pets"])

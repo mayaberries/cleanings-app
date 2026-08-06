@@ -9,6 +9,7 @@ pytest_plugins = [
     "tests._fixtures.users",
     "tests._fixtures.database",
     "tests._fixtures.profiles",
+    "tests._fixtures.pets",
     "tests._fixtures.services"
 ]
 

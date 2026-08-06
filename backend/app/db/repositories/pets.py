@@ -1,11 +1,10 @@
-from typing import List
+from typing import List, Optional
 from uuid import uuid4
 
 from databases.core import Database
 
 from app.db.repositories.base import BaseRepository
 from app.models.pet_profile import PetProfileCreate, PetProfileUpdate, PetProfileInDB
-
 
 CREATE_PET_QUERY = """
     INSERT INTO pet_profiles (id, name, species, breed, birth_date, notes, image, owner_profile_id)
@@ -41,6 +40,24 @@ DELETE_PET_BY_ID_QUERY = """
     DELETE FROM pet_profiles
     WHERE id = :id AND owner_profile_id = :owner_profile_id
     RETURNING id;
+"""
+
+LIST_PET_PROFILES_FOR_CLINIC_QUERY = """
+    SELECT p.id, p.name, p.species, p.breed, p.birth_date, p.notes, p.image,
+           p.owner_profile_id, p.created_at, p.updated_at
+    FROM pet_profiles p
+    INNER JOIN clinic_owner_profiles cop ON cop.owner_profile_id = p.owner_profile_id
+    WHERE cop.clinic_id = :clinic_id
+      AND (CAST(:owner_profile_id AS CHAR(36)) IS NULL OR p.owner_profile_id = CAST(:owner_profile_id AS CHAR(36)))
+    ORDER BY p.created_at DESC;
+"""
+
+GET_PET_BY_ID_FOR_CLINIC_QUERY = """
+    SELECT p.id, p.name, p.species, p.breed, p.birth_date, p.notes, p.image,
+           p.owner_profile_id, p.created_at, p.updated_at
+    FROM pet_profiles p
+    INNER JOIN clinic_owner_profiles cop ON cop.owner_profile_id = p.owner_profile_id
+    WHERE cop.clinic_id = :clinic_id AND p.id = :id;
 """
 
 
@@ -100,3 +117,22 @@ class PetProfilesRepository(BaseRepository):
             return None
 
         return deleted_pet["id"]
+
+    async def list_pet_profiles_for_clinic(
+            self, *, clinic_id: str, owner_profile_id: Optional[str] = None
+    ) -> List[PetProfileInDB]:
+        pet_records = await self.db.fetch_all(
+            query=LIST_PET_PROFILES_FOR_CLINIC_QUERY,
+            values={"clinic_id": clinic_id, "owner_profile_id": owner_profile_id},
+        )
+        return [PetProfileInDB(**pet_record) for pet_record in pet_records]
+
+    async def get_pet_by_id_for_clinic(self, *, id: str, clinic_id: str) -> Optional[PetProfileInDB]:
+        pet_record = await self.db.fetch_one(
+            query=GET_PET_BY_ID_FOR_CLINIC_QUERY, values={"id": id, "clinic_id": clinic_id}
+        )
+
+        if not pet_record:
+            return None
+
+        return PetProfileInDB(**pet_record)

@@ -39,3 +39,7 @@ class PetProfileInDB(IDModelMixin, PetProfileBase, DateTimeModelMixin):
 
 class PetProfilePublic(PetProfileInDB):
     owner_profile_id: Optional["str | OwnerProfilePublic"] = None
+
+
+class ClinicPetProfileCreate(PetProfileCreate):
+    owner_profile_id: str
