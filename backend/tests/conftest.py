@@ -8,6 +8,7 @@ from httpx import AsyncClient, ASGITransport
 pytest_plugins = [
     "tests._fixtures.users",
     "tests._fixtures.database",
+    "tests._fixtures.profiles",
     "tests._fixtures.services"
 ]
 
@@ -21,4 +22,3 @@ async def client(app: FastAPI) -> AsyncGenerator[AsyncClient, Any]:
                 headers={"Content-Type": "application/json"}
         ) as client:
             yield client
-

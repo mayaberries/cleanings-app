@@ -4,12 +4,12 @@ from typing import Optional, Type
 import bcrypt
 import jwt
 from fastapi.exceptions import HTTPException
-from passlib.context import CryptContext
 from pydantic import ValidationError
 from starlette import status
 
-from app.core.config import SECRET_KEY, JWT_ALGORITHM, JWT_AUDIENCE, ACCESS_TOKEN_EXPIRE_MINUTES
-from app.models.token import JWTMeta, JWTCreds, JWTPayload
+from app.core.config import SECRET_KEY, JWT_ALGORITHM, JWT_AUDIENCE, ACCESS_TOKEN_EXPIRE_MINUTES, \
+    PROFILE_CLAIM_AUDIENCE, PROFILE_CLAIM_TOKEN_EXPIRE_MINUTES
+from app.models.token import JWTMeta, JWTCreds, JWTPayload, ProfileClaimToken
 from app.models.user import UserPasswordUpdate, UserBase
 
 
@@ -80,3 +80,35 @@ class AuthService:
                 headers={"WWW-Authenticate": "Bearer"},
             )
         return payload.username
+
+    def create_profile_claim_token(
+            self,
+            *,
+            profile_id: str,
+            secret_key: str = str(SECRET_KEY),
+            audience: str = PROFILE_CLAIM_AUDIENCE,
+            expires_in: int = PROFILE_CLAIM_TOKEN_EXPIRE_MINUTES,
+    ) -> str:
+        now = datetime.now(timezone.utc)
+
+        token_payload = ProfileClaimToken(
+            profile_id=profile_id,
+            aud=audience,
+            iat=datetime.timestamp(now),
+            exp=datetime.timestamp(now + timedelta(minutes=expires_in)),
+        )
+
+        return jwt.encode(token_payload.model_dump(), secret_key, algorithm=JWT_ALGORITHM)
+
+    def get_profile_id_from_claim_token(self, *, token: str, secret_key: str = str(SECRET_KEY)) -> str:
+        try:
+            decoded_token = jwt.decode(
+                token, str(secret_key), audience=PROFILE_CLAIM_AUDIENCE, algorithms=[JWT_ALGORITHM]
+            )
+            payload = ProfileClaimToken(**decoded_token)
+        except (jwt.PyJWTError, ValidationError):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Could not validate claim token.",
+            )
+        return payload.profile_id

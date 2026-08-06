@@ -3,7 +3,9 @@ from fastapi.security import OAuth2PasswordRequestForm
 from starlette.status import HTTP_201_CREATED, HTTP_401_UNAUTHORIZED, HTTP_404_NOT_FOUND
 
 from app.api.dependencies.database import get_repository
+from app.api.dependencies.profiles import get_profile_from_claim_token
 from app.models.user import UserCreate, UserInDB, UserPublic
+from app.models.owner_profile import OwnerProfileInDB
 
 from app.db.repositories.users import UsersRepository
 from app.models.token import AccessToken
@@ -21,8 +23,28 @@ async def register_new_user(
     created_user = await user_repo.register_new_user(new_user=new_user)
 
     access_token = AccessToken(
-        access_token=auth_service.create_access_token_for_user(
-            user=created_user),
+        access_token=auth_service.create_access_token_for_user(user=created_user),
+        token_type="bearer"
+    )
+
+    return created_user.model_copy(update={"access_token": access_token})
+
+
+@router.post("/claim/", response_model=UserPublic, name="users:claim-profile", status_code=HTTP_201_CREATED)
+async def claim_owner_profile(
+        new_user: UserCreate = Body(..., embed=False),
+        profile: OwnerProfileInDB = Depends(get_profile_from_claim_token),
+        user_repo: UsersRepository = Depends(get_repository(UsersRepository)),
+) -> UserPublic:
+    """Turns an account-less owner profile (created by a clinic, or through
+    the embeddable widget) into a real login — the ?token= query param is
+    what proves the caller was the intended recipient of that profile."""
+    created_user = await user_repo.register_user_for_existing_profile(
+        new_user=new_user, existing_profile_id=profile.id
+    )
+
+    access_token = AccessToken(
+        access_token=auth_service.create_access_token_for_user(user=created_user),
         token_type="bearer"
     )
 
@@ -44,8 +66,7 @@ async def user_login_with_email_and_password(
         )
 
     access_token = AccessToken(
-        access_token=auth_service.create_access_token_for_user(
-            user=user),
+        access_token=auth_service.create_access_token_for_user(user=user),
         token_type="bearer"
     )
 

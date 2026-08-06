@@ -31,3 +31,8 @@ DATABASE_URL = config(
     cast=DatabaseURL,
     default=f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_SERVER}:{POSTGRES_PORT}/{POSTGRES_DB}"
 )
+
+PROFILE_CLAIM_AUDIENCE = config("PROFILE_CLAIM_AUDIENCE", cast=str, default="phresh:profile-claim")
+PROFILE_CLAIM_TOKEN_EXPIRE_MINUTES = config(
+    "PROFILE_CLAIM_TOKEN_EXPIRE_MINUTES", cast=int, default=7 * 24 * 60  # one week
+)

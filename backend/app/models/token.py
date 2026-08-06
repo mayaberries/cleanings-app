@@ -1,6 +1,6 @@
 from pydantic import EmailStr
 
-from app.core.config import JWT_AUDIENCE
+from app.core.config import JWT_AUDIENCE, PROFILE_CLAIM_AUDIENCE
 from app.models.core import CoreModel
 
 
@@ -23,3 +23,15 @@ class JWTPayload(JWTMeta, JWTCreds):
 class AccessToken(CoreModel):
     access_token: str
     token_type: str
+
+
+class ProfileClaimToken(CoreModel):
+    profile_id: str
+    aud: str = PROFILE_CLAIM_AUDIENCE
+    iat: float
+    exp: float
+
+
+class ProfileClaimTokenResponse(CoreModel):
+    token: str
+    token_type: str = "profile_claim"
