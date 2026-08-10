@@ -49,7 +49,7 @@ PUBLIC_RATE_LIMIT_PER_KEY = config("PUBLIC_RATE_LIMIT_PER_KEY", cast=int, defaul
 # Requests per minute allowed from a single IP against the public surface,
 # regardless of which (or whether a valid) key it sent. Backstop against
 # key-enumeration attempts, not expected to be hit by real widget traffic.
-PUBLIC_RATE_LIMIT_PER_IP = config("PUBLIC_RATE_LIMIT_PER_IP", cast=int, default=100)
+PUBLIC_RATE_LIMIT_PER_IP = config("PUBLIC_RATE_LIMIT_PER_IP", cast=int, default=600)
 
 PROFILE_CLAIM_AUDIENCE = config("PROFILE_CLAIM_AUDIENCE", cast=str, default="phresh:profile-claim")
 PROFILE_CLAIM_TOKEN_EXPIRE_MINUTES = config(

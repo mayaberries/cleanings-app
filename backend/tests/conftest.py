@@ -10,7 +10,9 @@ pytest_plugins = [
     "tests._fixtures.database",
     "tests._fixtures.profiles",
     "tests._fixtures.pets",
-    "tests._fixtures.services"
+    "tests._fixtures.services",
+    "tests._fixtures.clinic_api_key",
+    "tests._fixtures.rate_limit",
 ]
 
 
