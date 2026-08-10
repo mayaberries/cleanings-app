@@ -2,17 +2,17 @@ from datetime import timedelta
 
 from fastapi import HTTPException, Depends, Path, status, Body
 
-from app.models.user import UserInDB
-from app.models.service import ServiceInDB
-from app.models.appointment import AppointmentInDB, AppointmentStatus, DEFAULT_APPOINTMENT_DURATION_MINUTES, \
-    AppointmentRequestIn
-
-from app.db.repositories.appointments import AppointmentsRepository
-
-from app.api.dependencies.database import get_repository
 from app.api.dependencies.auth import get_current_active_user
+from app.api.dependencies.database import get_repository
+from app.api.dependencies.pets import get_owner_profile_id_for_user
 from app.api.dependencies.services import get_service_by_id_from_path, user_can_manage_service, get_service_clinic_id
 from app.api.dependencies.users import get_user_by_username_from_path
+from app.db.repositories.appointments import AppointmentsRepository
+from app.db.repositories.pets import PetProfilesRepository
+from app.models.appointment import AppointmentInDB, AppointmentStatus, DEFAULT_APPOINTMENT_DURATION_MINUTES, \
+    AppointmentRequestIn
+from app.models.service import ServiceInDB
+from app.models.user import UserInDB
 
 
 async def get_appointment_for_service_from_user_by_path(
@@ -54,11 +54,22 @@ async def check_appointment_create_permissions(
         current_user: UserInDB = Depends(get_current_active_user),
         service: ServiceInDB = Depends(get_service_by_id_from_path),
         appointments_repo: AppointmentsRepository = Depends(get_repository(AppointmentsRepository)),
+        pets_repo: PetProfilesRepository = Depends(get_repository(PetProfilesRepository)),
 ) -> None:
     if user_can_manage_service(user=current_user, service=service):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Users are unable to request appointments for services they own.",
+        )
+
+    # NEW — same 404-not-403 opacity as the pet/owner dependencies
+    # elsewhere: don't confirm whether a given pet_id exists at all if it
+    # isn't the requesting user's own.
+    pet = await pets_repo.get_pet_by_id(id=appointment_in.pet_id)
+    if not pet or pet.owner_profile_id != get_owner_profile_id_for_user(user=current_user):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No pet found with that id.",
         )
 
     clinic_id = get_service_clinic_id(service)
@@ -68,10 +79,7 @@ async def check_appointment_create_permissions(
     if await appointments_repo.has_overlapping_confirmed_appointment(
             clinic_id=clinic_id, start_time=appointment_in.start_time, end_time=end_time
     ):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="This time is already booked.",
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="This time is already booked.")
 
 
 def check_appointment_list_permissions(

@@ -1,34 +1,36 @@
 from datetime import timedelta, datetime
 from typing import List, Optional, Union
 from uuid import uuid4
+
 from databases.core import Database
 
 from app.db.repositories.base import BaseRepository
+from app.db.repositories.pets import PetProfilesRepository
 from app.db.repositories.users import UsersRepository
-
 from app.models.appointment import (
     AppointmentCreate,
     AppointmentPublic,
     AppointmentInDB,
     AppointmentStatus, DEFAULT_APPOINTMENT_DURATION_MINUTES,
 )
+from app.models.pet_profile import PetProfilePublic
 from app.models.service import ServiceInDB
 from app.models.user import UserInDB
 
 CREATE_APPOINTMENT_FOR_SERVICE_QUERY = """
-    INSERT INTO appointments (id, service_id, user_id, status, start_time, end_time)
-    VALUES (:id, :service_id, :user_id, :status, :start_time, :end_time)
-    RETURNING id, service_id, user_id, status, start_time, end_time, created_at, updated_at;
+    INSERT INTO appointments (id, service_id, user_id, pet_id, status, start_time, end_time)
+    VALUES (:id, :service_id, :user_id, :pet_id, :status, :start_time, :end_time)
+    RETURNING id, service_id, user_id, pet_id, status, start_time, end_time, created_at, updated_at;
 """
 
 GET_APPOINTMENT_BY_ID_QUERY = """
-    SELECT id, service_id, user_id, status, start_time, end_time, created_at, updated_at
+    SELECT id, service_id, user_id, pet_id, status, start_time, end_time, created_at, updated_at
     FROM appointments
     WHERE id = :id;
 """
 
 LIST_APPOINTMENTS_FOR_SERVICE_QUERY = """
-    SELECT id, service_id, user_id, status, start_time, end_time, created_at, updated_at
+    SELECT id, service_id, user_id, pet_id, status, start_time, end_time, created_at, updated_at
     FROM appointments
     WHERE service_id = :service_id
     ORDER BY start_time;
@@ -37,7 +39,7 @@ LIST_APPOINTMENTS_FOR_SERVICE_QUERY = """
 # Replaces "does this service already have any appointment from this user" —
 # now it's just history, not an identity check.
 LIST_APPOINTMENTS_FOR_SERVICE_FROM_USER_QUERY = """
-    SELECT id, service_id, user_id, status, start_time, end_time, created_at, updated_at
+    SELECT id, service_id, user_id, pet_id, status, start_time, end_time, created_at, updated_at
     FROM appointments
     WHERE service_id = :service_id AND user_id = :user_id
     ORDER BY start_time DESC;
@@ -61,20 +63,20 @@ CONFIRM_APPOINTMENT_QUERY = """
     UPDATE appointments
     SET status = 'confirmed'
     WHERE id = :id
-    RETURNING id, service_id, user_id, status, start_time, end_time, created_at, updated_at;
+    RETURNING id, service_id, user_id, pet_id, status, start_time, end_time, created_at, updated_at;
 """
 
 CANCEL_APPOINTMENT_QUERY = """
     UPDATE appointments
     SET status = 'cancelled'
     WHERE id = :id
-    RETURNING id, service_id, user_id, status, start_time, end_time, created_at, updated_at;
+    RETURNING id, service_id, user_id, pet_id, status, start_time, end_time, created_at, updated_at;
 """
 
 WITHDRAW_APPOINTMENT_QUERY = """
     DELETE FROM appointments
     WHERE id = :id
-    RETURNING id, service_id, user_id, status, start_time, end_time, created_at, updated_at;
+    RETURNING id, service_id, user_id, pet_id, status, start_time, end_time, created_at, updated_at;
 """
 
 MARK_AS_COMPLETED_QUERY = """
@@ -88,6 +90,7 @@ class AppointmentsRepository(BaseRepository):
     def __init__(self, db: Database) -> None:
         super().__init__(db)
         self.users_repo = UsersRepository(db)
+        self.pets_repo = PetProfilesRepository(db)
 
     async def create_appointment_for_service(
             self, *, new_appointment: AppointmentCreate, service: ServiceInDB
@@ -102,6 +105,7 @@ class AppointmentsRepository(BaseRepository):
                 "id": str(uuid4()),
                 "service_id": new_appointment.service_id,
                 "user_id": new_appointment.user_id,
+                "pet_id": new_appointment.pet_id,  # NEW
                 "status": AppointmentStatus.requested.value,
                 "start_time": start_time,
                 "end_time": end_time,
@@ -165,7 +169,9 @@ class AppointmentsRepository(BaseRepository):
         return await self.db.execute(query=MARK_AS_COMPLETED_QUERY, values={"id": appointment.id})
 
     async def populate_appointment(self, *, appointment: AppointmentInDB) -> AppointmentPublic:
+        pet = await self.pets_repo.get_pet_by_id(id=appointment.pet_id)
         return AppointmentPublic(
             **appointment.model_dump(),
             user=await self.users_repo.get_user_by_id(user_id=appointment.user_id),
+            pet=PetProfilePublic(**pet.model_dump()) if pet else None,
         )

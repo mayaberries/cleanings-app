@@ -2,15 +2,19 @@ import random
 from typing import List, Callable
 
 import pytest
+from databases import Database
 from fastapi import FastAPI, status
 from httpx import AsyncClient
 
 from app.db.repositories.appointments import AppointmentsRepository
+from app.models.appointment import AppointmentCreate
 from app.models.appointment import AppointmentPublic
 from app.models.service import ServiceInDB
 from app.models.user import UserInDB
+from tests._fixtures.pets import create_pet_for_user
 
 pytestmark = pytest.mark.asyncio
+
 
 class TestAcceptAppointments:
     async def test_service_owner_can_accept_offer_succesfully(
@@ -72,9 +76,9 @@ class TestAcceptAppointments:
             test_service_with_appointments: ServiceInDB
     ) -> None:
         appts_repo = AppointmentsRepository(app.state._db)
+        pet = await create_pet_for_user(app.state._db, test_client_list[0], name="Overlap Pet")
         appointments = await appts_repo.list_appointments_for_service(service=test_service_with_appointments)
 
-        # confirm the first one
         response = await clinic_a_admin_client.put(
             app.url_path_for(
                 "appointments:confirm-appointment",
@@ -84,12 +88,11 @@ class TestAcceptAppointments:
         )
         assert response.status_code == status.HTTP_200_OK
 
-        # manufacture a second appointment that overlaps the first, then try
-        # to confirm it too
         overlapping = await appts_repo.create_appointment_for_service(
-            new_appointment=__import__("app.models.appointment", fromlist=["AppointmentCreate"]).AppointmentCreate(
+            new_appointment=AppointmentCreate(
                 service_id=test_service_with_appointments.id,
                 user_id=test_client_list[0].id,
+                pet_id=pet.id,
                 start_time=appointments[0].start_time,
             ),
             service=test_service_with_appointments,
@@ -102,7 +105,6 @@ class TestAcceptAppointments:
                 appointment_id=overlapping.id,
             )
         )
-
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     async def test_confirming_one_offer_does_not_affect_others(

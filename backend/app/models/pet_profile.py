@@ -43,3 +43,25 @@ class PetProfilePublic(PetProfileInDB):
 
 class ClinicPetProfileCreate(PetProfileCreate):
     owner_profile_id: str
+
+
+from pydantic import model_validator
+
+
+class PublicPetInput(CoreModel):
+    """Input for attaching a pet to a public/guest booking — either an
+    existing pet already registered at this clinic, or a brand-new one
+    created under the resolved guest owner. Same XOR shape as
+    ClinicOwnerProfileRegistration, applied to pets instead of owners."""
+    pet_id: Optional[str] = None
+    new_pet: Optional[PetProfileCreate] = None
+
+    @model_validator(mode="after")
+    def exactly_one_pet_source(self) -> "PublicPetInput":
+        has_id = self.pet_id is not None
+        has_new = self.new_pet is not None
+        if has_id == has_new:
+            raise ValueError(
+                "Provide exactly one of pet_id (existing pet) or new_pet (to create one)."
+            )
+        return self

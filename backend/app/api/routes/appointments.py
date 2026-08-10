@@ -35,7 +35,10 @@ async def create_appointment(
 ) -> AppointmentPublic:
     created = await appointments_repo.create_appointment_for_service(
         new_appointment=AppointmentCreate(
-            service_id=service.id, user_id=current_user.id, start_time=appointment_in.start_time
+            service_id=service.id,
+            user_id=current_user.id,
+            pet_id=appointment_in.pet_id,
+            start_time=appointment_in.start_time,
         ),
         service=service,
     )
