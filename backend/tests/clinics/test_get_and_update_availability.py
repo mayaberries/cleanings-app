@@ -11,7 +11,7 @@ pytestmark = pytest.mark.asyncio
 
 class TestGetClinicAvailability:
     async def test_new_clinic_is_provisioned_with_default_hours_at_creation(
-            self, client: AsyncClient, db: Database, user_clinic_a_admin: UserInDB
+            self, db: Database, user_clinic_a_admin: UserInDB
     ) -> None:
         availability_repo = ClinicAvailabilityRepository(db)
         availability = await availability_repo.get_availability_by_clinic_id(

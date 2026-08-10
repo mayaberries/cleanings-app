@@ -17,11 +17,10 @@ pytest_plugins = [
 
 
 @pytest_asyncio.fixture
-async def client(app: FastAPI) -> AsyncGenerator[AsyncClient, Any]:
-    async with LifespanManager(app):
-        async with AsyncClient(
-                transport=ASGITransport(app=app),
-                base_url="http://testserver",
-                headers={"Content-Type": "application/json"}
-        ) as client:
-            yield client
+async def client(initialized_app: FastAPI) -> AsyncGenerator[AsyncClient, Any]:
+    async with AsyncClient(
+            transport=ASGITransport(app=initialized_app),
+            base_url="http://testserver",
+            headers={"Content-Type": "application/json"}
+    ) as client:
+        yield client
