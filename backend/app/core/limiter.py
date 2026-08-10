@@ -7,7 +7,8 @@ from app.core.config import (
     REDIS_URL,
     PUBLIC_RATE_LIMIT_PER_KEY,
     PUBLIC_RATE_LIMIT_PER_IP,
-    CLINIC_AVAILABILITY_RATE_LIMIT_PER_CLINIC,
+    CLINIC_AVAILABILITY_READ_RATE_LIMIT_PER_CLINIC,
+    CLINIC_AVAILABILITY_WRITE_RATE_LIMIT_PER_CLINIC,
 )
 
 
@@ -22,10 +23,15 @@ def _build_storage() -> Storage:
 # ("clinic-key" vs "ip"), so they land in different buckets even though
 # they share one backend -- no need for two separate storage instances.
 _storage = _build_storage()
-_clinic_availability_limit: RateLimitItem = parse(f"{CLINIC_AVAILABILITY_RATE_LIMIT_PER_CLINIC}/minute")
 _strategy = MovingWindowRateLimiter(_storage)
 _key_limit: RateLimitItem = parse(f"{PUBLIC_RATE_LIMIT_PER_KEY}/minute")
 _ip_limit: RateLimitItem = parse(f"{PUBLIC_RATE_LIMIT_PER_IP}/minute")
+_clinic_availability_read_limit: RateLimitItem = parse(
+    f"{CLINIC_AVAILABILITY_READ_RATE_LIMIT_PER_CLINIC}/minute"
+)
+_clinic_availability_write_limit: RateLimitItem = parse(
+    f"{CLINIC_AVAILABILITY_WRITE_RATE_LIMIT_PER_CLINIC}/minute"
+)
 
 
 def get_client_ip(request: Request) -> str:
@@ -79,28 +85,46 @@ def enforce_public_rate_limits(request: Request) -> None:
         )
 
 
-def enforce_clinic_availability_rate_limits(request: Request, clinic_id: str = Path(...)) -> None:
-    """
-    Router-level dependency for /clinics/{clinic_id}/availability (see
-    api/routes/clinic_availability.py). Same two-tier shape as
-    enforce_public_rate_limits, but the primary tier is scoped to
-    clinic_id (from the path) rather than a clinic key -- the closest
-    thing this route has to a caller identity, since GET is open. Shares
-    the same "ip" bucket as the public surface as a blanket backstop
-    against one IP hammering any part of the API, not just this route --
-    that's a deliberate reuse, not an accident of copy-paste.
-    """
-    if not _strategy.hit(_clinic_availability_limit, "clinic-availability", clinic_id):
+def _enforce_clinic_availability_limit(request: Request, clinic_id: str, limit: RateLimitItem, bucket: str) -> None:
+    if not _strategy.hit(limit, bucket, clinic_id):
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail="Rate limit exceeded for this clinic's availability endpoint. Please slow down.",
         )
-
+    # Shared IP backstop across the whole API, GET and PUT and the public
+    # surface alike -- deliberately the one bucket that IS shared, since
+    # its job is "stop one IP hammering anything," not per-resource budget.
     if not _strategy.hit(_ip_limit, "ip", get_client_ip(request)):
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail="Rate limit exceeded for this IP address. Please slow down.",
         )
+
+
+def enforce_clinic_availability_read_rate_limits(request: Request, clinic_id: str = Path(...)) -> None:
+    """GET /clinics/{clinic_id}/availability -- unauthenticated, so
+    clinic_id from the path is the only identity there is to key on."""
+    _enforce_clinic_availability_limit(
+        request, clinic_id, _clinic_availability_read_limit, "clinic-availability-read"
+    )
+
+
+# TODO(rate-limit): the write-side limiter is keyed on clinic_id (from the
+# path), not on the authenticated caller -- so an unauthenticated request
+# with a guessed/known clinic_id still consumes write budget even though
+# check_clinic_modification_permissions will 403 it right after. A flood of
+# such requests could still exhaust the real admin's write budget before
+# the 403 ever gets checked. Fix: key this limiter on current_user.id
+# instead, since PUT is JWT-authed anyway -- add
+# current_user: UserInDB = Depends(get_current_active_user) to this
+# function's signature and hit the bucket with current_user.id.
+def enforce_clinic_availability_write_rate_limits(request: Request, clinic_id: str = Path(...)) -> None:
+    """PUT /clinics/{clinic_id}/availability -- separate bucket from the
+    read tier on purpose, see app/core/config.py, so public read traffic
+    can never exhaust the clinic admin's own write budget."""
+    _enforce_clinic_availability_limit(
+        request, clinic_id, _clinic_availability_write_limit, "clinic-availability-write"
+    )
 
 
 def reset_public_rate_limits() -> None:

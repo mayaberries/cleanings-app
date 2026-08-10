@@ -4,7 +4,6 @@ from databases import DatabaseURL
 from starlette.config import Config
 from starlette.datastructures import Secret
 
-
 config = Config(".env")
 
 PROJECT_NAME = "Phresh"
@@ -15,7 +14,7 @@ SECRET_KEY = config("SECRET_KEY", cast=Secret)
 ACCESS_TOKEN_EXPIRE_MINUTES = config(
     "ACCESS_TOKEN_EXPIRE_MINUTES",
     cast=int,
-    default=7*24*60  # one week
+    default=7 * 24 * 60  # one week
 )
 JWT_ALGORITHM = config("JWT_ALGORITHM", cast=str, default="HS256")
 JWT_AUDIENCE = config("JWT_AUDIENCE", cast=str, default="phresh:auth")
@@ -26,7 +25,6 @@ POSTGRES_PASSWORD = config("POSTGRES_PASSWORD", cast=Secret)
 POSTGRES_SERVER = config("POSTGRES_SERVER", cast=str, default="localhost")
 POSTGRES_PORT = config("POSTGRES_PORT", cast=str, default="5432")
 POSTGRES_DB = config("POSTGRES_DB", cast=str)
-
 
 DATABASE_URL = config(
     "DATABASE_URL",
@@ -63,6 +61,9 @@ PROFILE_CLAIM_TOKEN_EXPIRE_MINUTES = config(
 # so unlike the JWT-authed rest of the staff API there's no caller
 # identity to key a limiter on. clinic_id from the path stands in for
 # that instead.
-CLINIC_AVAILABILITY_RATE_LIMIT_PER_CLINIC = config(
-    "CLINIC_AVAILABILITY_RATE_LIMIT_PER_CLINIC", cast=int, default=60
+CLINIC_AVAILABILITY_READ_RATE_LIMIT_PER_CLINIC = config(
+    "CLINIC_AVAILABILITY_READ_RATE_LIMIT_PER_CLINIC", cast=int, default=60
+)
+CLINIC_AVAILABILITY_WRITE_RATE_LIMIT_PER_CLINIC = config(
+    "CLINIC_AVAILABILITY_WRITE_RATE_LIMIT_PER_CLINIC", cast=int, default=20
 )
