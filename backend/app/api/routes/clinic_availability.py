@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Body, Depends
 
+from app.core.limiter import enforce_clinic_availability_rate_limits
 from app.models.clinics.clinic import ClinicInDB
 from app.models.clinics.clinic_availability import ClinicAvailabilityInDB, ClinicAvailabilityUpdate
 from app.db.repositories.clinic_availability import ClinicAvailabilityRepository
@@ -7,7 +8,7 @@ from app.db.repositories.clinic_availability import ClinicAvailabilityRepository
 from app.api.dependencies.database import get_repository
 from app.api.dependencies.clinics import get_clinic_by_id_from_path, check_clinic_modification_permissions
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(enforce_clinic_availability_rate_limits)])
 
 
 @router.get("/", response_model=ClinicAvailabilityInDB, name="clinic-availability:get-availability")

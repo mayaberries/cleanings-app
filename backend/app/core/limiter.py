@@ -1,23 +1,14 @@
-from fastapi import HTTPException, Request, status
+from fastapi import HTTPException, Path, Request, status
 from limits import RateLimitItem, parse
 from limits.storage import MemoryStorage, Storage, storage_from_string
 from limits.strategies import MovingWindowRateLimiter
 
-from app.core.config import REDIS_URL, PUBLIC_RATE_LIMIT_PER_KEY, PUBLIC_RATE_LIMIT_PER_IP
-
-"""
-NOTE: this replaces an earlier version of this file built on two separate
-slowapi Limiter instances, applied to routes as two stacked @limit(...)
-decorators. That approach doesn't actually enforce both tiers -- slowapi
-sets request.state.view_rate_limit after the first (outermost) decorator's
-check runs, and treats that attribute's presence as "a rate-limit check
-already happened this request," silently skipping every decorator stacked
-underneath it. Whichever decorator was written first is the only one that
-ever really enforced anything; the other was dead code that happened to
-look correct. Calling into `limits` directly (slowapi's own underlying
-dependency, already installed transitively) sidesteps this -- there's no
-per-request short-circuit, so both tiers are genuinely independent checks.
-"""
+from app.core.config import (
+    REDIS_URL,
+    PUBLIC_RATE_LIMIT_PER_KEY,
+    PUBLIC_RATE_LIMIT_PER_IP,
+    CLINIC_AVAILABILITY_RATE_LIMIT_PER_CLINIC,
+)
 
 
 def _build_storage() -> Storage:
@@ -31,8 +22,8 @@ def _build_storage() -> Storage:
 # ("clinic-key" vs "ip"), so they land in different buckets even though
 # they share one backend -- no need for two separate storage instances.
 _storage = _build_storage()
+_clinic_availability_limit: RateLimitItem = parse(f"{CLINIC_AVAILABILITY_RATE_LIMIT_PER_CLINIC}/minute")
 _strategy = MovingWindowRateLimiter(_storage)
-
 _key_limit: RateLimitItem = parse(f"{PUBLIC_RATE_LIMIT_PER_KEY}/minute")
 _ip_limit: RateLimitItem = parse(f"{PUBLIC_RATE_LIMIT_PER_IP}/minute")
 
@@ -82,6 +73,30 @@ def enforce_public_rate_limits(request: Request) -> None:
         )
 
     if not _strategy.hit(_ip_limit, "ip", client_ip):
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Rate limit exceeded for this IP address. Please slow down.",
+        )
+
+
+def enforce_clinic_availability_rate_limits(request: Request, clinic_id: str = Path(...)) -> None:
+    """
+    Router-level dependency for /clinics/{clinic_id}/availability (see
+    api/routes/clinic_availability.py). Same two-tier shape as
+    enforce_public_rate_limits, but the primary tier is scoped to
+    clinic_id (from the path) rather than a clinic key -- the closest
+    thing this route has to a caller identity, since GET is open. Shares
+    the same "ip" bucket as the public surface as a blanket backstop
+    against one IP hammering any part of the API, not just this route --
+    that's a deliberate reuse, not an accident of copy-paste.
+    """
+    if not _strategy.hit(_clinic_availability_limit, "clinic-availability", clinic_id):
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Rate limit exceeded for this clinic's availability endpoint. Please slow down.",
+        )
+
+    if not _strategy.hit(_ip_limit, "ip", get_client_ip(request)):
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail="Rate limit exceeded for this IP address. Please slow down.",

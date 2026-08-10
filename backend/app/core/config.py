@@ -55,3 +55,14 @@ PROFILE_CLAIM_AUDIENCE = config("PROFILE_CLAIM_AUDIENCE", cast=str, default="phr
 PROFILE_CLAIM_TOKEN_EXPIRE_MINUTES = config(
     "PROFILE_CLAIM_TOKEN_EXPIRE_MINUTES", cast=int, default=7 * 24 * 60  # one week
 )
+# --- Clinic-facing internal API -----------------------------------------
+
+# Requests per minute allowed against a single clinic's availability
+# resource. GET on that route carries no auth (mirrors GET
+# /clinics/{clinic_id}/ today -- see api/routes/clinic_availability.py),
+# so unlike the JWT-authed rest of the staff API there's no caller
+# identity to key a limiter on. clinic_id from the path stands in for
+# that instead.
+CLINIC_AVAILABILITY_RATE_LIMIT_PER_CLINIC = config(
+    "CLINIC_AVAILABILITY_RATE_LIMIT_PER_CLINIC", cast=int, default=60
+)
