@@ -1,13 +1,13 @@
 from fastapi import APIRouter, Body, Depends
 from starlette.status import HTTP_201_CREATED
 
-from app.models.clinic_owner_profile import (
+from app.models.clinics.clinic_owner_profile import (
     ClinicOwnerProfileInDB,
     ClinicOwnerProfilePublic,
     ClinicOwnerProfileRegistration,
     ClinicOwnerProfileUpdate,
 )
-from app.models.user import UserInDB
+from app.models.auth.user import UserInDB
 from app.db.repositories.clinic_owner_profiles import ClinicOwnerProfilesRepository
 
 from app.api.dependencies.database import get_repository

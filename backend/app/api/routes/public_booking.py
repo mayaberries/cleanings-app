@@ -13,16 +13,16 @@ from app.db.repositories.clinic_owner_profiles import ClinicOwnerProfilesReposit
 from app.db.repositories.pets import PetProfilesRepository
 from app.db.repositories.services import ServicesRepository
 from app.db.repositories.users import UsersRepository
-from app.models.appointment import (
+from app.models.appointments.appointment import (
     PublicAppointmentCreate,
     AppointmentCreate,
     AppointmentPublic,
     DEFAULT_APPOINTMENT_DURATION_MINUTES,
 )
-from app.models.clinic import ClinicInDB
-from app.models.clinic_owner_profile import ClinicOwnerProfileRegistration
-from app.models.pet_profile import PetProfilePublic
-from app.models.service import ServicePublic
+from app.models.clinics.clinic import ClinicInDB
+from app.models.clinics.clinic_owner_profile import ClinicOwnerProfileRegistration
+from app.models.profiles.pet_profile import PetProfilePublic
+from app.models.services.service import ServicePublic
 
 # Rate limiting applied once, router-wide, rather than per-route -- see
 # app/core/limiter.py for why this replaced two stacked slowapi decorators.

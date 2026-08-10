@@ -1,14 +1,14 @@
-from fastapi import Depends, APIRouter, HTTPException, Path, Body
+from fastapi import Depends, APIRouter, HTTPException, Body
 from fastapi.security import OAuth2PasswordRequestForm
-from starlette.status import HTTP_201_CREATED, HTTP_401_UNAUTHORIZED, HTTP_404_NOT_FOUND
+from starlette.status import HTTP_201_CREATED, HTTP_401_UNAUTHORIZED
 
 from app.api.dependencies.database import get_repository
 from app.api.dependencies.profiles import get_profile_from_claim_token
-from app.models.user import UserCreate, UserInDB, UserPublic
-from app.models.owner_profile import OwnerProfileInDB
+from app.models.auth.user import UserCreate, UserInDB, UserPublic
+from app.models.profiles.owner_profile import OwnerProfileInDB
 
 from app.db.repositories.users import UsersRepository
-from app.models.token import AccessToken
+from app.models.auth.token import AccessToken
 from app.services import auth_service
 from app.api.dependencies.auth import get_current_active_user
 

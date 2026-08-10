@@ -4,7 +4,7 @@ import pytest
 from fastapi import FastAPI, status
 from httpx import AsyncClient
 
-from app.models.service import ServiceInDB
+from app.models.services.service import ServiceInDB
 
 pytestmark = pytest.mark.asyncio
 

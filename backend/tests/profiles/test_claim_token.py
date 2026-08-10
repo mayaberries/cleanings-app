@@ -6,10 +6,10 @@ from httpx import AsyncClient
 from app.core.config import SECRET_KEY
 from app.db.repositories.clinic_owner_profiles import ClinicOwnerProfilesRepository
 from app.db.repositories.profiles import OwnerProfilesRepository
-from app.models.clinic_owner_profile import ClinicOwnerProfileRegistration
-from app.models.owner_profile import OwnerProfileInDB
-from app.models.token import ProfileClaimTokenResponse
-from app.models.user import UserInDB
+from app.models.clinics.clinic_owner_profile import ClinicOwnerProfileRegistration
+from app.models.profiles.owner_profile import OwnerProfileInDB
+from app.models.auth.token import ProfileClaimTokenResponse
+from app.models.auth.user import UserInDB
 from app.services import auth_service
 
 pytestmark = pytest.mark.asyncio

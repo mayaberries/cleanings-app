@@ -1,13 +1,12 @@
 from fastapi import APIRouter, Body, Depends
 from starlette.status import HTTP_201_CREATED
 
-from app.models.clinic import ClinicCreate, ClinicUpdate, ClinicInDB, ClinicPublic
-from app.models.user import UserInDB
-from app.db.repositories.clinics import ClinicsRepository
-
-from app.api.dependencies.database import get_repository
 from app.api.dependencies.auth import get_current_active_user
 from app.api.dependencies.clinics import get_clinic_by_id_from_path, check_clinic_modification_permissions
+from app.api.dependencies.database import get_repository
+from app.db.repositories.clinics import ClinicsRepository
+from app.models.auth.user import UserInDB
+from app.models.clinics.clinic import ClinicCreate, ClinicUpdate, ClinicInDB
 
 router = APIRouter()
 

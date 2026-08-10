@@ -2,8 +2,8 @@ import pytest
 from fastapi import FastAPI, status
 from pydantic import HttpUrl
 
-from app.models.owner_profile import OwnerProfilePublic
-from app.models.user import UserInDB
+from app.models.profiles.owner_profile import OwnerProfilePublic
+from app.models.auth.user import UserInDB
 
 pytestmark = pytest.mark.asyncio
 

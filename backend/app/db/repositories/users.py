@@ -9,8 +9,8 @@ from starlette.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 
 from app.db.repositories.base import BaseRepository
 from app.db.repositories.profiles import OwnerProfilesRepository
-from app.models.owner_profile import OwnerProfileCreate, OwnerProfilePublic, OwnerProfileUpdate
-from app.models.user import UserCreate, UserPublic, UserInDB, UserRole
+from app.models.profiles.owner_profile import OwnerProfileCreate, OwnerProfilePublic, OwnerProfileUpdate
+from app.models.auth.user import UserCreate, UserPublic, UserInDB, UserRole
 from app.services import auth_service
 
 USER_COLUMNS = (

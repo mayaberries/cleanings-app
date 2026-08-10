@@ -5,9 +5,9 @@ from typing import Optional
 from pydantic import EmailStr, field_validator
 
 from app.models.core import CoreModel, DateTimeModelMixin, IDModelMixin
-from app.models.user import UserPublic
-from app.models.service import ServicePublic
-from app.models.pet_profile import PetProfilePublic, PublicPetInput
+from app.models.auth.user import UserPublic
+from app.models.services.service import ServicePublic
+from app.models.profiles.pet_profile import PetProfilePublic, PublicPetInput
 
 
 class AppointmentStatus(str, Enum):

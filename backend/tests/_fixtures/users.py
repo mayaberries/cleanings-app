@@ -7,8 +7,8 @@ from httpx import AsyncClient
 from app.core.config import SECRET_KEY, JWT_TOKEN_PREFIX
 from app.db.repositories.users import UsersRepository
 from app.db.repositories.clinics import ClinicsRepository
-from app.models.clinic import ClinicCreate
-from app.models.user import UserCreate, UserInDB, UserRole
+from app.models.clinics.clinic import ClinicCreate
+from app.models.auth.user import UserCreate, UserInDB, UserRole
 from app.services import auth_service
 
 

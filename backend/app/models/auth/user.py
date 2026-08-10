@@ -4,8 +4,8 @@ from typing import Optional
 from pydantic import EmailStr, constr, field_validator
 
 from app.models.core import DateTimeModelMixin, IDModelMixin, CoreModel
-from app.models.token import AccessToken
-from app.models.owner_profile import OwnerProfilePublic as ProfilePublic
+from app.models.auth.token import AccessToken
+from app.models.profiles.owner_profile import OwnerProfilePublic as ProfilePublic
 
 
 def validate_username(username: str) -> str:

@@ -7,7 +7,7 @@ from starlette.status import (
 )
 
 from app.db.repositories.users import UsersRepository
-from app.models.user import UserPublic, UserCreate
+from app.models.auth.user import UserPublic, UserCreate
 from app.services import auth_service
 
 pytestmark = pytest.mark.asyncio

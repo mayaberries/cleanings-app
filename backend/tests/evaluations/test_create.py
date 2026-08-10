@@ -4,9 +4,9 @@ from typing import Callable
 import pytest
 from fastapi import FastAPI, status
 
-from app.models.evaluation import EvaluationCreate, EvaluationInDB
-from app.models.service import ServiceInDB
-from app.models.user import UserInDB
+from app.models.appointments.evaluation import EvaluationCreate, EvaluationInDB
+from app.models.services.service import ServiceInDB
+from app.models.auth.user import UserInDB
 from tests._helpers.get_appointment import get_appointment_for
 
 pytestmark = pytest.mark.asyncio

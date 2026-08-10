@@ -9,10 +9,10 @@ from app.api.dependencies.services import get_service_by_id_from_path, user_can_
 from app.api.dependencies.users import get_user_by_username_from_path
 from app.db.repositories.appointments import AppointmentsRepository
 from app.db.repositories.pets import PetProfilesRepository
-from app.models.appointment import AppointmentInDB, AppointmentStatus, DEFAULT_APPOINTMENT_DURATION_MINUTES, \
+from app.models.appointments.appointment import AppointmentInDB, AppointmentStatus, DEFAULT_APPOINTMENT_DURATION_MINUTES, \
     AppointmentRequestIn
-from app.models.service import ServiceInDB
-from app.models.user import UserInDB
+from app.models.services.service import ServiceInDB
+from app.models.auth.user import UserInDB
 
 
 async def get_appointment_for_service_from_user_by_path(

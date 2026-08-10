@@ -1,8 +1,8 @@
 from uuid import uuid4
 
 from app.db.repositories.base import BaseRepository
-from app.models.owner_profile import OwnerProfileCreate, OwnerProfileUpdate, OwnerProfileInDB
-from app.models.user import UserInDB
+from app.models.profiles.owner_profile import OwnerProfileCreate, OwnerProfileUpdate, OwnerProfileInDB
+from app.models.auth.user import UserInDB
 
 CREATE_OWNER_PROFILE_QUERY = """
     INSERT INTO owner_profiles (id, full_name, phone_number, bio, image, user_id)

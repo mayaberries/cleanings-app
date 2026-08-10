@@ -2,9 +2,9 @@ from typing import List, Optional
 from databases.core import Database
 from app.db.repositories.base import BaseRepository
 from app.db.repositories.appointments import AppointmentsRepository
-from app.models.appointment import AppointmentInDB
-from app.models.evaluation import EvaluationAggregate, EvaluationCreate, EvaluationInDB
-from app.models.user import UserInDB
+from app.models.appointments.appointment import AppointmentInDB
+from app.models.appointments.evaluation import EvaluationAggregate, EvaluationCreate, EvaluationInDB
+from app.models.auth.user import UserInDB
 
 CREATE_EVALUATION_FOR_APPOINTMENT_QUERY = """
     INSERT INTO service_to_cleaner_evaluations (

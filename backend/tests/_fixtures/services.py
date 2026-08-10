@@ -8,10 +8,10 @@ from databases import Database
 from app.db.repositories.evaluations import EvaluationsRepository
 from app.db.repositories.appointments import AppointmentsRepository
 from app.db.repositories.services import ServicesRepository
-from app.models.evaluation import EvaluationCreate
-from app.models.appointment import AppointmentCreate
-from app.models.service import ServiceCreate, ServiceInDB, ServiceUpdate
-from app.models.user import UserInDB
+from app.models.appointments.evaluation import EvaluationCreate
+from app.models.appointments.appointment import AppointmentCreate
+from app.models.services.service import ServiceCreate, ServiceInDB, ServiceUpdate
+from app.models.auth.user import UserInDB
 from tests._fixtures.pets import create_pet_for_user
 
 

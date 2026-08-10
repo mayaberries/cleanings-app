@@ -2,11 +2,11 @@ import pytest_asyncio
 from databases import Database
 
 from app.db.repositories.profiles import OwnerProfilesRepository
-from app.models.owner_profile import OwnerProfileCreate, OwnerProfileInDB
+from app.models.profiles.owner_profile import OwnerProfileCreate, OwnerProfileInDB
 
 from app.db.repositories.clinic_owner_profiles import ClinicOwnerProfilesRepository
-from app.models.clinic_owner_profile import ClinicOwnerProfileRegistration
-from app.models.user import UserInDB
+from app.models.clinics.clinic_owner_profile import ClinicOwnerProfileRegistration
+from app.models.auth.user import UserInDB
 
 
 @pytest_asyncio.fixture

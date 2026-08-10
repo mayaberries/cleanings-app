@@ -4,7 +4,7 @@ from uuid import uuid4
 from databases.core import Database
 
 from app.db.repositories.base import BaseRepository
-from app.models.pet_profile import PetProfileCreate, PetProfileUpdate, PetProfileInDB
+from app.models.profiles.pet_profile import PetProfileCreate, PetProfileUpdate, PetProfileInDB
 
 CREATE_PET_QUERY = """
     INSERT INTO pet_profiles (id, name, species, breed, birth_date, notes, image, owner_profile_id)

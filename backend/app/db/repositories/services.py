@@ -4,11 +4,11 @@ from databases.core import Database
 from fastapi.exceptions import HTTPException
 from starlette import status
 from app.db.repositories.base import BaseRepository
-from app.models.clinic import ClinicPublic
-from app.models.service import ServiceCreate, ServicePublic, ServiceUpdate, ServiceInDB
+from app.models.clinics.clinic import ClinicPublic
+from app.models.services.service import ServiceCreate, ServicePublic, ServiceUpdate, ServiceInDB
 from uuid import uuid4
 
-from app.models.user import UserInDB
+from app.models.auth.user import UserInDB
 from app.db.repositories.clinics import ClinicsRepository
 
 CREATE_SERVICE_QUERY = """

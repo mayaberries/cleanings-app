@@ -16,9 +16,9 @@ from app.api.dependencies.auth import get_current_active_user
 from app.api.dependencies.database import get_repository
 from app.api.dependencies.services import get_service_by_id_from_path
 from app.db.repositories.appointments import AppointmentsRepository
-from app.models.appointment import AppointmentCreate, AppointmentInDB, AppointmentPublic, AppointmentRequestIn
-from app.models.service import ServiceInDB
-from app.models.user import UserInDB
+from app.models.appointments.appointment import AppointmentCreate, AppointmentInDB, AppointmentPublic, AppointmentRequestIn
+from app.models.services.service import ServiceInDB
+from app.models.auth.user import UserInDB
 
 router = APIRouter()
 

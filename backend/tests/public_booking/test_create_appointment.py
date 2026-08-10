@@ -8,10 +8,10 @@ from httpx import AsyncClient
 from app.db.repositories.appointments import AppointmentsRepository
 from app.db.repositories.clinic_owner_profiles import ClinicOwnerProfilesRepository
 from app.db.repositories.users import UsersRepository
-from app.models.appointment import AppointmentCreate
-from app.models.clinic_api_key import ClinicAPIKeyInDB
-from app.models.service import ServiceInDB
-from app.models.user import UserInDB
+from app.models.appointments.appointment import AppointmentCreate
+from app.models.clinics.clinic_api_key import ClinicAPIKeyInDB
+from app.models.services.service import ServiceInDB
+from app.models.auth.user import UserInDB
 from tests._fixtures.pets import create_pet_for_user
 
 pytestmark = pytest.mark.asyncio
@@ -230,8 +230,6 @@ class TestListPublicPets:
         )
         assert response.status_code == status.HTTP_200_OK
         assert response.json() == []
-
-    from tests._fixtures.pets import create_pet_for_user  # NEW import
 
     async def test_conflicting_slot_rejected(
             self,

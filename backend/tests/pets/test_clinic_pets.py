@@ -2,9 +2,9 @@ import pytest
 from fastapi import FastAPI, status
 from httpx import AsyncClient
 
-from app.models.owner_profile import OwnerProfileInDB
-from app.models.pet_profile import PetProfileInDB, PetProfilePublic
-from app.models.user import UserInDB
+from app.models.profiles.owner_profile import OwnerProfileInDB
+from app.models.profiles.pet_profile import PetProfileInDB, PetProfilePublic
+from app.models.auth.user import UserInDB
 
 pytestmark = pytest.mark.asyncio
 

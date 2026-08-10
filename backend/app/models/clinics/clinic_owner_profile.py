@@ -5,7 +5,7 @@ from typing import Optional
 from pydantic import model_validator
 
 from app.models.core import CoreModel, DateTimeModelMixin, IDModelMixin
-from app.models.owner_profile import OwnerProfileCreate, OwnerProfilePublic
+from app.models.profiles.owner_profile import OwnerProfileCreate, OwnerProfilePublic
 
 
 class ClinicOwnerProfileStatus(str, Enum):

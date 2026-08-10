@@ -2,8 +2,8 @@ from typing import Optional, Union
 from pydantic import conint, confloat
 
 from app.models.core import DateTimeModelMixin, CoreModel
-from app.models.user import UserPublic
-from app.models.service import ServicePublic
+from app.models.auth.user import UserPublic
+from app.models.services.service import ServicePublic
 
 
 class EvaluationBase(CoreModel):
@@ -28,7 +28,7 @@ class EvaluationInDB(DateTimeModelMixin, EvaluationBase):
     appointment_id: str
     cleaner_id: str
     service_id: str
-   
+
 
 class EvaluationAggregate(CoreModel):
     avg_professionalism: confloat(ge=0, le=5)

@@ -2,8 +2,8 @@ import pytest_asyncio
 from databases import Database
 
 from app.db.repositories.clinic_api_keys import ClinicAPIKeysRepository
-from app.models.clinic_api_key import ClinicAPIKeyCreate, ClinicAPIKeyInDB
-from app.models.user import UserInDB
+from app.models.clinics.clinic_api_key import ClinicAPIKeyCreate, ClinicAPIKeyInDB
+from app.models.auth.user import UserInDB
 
 
 @pytest_asyncio.fixture

@@ -8,9 +8,9 @@ from app.api.dependencies.clinic_owner_profiles import get_current_clinic_staff
 from app.api.dependencies.database import get_repository
 from app.db.repositories.clinic_owner_profiles import ClinicOwnerProfilesRepository
 from app.db.repositories.profiles import OwnerProfilesRepository
-from app.models.owner_profile import OwnerProfileUpdate, OwnerProfilePublic
-from app.models.token import ProfileClaimTokenResponse
-from app.models.user import UserInDB
+from app.models.profiles.owner_profile import OwnerProfileUpdate, OwnerProfilePublic
+from app.models.auth.token import ProfileClaimTokenResponse
+from app.models.auth.user import UserInDB
 from app.services import auth_service
 
 router = APIRouter()

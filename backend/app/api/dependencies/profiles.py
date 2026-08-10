@@ -1,7 +1,7 @@
 from fastapi import Depends, HTTPException, Query, status
 
 from app.core.config import SECRET_KEY
-from app.models.owner_profile import OwnerProfileInDB
+from app.models.profiles.owner_profile import OwnerProfileInDB
 from app.db.repositories.profiles import OwnerProfilesRepository
 from app.api.dependencies.database import get_repository
 from app.services import auth_service

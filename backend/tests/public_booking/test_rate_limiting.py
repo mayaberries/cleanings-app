@@ -3,7 +3,7 @@ from fastapi import FastAPI, status
 from httpx import AsyncClient
 
 from app.core.config import PUBLIC_RATE_LIMIT_PER_KEY
-from app.models.clinic_api_key import ClinicAPIKeyInDB
+from app.models.clinics.clinic_api_key import ClinicAPIKeyInDB
 
 pytestmark = pytest.mark.asyncio
 

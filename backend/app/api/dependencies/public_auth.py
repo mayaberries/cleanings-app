@@ -2,7 +2,7 @@ from typing import Optional
 
 from fastapi import Header, HTTPException, status, Depends
 
-from app.models.clinic import ClinicInDB
+from app.models.clinics.clinic import ClinicInDB
 from app.db.repositories.clinic_api_keys import ClinicAPIKeysRepository
 from app.api.dependencies.database import get_repository
 

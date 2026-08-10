@@ -3,13 +3,13 @@ from typing import List, Optional
 from fastapi import APIRouter, Body, Depends, HTTPException
 from starlette.status import HTTP_201_CREATED, HTTP_404_NOT_FOUND
 
-from app.models.pet_profile import (
+from app.models.profiles.pet_profile import (
     ClinicPetProfileCreate,
     PetProfileInDB,
     PetProfilePublic,
     PetProfileUpdate,
 )
-from app.models.user import UserInDB
+from app.models.auth.user import UserInDB
 from app.db.repositories.pets import PetProfilesRepository
 
 from app.api.dependencies.database import get_repository

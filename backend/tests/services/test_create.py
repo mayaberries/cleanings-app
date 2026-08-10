@@ -6,8 +6,8 @@ import pytest_asyncio
 from fastapi import FastAPI, status
 from httpx import AsyncClient
 
-from app.models.service import ServiceCreate, ServicePublic
-from app.models.user import UserInDB
+from app.models.services.service import ServiceCreate, ServicePublic
+from app.models.auth.user import UserInDB
 
 pytestmark = pytest.mark.asyncio
 

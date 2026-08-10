@@ -1,6 +1,6 @@
 from fastapi import HTTPException, Depends, Path, status
 
-from app.models.user import UserInDB
+from app.models.auth.user import UserInDB
 from app.db.repositories.users import UsersRepository
 
 from app.api.dependencies.database import get_repository

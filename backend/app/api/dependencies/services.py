@@ -3,8 +3,8 @@ from fastapi import HTTPException, Depends, Path, status
 from app.api.dependencies.auth import get_current_active_user
 from app.api.dependencies.database import get_repository
 from app.db.repositories.services import ServicesRepository
-from app.models.service import ServicePublic
-from app.models.user import UserInDB
+from app.models.services.service import ServicePublic
+from app.models.auth.user import UserInDB
 
 
 async def get_service_by_id_from_path(

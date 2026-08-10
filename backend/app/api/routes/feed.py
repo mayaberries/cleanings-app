@@ -1,7 +1,7 @@
 from typing import List
 import datetime
 from fastapi import APIRouter, Depends, Query
-from app.models.feed import ServiceFeedItem
+from app.models.appointments.feed import ServiceFeedItem
 from app.api.dependencies.auth import get_current_active_user
 from app.api.dependencies.database import get_repository
 from app.db.repositories.feed import FeedRepository

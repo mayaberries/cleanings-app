@@ -2,9 +2,9 @@ from typing import List
 from fastapi import APIRouter, Body, status
 from fastapi.param_functions import Depends
 
-from app.models.evaluation import EvaluationAggregate, EvaluationCreate, EvaluationInDB, EvaluationPublic
-from app.models.appointment import AppointmentInDB
-from app.models.user import UserInDB
+from app.models.appointments.evaluation import EvaluationAggregate, EvaluationCreate, EvaluationInDB, EvaluationPublic
+from app.models.appointments.appointment import AppointmentInDB
+from app.models.auth.user import UserInDB
 
 from app.api.dependencies.database import get_repository
 from app.api.dependencies.appointments import get_appointment_by_id_from_path

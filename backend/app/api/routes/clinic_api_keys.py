@@ -3,9 +3,9 @@ from typing import List
 from fastapi import APIRouter, Body, Depends
 from starlette.status import HTTP_201_CREATED
 
-from app.models.clinic import ClinicInDB
-from app.models.clinic_api_key import ClinicAPIKeyCreate, ClinicAPIKeyPublic, ClinicAPIKeyInDB
-from app.models.user import UserInDB
+from app.models.clinics.clinic import ClinicInDB
+from app.models.clinics.clinic_api_key import ClinicAPIKeyCreate, ClinicAPIKeyPublic, ClinicAPIKeyInDB
+from app.models.auth.user import UserInDB
 from app.db.repositories.clinic_api_keys import ClinicAPIKeysRepository
 
 from app.api.dependencies.database import get_repository

@@ -8,7 +8,7 @@ from starlette.status import (
 )
 
 from app.core.config import SECRET_KEY, JWT_ALGORITHM, JWT_AUDIENCE
-from app.models.user import UserInDB, UserPublic
+from app.models.auth.user import UserInDB, UserPublic
 from app.services import auth_service
 
 pytestmark = pytest.mark.asyncio

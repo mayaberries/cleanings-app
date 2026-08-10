@@ -2,8 +2,8 @@ from typing import Optional
 
 from fastapi import Body, Depends, HTTPException, Path, Query, status
 
-from app.models.user import UserInDB
-from app.models.pet_profile import ClinicPetProfileCreate, PetProfileInDB
+from app.models.auth.user import UserInDB
+from app.models.profiles.pet_profile import ClinicPetProfileCreate, PetProfileInDB
 
 from app.db.repositories.pets import PetProfilesRepository
 from app.db.repositories.clinic_owner_profiles import ClinicOwnerProfilesRepository

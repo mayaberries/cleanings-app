@@ -4,8 +4,8 @@ from fastapi import FastAPI, status
 from httpx import AsyncClient
 
 from app.db.repositories.profiles import OwnerProfilesRepository
-from app.models.owner_profile import OwnerProfileInDB
-from app.models.user import UserPublic
+from app.models.profiles.owner_profile import OwnerProfileInDB
+from app.models.auth.user import UserPublic
 
 pytestmark = pytest.mark.asyncio
 

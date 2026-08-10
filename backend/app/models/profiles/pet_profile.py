@@ -3,7 +3,7 @@ from typing import Optional
 from pydantic import field_validator
 
 from app.models.core import IDModelMixin, CoreModel, DateTimeModelMixin
-from app.models.owner_profile import OwnerProfilePublic
+from app.models.profiles.owner_profile import OwnerProfilePublic
 
 
 class PetProfileBase(CoreModel):

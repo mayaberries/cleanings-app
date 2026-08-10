@@ -5,7 +5,7 @@ from databases import Database
 
 from app.db.repositories.base import BaseRepository
 from app.db.repositories.users import UsersRepository
-from app.models.feed import ServiceFeedItem
+from app.models.appointments.feed import ServiceFeedItem
 
 FETCH_SERVICE_JOBS_FOR_FEED_QUERY = """
     SELECT  id,

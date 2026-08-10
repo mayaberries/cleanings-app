@@ -7,9 +7,9 @@ from fastapi import FastAPI, status
 from httpx import AsyncClient
 
 from app.db.repositories.appointments import AppointmentsRepository
-from app.models.appointment import AppointmentPublic
-from app.models.service import ServiceInDB
-from app.models.user import UserInDB
+from app.models.appointments.appointment import AppointmentPublic
+from app.models.services.service import ServiceInDB
+from app.models.auth.user import UserInDB
 
 pytestmark = pytest.mark.asyncio
 

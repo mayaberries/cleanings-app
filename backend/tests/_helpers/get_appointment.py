@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 
 from app.db.repositories.appointments import AppointmentsRepository
-from app.models.service import ServiceInDB
-from app.models.user import UserInDB
+from app.models.services.service import ServiceInDB
+from app.models.auth.user import UserInDB
 
 
 async def get_appointment_for(app: FastAPI, service: ServiceInDB, user: UserInDB):

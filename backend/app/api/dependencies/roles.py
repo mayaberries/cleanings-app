@@ -1,7 +1,7 @@
-from typing import Callable, List
+from typing import Callable
 from fastapi import Depends, HTTPException, status
 
-from app.models.user import UserInDB, UserRole
+from app.models.auth.user import UserInDB, UserRole
 from app.api.dependencies.auth import get_current_active_user
 
 

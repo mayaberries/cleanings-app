@@ -2,10 +2,10 @@ import pytest_asyncio
 from databases import Database
 
 from app.db.repositories.pets import PetProfilesRepository
-from app.models.owner_profile import OwnerProfileInDB
-from app.models.pet_profile import PetProfileCreate, PetProfileInDB
+from app.models.profiles.owner_profile import OwnerProfileInDB
+from app.models.profiles.pet_profile import PetProfileCreate, PetProfileInDB
 from app.db.repositories.profiles import OwnerProfilesRepository
-from app.models.user import UserInDB
+from app.models.auth.user import UserInDB
 
 
 async def create_pet_for_user(

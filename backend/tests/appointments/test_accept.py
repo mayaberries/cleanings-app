@@ -2,15 +2,14 @@ import random
 from typing import List, Callable
 
 import pytest
-from databases import Database
 from fastapi import FastAPI, status
 from httpx import AsyncClient
 
 from app.db.repositories.appointments import AppointmentsRepository
-from app.models.appointment import AppointmentCreate
-from app.models.appointment import AppointmentPublic
-from app.models.service import ServiceInDB
-from app.models.user import UserInDB
+from app.models.appointments.appointment import AppointmentCreate
+from app.models.appointments.appointment import AppointmentPublic
+from app.models.services.service import ServiceInDB
+from app.models.auth.user import UserInDB
 from tests._fixtures.pets import create_pet_for_user
 
 pytestmark = pytest.mark.asyncio

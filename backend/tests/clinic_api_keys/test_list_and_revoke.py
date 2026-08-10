@@ -2,7 +2,7 @@ import pytest
 from fastapi import FastAPI, status
 from httpx import AsyncClient
 
-from app.models.clinic_api_key import ClinicAPIKeyInDB
+from app.models.clinics.clinic_api_key import ClinicAPIKeyInDB
 
 pytestmark = pytest.mark.asyncio
 

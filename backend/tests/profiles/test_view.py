@@ -3,8 +3,8 @@ from fastapi import FastAPI, status
 from httpx import AsyncClient
 from starlette.status import HTTP_200_OK
 
-from app.models.owner_profile import OwnerProfilePublic
-from app.models.user import UserInDB
+from app.models.profiles.owner_profile import OwnerProfilePublic
+from app.models.auth.user import UserInDB
 
 pytestmark = pytest.mark.asyncio
 

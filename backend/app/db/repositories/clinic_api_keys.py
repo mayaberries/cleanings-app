@@ -7,9 +7,9 @@ from databases.core import Database
 from fastapi import HTTPException, status
 
 from app.db.repositories.base import BaseRepository
-from app.models.clinic import ClinicInDB
-from app.models.clinic_api_key import ClinicAPIKeyCreate, ClinicAPIKeyInDB, ClinicKeyEnvironment
-from app.models.user import UserInDB, UserRole
+from app.models.clinics.clinic import ClinicInDB
+from app.models.clinics.clinic_api_key import ClinicAPIKeyCreate, ClinicAPIKeyInDB, ClinicKeyEnvironment
+from app.models.auth.user import UserInDB, UserRole
 
 CLINIC_API_KEY_COLUMNS = (
     "id, clinic_id, public_key, environment, label, is_active, "

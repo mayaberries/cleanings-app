@@ -7,8 +7,8 @@ from app.api.dependencies.auth import get_current_active_user
 from app.api.dependencies.database import get_repository
 from app.api.dependencies.services import get_service_by_id_from_path, check_service_modification_permissions
 from app.db.repositories.services import ServicesRepository
-from app.models.service import ServiceCreate, ServiceInDB, ServicePublic, ServiceUpdate
-from app.models.user import UserInDB
+from app.models.services.service import ServiceCreate, ServiceInDB, ServicePublic, ServiceUpdate
+from app.models.auth.user import UserInDB
 
 router = APIRouter()
 

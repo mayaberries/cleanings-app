@@ -9,8 +9,8 @@ from starlette import status
 
 from app.core.config import SECRET_KEY, JWT_ALGORITHM, JWT_AUDIENCE, ACCESS_TOKEN_EXPIRE_MINUTES, \
     PROFILE_CLAIM_AUDIENCE, PROFILE_CLAIM_TOKEN_EXPIRE_MINUTES
-from app.models.token import JWTMeta, JWTCreds, JWTPayload, ProfileClaimToken
-from app.models.user import UserPasswordUpdate, UserBase
+from app.models.auth.token import JWTMeta, JWTCreds, JWTPayload, ProfileClaimToken
+from app.models.auth.user import UserPasswordUpdate, UserBase
 
 
 class AuthException(BaseException):

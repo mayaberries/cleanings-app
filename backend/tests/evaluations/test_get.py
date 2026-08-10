@@ -5,9 +5,9 @@ import uuid
 from httpx import AsyncClient
 from fastapi import FastAPI, status
 
-from app.models.service import ServiceInDB
-from app.models.evaluation import EvaluationAggregate, EvaluationCreate, EvaluationInDB, EvaluationPublic
-from app.models.user import UserInDB
+from app.models.services.service import ServiceInDB
+from app.models.appointments.evaluation import EvaluationAggregate, EvaluationPublic
+from app.models.auth.user import UserInDB
 from tests._helpers.get_appointment import get_appointment_for
 
 pytestmark = pytest.mark.asyncio

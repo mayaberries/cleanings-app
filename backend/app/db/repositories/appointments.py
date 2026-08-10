@@ -7,15 +7,15 @@ from databases.core import Database
 from app.db.repositories.base import BaseRepository
 from app.db.repositories.pets import PetProfilesRepository
 from app.db.repositories.users import UsersRepository
-from app.models.appointment import (
+from app.models.appointments.appointment import (
     AppointmentCreate,
     AppointmentPublic,
     AppointmentInDB,
     AppointmentStatus, DEFAULT_APPOINTMENT_DURATION_MINUTES,
 )
-from app.models.pet_profile import PetProfilePublic
-from app.models.service import ServiceInDB
-from app.models.user import UserInDB
+from app.models.profiles.pet_profile import PetProfilePublic
+from app.models.services.service import ServiceInDB
+from app.models.auth.user import UserInDB
 
 CREATE_APPOINTMENT_FOR_SERVICE_QUERY = """
     INSERT INTO appointments (id, service_id, user_id, pet_id, status, start_time, end_time)

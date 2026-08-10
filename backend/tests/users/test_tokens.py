@@ -9,7 +9,7 @@ from pydantic import ValidationError
 from starlette.datastructures import Secret
 
 from app.core.config import SECRET_KEY, JWT_ALGORITHM, JWT_AUDIENCE, ACCESS_TOKEN_EXPIRE_MINUTES
-from app.models.user import UserInDB
+from app.models.auth.user import UserInDB
 from app.services import auth_service
 
 pytestmark = pytest.mark.asyncio

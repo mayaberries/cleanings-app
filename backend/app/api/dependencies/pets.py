@@ -1,7 +1,7 @@
 from fastapi import HTTPException, Depends, Path, status
 
-from app.models.user import UserInDB
-from app.models.pet_profile import PetProfileInDB
+from app.models.auth.user import UserInDB
+from app.models.profiles.pet_profile import PetProfileInDB
 
 from app.db.repositories.pets import PetProfilesRepository
 

@@ -6,14 +6,14 @@ from fastapi import HTTPException, status
 
 from app.db.repositories.base import BaseRepository
 from app.db.repositories.profiles import OwnerProfilesRepository
-from app.models.clinic_owner_profile import (
+from app.models.clinics.clinic_owner_profile import (
     ClinicOwnerProfileInDB,
     ClinicOwnerProfilePublic,
     ClinicOwnerProfileRegistration,
     ClinicOwnerProfileStatus,
     ClinicOwnerProfileUpdate,
 )
-from app.models.owner_profile import OwnerProfilePublic
+from app.models.profiles.owner_profile import OwnerProfilePublic
 
 CREATE_CLINIC_OWNER_PROFILE_QUERY = """
     INSERT INTO clinic_owner_profiles (id, clinic_id, owner_profile_id, notes, status, referred_by)

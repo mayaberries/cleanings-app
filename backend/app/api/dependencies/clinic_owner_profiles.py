@@ -1,7 +1,7 @@
 from fastapi import Depends, HTTPException, Path, status
 
-from app.models.user import UserInDB, UserRole
-from app.models.clinic_owner_profile import ClinicOwnerProfileInDB
+from app.models.auth.user import UserInDB, UserRole
+from app.models.clinics.clinic_owner_profile import ClinicOwnerProfileInDB
 
 from app.db.repositories.clinic_owner_profiles import ClinicOwnerProfilesRepository
 

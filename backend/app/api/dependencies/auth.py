@@ -4,7 +4,7 @@ from fastapi.security import OAuth2PasswordBearer
 from starlette.status import HTTP_401_UNAUTHORIZED
 
 from app.core.config import SECRET_KEY, API_PREFIX
-from app.models.user import UserInDB
+from app.models.auth.user import UserInDB
 from app.api.dependencies.database import get_repository
 from app.db.repositories.users import UsersRepository
 from app.services import auth_service
