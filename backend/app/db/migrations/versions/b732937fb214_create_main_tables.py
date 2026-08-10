@@ -264,11 +264,11 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    op.drop_table("pets")
+    op.drop_table("pet_profiles")
     op.drop_table("service_to_cleaner_evaluations")
     op.drop_table("appointments")
     op.drop_table("services")
-    op.drop_table("profiles")
+    op.drop_table("owner_profiles")
     op.drop_table("users")
     op.drop_table("clinics")
     op.execute("DROP FUNCTION update_updated_at_column")

@@ -5,7 +5,7 @@ from pydantic import EmailStr, constr, field_validator
 
 from app.models.core import DateTimeModelMixin, IDModelMixin, CoreModel
 from app.models.token import AccessToken
-from app.models.owner_profile import OwnerProfilePublic
+from app.models.owner_profile import OwnerProfilePublic as ProfilePublic
 
 
 def validate_username(username: str) -> str:
@@ -29,6 +29,11 @@ class UserBase(CoreModel):
     clinic_id: Optional[str] = None
     is_active: bool = True
     is_superuser: bool = False
+    # True only for accounts auto-provisioned by the public booking surface
+    # (app/api/routes/public_booking.py) to anchor an appointment's user_id
+    # FK. No login path accepts credentials for these -- they exist purely
+    # so the guest's Profile (contact details) has somewhere to attach.
+    is_guest: bool = False
 
 
 class UserCreate(CoreModel):
@@ -64,4 +69,4 @@ class UserInDB(IDModelMixin, DateTimeModelMixin, UserBase):
 
 class UserPublic(IDModelMixin, DateTimeModelMixin, UserBase):
     access_token: Optional[AccessToken] = None
-    profile: Optional[OwnerProfilePublic] = None
+    profile: Optional[ProfilePublic] = None

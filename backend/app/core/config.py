@@ -1,3 +1,5 @@
+from typing import Optional
+
 from databases import DatabaseURL
 from starlette.config import Config
 from starlette.datastructures import Secret
@@ -31,6 +33,23 @@ DATABASE_URL = config(
     cast=DatabaseURL,
     default=f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_SERVER}:{POSTGRES_PORT}/{POSTGRES_DB}"
 )
+
+# --- Public booking widget (clinic-key auth) ---------------------------
+
+# Optional on purpose: unset -> slowapi falls back to in-memory storage,
+# which is fine for a single-process MVP deploy. Set this once the app
+# runs with more than one worker/process, see app/core/limiter.py.
+REDIS_URL: Optional[str] = config("REDIS_URL", cast=str, default=None)
+
+# Requests per minute allowed for a single clinic public key. This is the
+# expected-traffic limiter -- sized for "many visitors booking through one
+# clinic's embedded widget at once", not for a single visitor's clicks.
+PUBLIC_RATE_LIMIT_PER_KEY = config("PUBLIC_RATE_LIMIT_PER_KEY", cast=int, default=120)
+
+# Requests per minute allowed from a single IP against the public surface,
+# regardless of which (or whether a valid) key it sent. Backstop against
+# key-enumeration attempts, not expected to be hit by real widget traffic.
+PUBLIC_RATE_LIMIT_PER_IP = config("PUBLIC_RATE_LIMIT_PER_IP", cast=int, default=100)
 
 PROFILE_CLAIM_AUDIENCE = config("PROFILE_CLAIM_AUDIENCE", cast=str, default="phresh:profile-claim")
 PROFILE_CLAIM_TOKEN_EXPIRE_MINUTES = config(

@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import List, Optional, Union
 from databases.core import Database
 
 from fastapi.exceptions import HTTPException
@@ -88,10 +88,40 @@ class ServicesRepository(BaseRepository):
     async def list_all_clinic_services(self, requesting_user: UserInDB) -> List[ServicePublic]:
         if not requesting_user.clinic_id:
             return []
+        return await self.list_services_by_clinic_id(clinic_id=requesting_user.clinic_id)
+
+    async def list_services_by_clinic_id(self, *, clinic_id: str) -> List[ServicePublic]:
+        """
+        Same query as list_all_clinic_services, split out to take a bare
+        clinic_id instead of a UserInDB. Used by the public booking surface
+        (app/api/routes/public_booking.py), where the clinic comes from a
+        resolved public API key rather than a logged-in user -- there is no
+        UserInDB in that request path at all.
+        """
         records = await self.db.fetch_all(
-            query=LIST_ALL_CLINIC_SERVICES_QUERY, values={"clinic_id": requesting_user.clinic_id}
+            query=LIST_ALL_CLINIC_SERVICES_QUERY, values={"clinic_id": clinic_id}
         )
         return [await self.populate_service(service=ServiceInDB(**r)) for r in records]
+
+    async def get_service_by_id_for_clinic(self, *, id: str, clinic_id: str) -> Optional[ServiceInDB]:
+        """
+        Used by the public booking surface (public_booking.py) to confirm
+        the requested service actually belongs to the key-resolved clinic
+        before anything is booked against it -- a key for clinic A can
+        never book, or even confirm the existence of, clinic B's services.
+        Returns the bare ServiceInDB (not populated/ServicePublic) since
+        callers here just need duration_minutes and id, not a nested
+        clinic object they already have.
+        """
+        service_record = await self.db.fetch_one(query=GET_SERVICE_BY_ID_QUERY, values={"id": id})
+        if not service_record:
+            return None
+
+        service = ServiceInDB(**service_record)
+        if service.clinic_id != clinic_id:
+            return None
+
+        return service
 
     async def get_all_services(self) -> List[ServiceInDB]:
         service_records = await self.db.fetch_all(query=GET_ALL_SERVICES_QUERY)

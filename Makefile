@@ -34,3 +34,12 @@ tests: ## Run tests locally (venv), against the dockerized db
 
 pep: ## Run PEP8 style standards locally
 	cd backend && autopep8 . --recursive --in-place --pep8-passes 2000 --verbose
+
+freeze-deps: ## Freeze the active venv's installed packages into backend/requirements.txt
+	cd backend && pip freeze | grep -v '^pip-chill' > requirements.txt
+
+install-deps: ## Install backend/requirements.in into the active venv
+	cd backend && pip install -r requirements.in
+
+update-deps: ## Install requirements.in, then refreeze requirements.txt (run after adding a new dep)
+	cd backend && pip install -r requirements.in && pip freeze | grep -v '^pip-chill' > requirements.txt
