@@ -3,9 +3,10 @@ from uuid import uuid4
 from databases.core import Database
 from fastapi import HTTPException, status
 
-from app.db.repositories.base import BaseRepository
 from app.models.clinics.clinic import ClinicCreate, ClinicUpdate, ClinicInDB
 from app.models.auth.user import UserInDB, UserRole
+from app.db.repositories.clinic_availability import ClinicAvailabilityRepository
+from app.db.repositories.base import BaseRepository
 
 CREATE_CLINIC_QUERY = """
     INSERT INTO clinics (id, name, email, phone_number, address)
@@ -47,6 +48,7 @@ LIST_STAFF_FOR_CLINIC_QUERY = """
 class ClinicsRepository(BaseRepository):
     def __init__(self, db: Database) -> None:
         super().__init__(db)
+        self.availability_repo = ClinicAvailabilityRepository(db)
 
     async def create_clinic_for_admin(self, *, new_clinic: ClinicCreate, requesting_user: UserInDB) -> ClinicInDB:
         if requesting_user.role != UserRole.clinic_admin:
@@ -60,16 +62,23 @@ class ClinicsRepository(BaseRepository):
                 detail="This user already belongs to a clinic.",
             )
 
-        clinic_record = await self.db.fetch_one(
-            query=CREATE_CLINIC_QUERY,
-            values={**new_clinic.model_dump(), "id": str(uuid4())},
-        )
-        clinic = ClinicInDB(**clinic_record)
+        # Clinic row + default hours + admin attachment as one unit -- a
+        # clinic should never exist without an availability row once this
+        # path is the one that created it (get_or_create_availability
+        # covers legacy/edge cases, but this is the normal path).
+        async with self.db.transaction():
+            clinic_record = await self.db.fetch_one(
+                query=CREATE_CLINIC_QUERY,
+                values={**new_clinic.model_dump(), "id": str(uuid4())},
+            )
+            clinic = ClinicInDB(**clinic_record)
 
-        await self.db.fetch_one(
-            query=SET_USER_CLINIC_ID_QUERY,
-            values={"user_id": requesting_user.id, "clinic_id": clinic.id},
-        )
+            await self.availability_repo.create_default_availability_for_clinic(clinic_id=clinic.id)
+
+            await self.db.fetch_one(
+                query=SET_USER_CLINIC_ID_QUERY,
+                values={"user_id": requesting_user.id, "clinic_id": clinic.id},
+            )
 
         return clinic
 

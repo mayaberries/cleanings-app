@@ -10,6 +10,7 @@ from app.api.routes.clinic_api_keys import router as clinic_api_keys_router
 from app.api.routes.public_booking import router as public_booking_router
 from app.api.routes.pets import router as pets_router
 from app.api.routes.clinic_pets import router as clinic_pets_router
+from app.api.routes.clinic_availability import router as clinic_availability_router
 
 router = APIRouter()
 
@@ -38,3 +39,5 @@ router.include_router(
 router.include_router(
     clinic_pets_router, prefix="/clinic_pets", tags=["clinic_pets"]
 )
+router.include_router(
+    clinic_availability_router, prefix="/clinics/{clinic_id}/availability", tags=["clinic-availability"])
