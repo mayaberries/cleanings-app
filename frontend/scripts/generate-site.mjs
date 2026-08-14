@@ -19,6 +19,10 @@ Usage:
     [--name "Acme Vet"] [--color "#2563eb"] [--logo https://...] [--site-url https://acme-vet.example.com]
 
   node scripts/generate-site.mjs --from-manifest   # rebuild every site in clinics.json
+
+Normally invoked via the admin CLI (backend/cli/main.py sites generate /
+generate-all), which resolves --clinic-id / --key from the backend for
+you. Called directly here mainly for local template development.
 `);
 }
 
