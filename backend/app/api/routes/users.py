@@ -76,3 +76,22 @@ async def user_login_with_email_and_password(
 @router.get("/me/", response_model=UserPublic, name="users:get-current-user")
 async def get_currently_authenticated_user(current_user: UserInDB = Depends(get_current_active_user)) -> UserPublic:
     return current_user
+
+@router.post(
+    "/bootstrap-superuser/",
+    response_model=UserPublic,
+    name="users:bootstrap-superuser",
+    status_code=HTTP_201_CREATED,
+)
+async def bootstrap_superuser(
+        new_user: UserCreate = Body(..., embed=False),
+        user_repo: UsersRepository = Depends(get_repository(UsersRepository)),
+) -> UserPublic:
+    created_user = await user_repo.bootstrap_first_superuser(new_user=new_user)
+
+    access_token = AccessToken(
+        access_token=auth_service.create_access_token_for_user(user=created_user),
+        token_type="bearer"
+    )
+
+    return created_user.model_copy(update={"access_token": access_token})

@@ -14,6 +14,7 @@ from typing import Optional
 
 CONFIG_DIR = Path.home() / ".config" / "pets-admin-cli"
 CONFIG_FILE = CONFIG_DIR / "credentials.json"
+DEFAULT_API_BASE_URL = "http://localhost:8000/api"
 
 
 def save_session(*, api_base_url: str, token: str) -> None:
