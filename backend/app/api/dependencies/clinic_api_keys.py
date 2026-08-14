@@ -2,11 +2,11 @@ from fastapi import Depends, HTTPException, Path, status
 
 from app.models.clinics.clinic import ClinicInDB
 from app.models.clinics.clinic_api_key import ClinicAPIKeyInDB
-from app.models.auth.user import UserInDB, UserRole
+from app.models.auth.user import UserInDB
 from app.db.repositories.clinic_api_keys import ClinicAPIKeysRepository
 from app.api.dependencies.database import get_repository
 from app.api.dependencies.auth import get_current_active_user
-from app.api.dependencies.clinics import get_clinic_by_id_from_path
+from app.api.dependencies.clinics import get_clinic_by_id_from_path, user_can_manage_clinic
 
 
 def check_clinic_admin_permissions(
@@ -14,16 +14,22 @@ def check_clinic_admin_permissions(
         clinic: ClinicInDB = Depends(get_clinic_by_id_from_path),
 ) -> None:
     """
-    Same shape as clinics.check_clinic_modification_permissions. Kept as a
-    separate dependency (rather than importing that one) because API-key
-    management is a distinct permission surface from clinic profile edits —
-    e.g. it's plausible clinic_aux staff get profile-edit rights later
-    without ever getting key-management rights.
+    Same permission shape as clinics.check_clinic_modification_permissions
+    (now sharing user_can_manage_clinic so the is_superuser bypass only
+    needed defining once). Kept as a separate dependency function --
+    rather than importing that one directly -- because API-key management
+    is a distinct permission surface from clinic profile edits, e.g. it's
+    plausible clinic_aux staff get profile-edit rights later without ever
+    getting key-management rights.
+
+    The admin CLI's `sites generate` / `generate-all` commands rely on the
+    is_superuser bypass here to read a clinic's public key without being
+    that clinic's own admin.
     """
-    if current_user.role != UserRole.clinic_admin or current_user.clinic_id != clinic.id:
+    if not user_can_manage_clinic(user=current_user, clinic_id=clinic.id):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only the admin of this clinic may manage its API keys.",
+            detail="Only the admin of this clinic (or a platform administrator) may manage its API keys.",
         )
 
 

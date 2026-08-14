@@ -38,7 +38,7 @@ GET_KEY_BY_ID_QUERY = f"""
 # Hot path — hit on every public booking-surface request. Matches the
 # partial index created in c3f7a2e9d5b1_create_clinic_api_keys.py.
 GET_ACTIVE_CLINIC_BY_PUBLIC_KEY_QUERY = """
-    SELECT c.id, c.name, c.email, c.phone_number, c.address, c.created_at, c.updated_at
+    SELECT c.id, c.name, c.slug, c.email, c.phone_number, c.address, c.created_at, c.updated_at
     FROM clinic_api_keys k
     INNER JOIN clinics c ON c.id = k.clinic_id
     WHERE k.public_key = :public_key
