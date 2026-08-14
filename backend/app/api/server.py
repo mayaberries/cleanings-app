@@ -1,3 +1,5 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
@@ -5,8 +7,17 @@ from app.core import config, tasks
 from app.api.routes import router as api_router
 
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    start_app = tasks.create_start_app_handler(app)
+    stop_app = tasks.create_stop_app_handler(app)
+    await start_app()
+    yield
+    await stop_app()
+
+
 def get_application():
-    app = FastAPI(title=config.PROJECT_NAME, version=config.VERSION)
+    app = FastAPI(title=config.PROJECT_NAME, version=config.VERSION, lifespan=lifespan)
 
     app.add_middleware(
         CORSMiddleware,
@@ -15,9 +26,6 @@ def get_application():
         allow_methods=["*"],
         allow_headers=["*"]
     )
-
-    app.add_event_handler("startup", tasks.create_start_app_handler(app))
-    app.add_event_handler("shutdown", tasks.create_stop_app_handler(app))
 
     app.include_router(api_router, prefix="/api")
 
