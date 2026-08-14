@@ -8,6 +8,9 @@ help: ## Show this help message
 	@echo 'targets:'
 	@egrep '^(.+)\:\ ##\ (.+)' ${MAKEFILE_LIST} | column -t -c 2 -s ':#'
 
+run: ## Start the FastAPI server locally (venv), against the dockerized db
+	cd backend && uvicorn app.api.server:app --reload
+
 db-up: ## Start the database container
 	docker-compose up -d db
 
