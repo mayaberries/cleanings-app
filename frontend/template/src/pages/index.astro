@@ -1,0 +1,39 @@
+---
+import { getClinicConfig } from "../lib/clinicConfig";
+
+const clinic = getClinicConfig();
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Book with {clinic.name}</title>
+    <style define:vars={{ primary: clinic.primaryColor }}>
+      body {
+        font-family: system-ui, sans-serif;
+        max-width: 480px;
+        margin: 4rem auto;
+        padding: 0 1.5rem;
+        color: #1f2937;
+      }
+      h1 { color: var(--primary); }
+      .badge {
+        display: inline-block;
+        font-size: 0.75rem;
+        color: #6b7280;
+        border: 1px solid #e5e7eb;
+        border-radius: 999px;
+        padding: 0.15rem 0.6rem;
+        margin-top: 1rem;
+      }
+    </style>
+  </head>
+  <body>
+    {clinic.logoUrl && <img src={clinic.logoUrl} alt={clinic.name} width="48" />}
+    <h1>Book with {clinic.name}</h1>
+    <p>Online booking is coming to this page.</p>
+    <span class="badge">clinic: {clinic.slug} · api: {clinic.apiBaseUrl}</span>
+  </body>
+</html>

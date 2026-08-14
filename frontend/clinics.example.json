@@ -1,0 +1,10 @@
+[
+  {
+    "slug": "acme-vet",
+    "clinicId": "00000000-0000-0000-0000-000000000000",
+    "key": "pk_live_xxxxxxxx",
+    "apiUrl": "https://api.yourdomain.com",
+    "name": "Acme Vet",
+    "color": "#2563eb"
+  }
+]
