@@ -70,10 +70,10 @@ class ClinicsRepository(BaseRepository):
         self.availability_repo = ClinicAvailabilityRepository(db)
 
     async def create_clinic_for_admin(self, *, new_clinic: ClinicCreate, requesting_user: UserInDB) -> ClinicInDB:
-        if requesting_user.role != UserRole.clinic_admin:
+        if requesting_user.role != UserRole.clinic_admin and not requesting_user.is_superuser:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Only clinic admins may create a clinic.",
+                detail="Only clinic admins (or a platform administrator) may create a clinic.",
             )
         if requesting_user.clinic_id is not None:
             raise HTTPException(

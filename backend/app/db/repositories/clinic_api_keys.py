@@ -74,10 +74,13 @@ class ClinicAPIKeysRepository(BaseRepository):
     async def create_key_for_clinic(
             self, *, clinic_id: str, key_create: ClinicAPIKeyCreate, requesting_user: UserInDB
     ) -> ClinicAPIKeyInDB:
-        if requesting_user.role != UserRole.clinic_admin or requesting_user.clinic_id != clinic_id:
+        is_own_clinic_admin = (
+                requesting_user.role == UserRole.clinic_admin and requesting_user.clinic_id == clinic_id
+        )
+        if not requesting_user.is_superuser and not is_own_clinic_admin:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Only the admin of this clinic may create API keys for it.",
+                detail="Only the admin of this clinic (or a platform administrator) may create API keys for it.",
             )
 
         public_key = self.generate_public_key(environment=key_create.environment)
@@ -123,10 +126,13 @@ class ClinicAPIKeysRepository(BaseRepository):
         return ClinicInDB(**record)
 
     async def revoke_key(self, *, key_id: str, clinic_id: str, requesting_user: UserInDB) -> ClinicAPIKeyInDB:
-        if requesting_user.role != UserRole.clinic_admin or requesting_user.clinic_id != clinic_id:
+        is_own_clinic_admin = (
+                requesting_user.role == UserRole.clinic_admin and requesting_user.clinic_id == clinic_id
+        )
+        if not requesting_user.is_superuser and not is_own_clinic_admin:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Only the admin of this clinic may revoke its API keys.",
+                detail="Only the admin of this clinic (or a platform administrator) may revoke its API keys.",
             )
 
         record = await self.db.fetch_one(

@@ -1,3 +1,5 @@
+from typing import Optional
+
 import typer
 from rich.console import Console
 from rich.table import Table
@@ -42,3 +44,63 @@ def keys(clinic_id: str) -> None:
     for key in response.json():
         table.add_row(key.get("label") or "-", key["environment"], key["public_key"], str(key["is_active"]))
     console.print(table)
+
+
+@app.command("create")
+def create_clinic(
+        name: str,
+        email: Optional[str] = typer.Option(None),
+        phone: Optional[str] = typer.Option(None, "--phone"),
+        address: Optional[str] = typer.Option(None),
+        slug: Optional[str] = typer.Option(None, help="Defaults to a slugified version of the name"),
+) -> None:
+    """
+    Calls POST /clinics/ and links the new clinic to your own (logged-in)
+    user -- same as the normal clinic_admin signup flow. Only works once
+    per user (see the note in create_clinic_for_admin) since it attaches
+    clinic_id to whoever's logged in.
+    """
+    payload = {"name": name}
+    if email:
+        payload["email"] = email
+    if phone:
+        payload["phone_number"] = phone
+    if address:
+        payload["address"] = address
+    if slug:
+        payload["slug"] = slug
+
+    with get_client() as client:
+        response = client.post("/clinics/", json=payload)
+    die_on_error(response)
+
+    clinic = response.json()
+    typer.secho(
+        f"✓ created clinic '{clinic['name']}' (slug: {clinic['slug']}, id: {clinic['id']})",
+        fg=typer.colors.GREEN,
+    )
+
+
+@app.command("create-key")
+def create_key(
+    clinic_id: str,
+    label: Optional[str] = typer.Option(None, help="e.g. 'Website widget'"),
+    environment: str = typer.Option("live", help="'live' or 'test'"),
+) -> None:
+    """
+    Calls POST /clinics/{clinic_id}/api-keys/. This is the key
+    `sites generate` / `generate-all` picks up automatically (they always
+    use the most recent active 'live' key), so this is the missing piece
+    between `clinics create` and `sites generate`.
+    """
+    payload = {"environment": environment}
+    if label:
+        payload["label"] = label
+
+    with get_client() as client:
+        response = client.post(f"/clinics/{clinic_id}/api-keys/", json=payload)
+    die_on_error(response)
+
+    key = response.json()
+    typer.secho(f"✓ created {key['environment']} key: {key['public_key']}", fg=typer.colors.GREEN)
+    typer.echo("Not a secret — safe to re-fetch any time with `clinics keys <clinic_id>`.")
