@@ -1,0 +1,158 @@
+---
+import SiteHeader from "../components/SiteHeader.astro";
+import SiteFooter from "../components/SiteFooter.astro";
+import MobileBookCta from "../components/MobileBookCta.astro";
+import { getClinicConfig } from "../lib/clinicConfig";
+
+type ClinicConfig = ReturnType<typeof getClinicConfig>;
+
+interface Props {
+  clinic: ClinicConfig;
+}
+
+const { clinic } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Book with {clinic.name}</title>
+
+    <!--
+      clinic.apiBaseUrl / clinic.slug aren't rendered anywhere on the page
+      yet — no functionality wired up. Left as a comment so multi-tenant
+      wiring stays visible in the source during dev.
+      clinic: {clinic.slug} · api: {clinic.apiBaseUrl}
+    -->
+
+    <!-- Fonts: Space Grotesk (display), Inter (body), IBM Plex Mono (utility/data) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+
+    <!--
+      Tailwind via CDN — prototype-only, matches the standalone HTML version.
+      Swap for a real Tailwind build pipeline before this ships.
+    -->
+    <script is:inline src="https://cdn.tailwindcss.com"></script>
+    <script is:inline>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              base: "#F1F3EE",
+              ink: "#172E29",
+              inksoft: "#4B5D58",
+              surface: "#FFFFFF",
+              line: "#DCE1D9",
+              gold: "#E3A039",
+              goldsoft: "#F7DBA6",
+              teal: "#3F7377",
+              panel: "#F7F9F4",
+              muted: "#4B5D58",
+              primary: { DEFAULT: "#3F7377", dark: "#2F5A5D" },
+              accent: { DEFAULT: "#E3A039", dark: "#C1841F", light: "#F7DBA6" },
+            },
+            fontFamily: {
+              display: ['"Space Grotesk"', "sans-serif"],
+              body: ['"Inter"', "sans-serif"],
+              sans: ['"Inter"', "sans-serif"],
+              mono: ['"IBM Plex Mono"', "monospace"],
+            },
+          },
+        },
+      };
+    </script>
+
+    <style is:global>
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        font-family: "Inter", sans-serif;
+      }
+
+      .ticket-edge {
+        position: relative;
+      }
+      .ticket-edge::before,
+      .ticket-edge::after {
+        content: "";
+        position: absolute;
+        width: 22px;
+        height: 22px;
+        background: #f1f3ee;
+        border-radius: 9999px;
+        top: 50%;
+        transform: translateY(-50%);
+      }
+      .ticket-edge::before {
+        left: -11px;
+      }
+      .ticket-edge::after {
+        right: -11px;
+      }
+      @media (max-width: 767px) {
+        .ticket-edge::before,
+        .ticket-edge::after {
+          display: none;
+        }
+      }
+
+      @keyframes rise {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .rise {
+        animation: rise 0.6s ease-out both;
+      }
+      .rise-delay-1 {
+        animation-delay: 0.08s;
+      }
+      .rise-delay-2 {
+        animation-delay: 0.16s;
+      }
+
+      .leash-line {
+        background-image: linear-gradient(to bottom, #c9d2c1 0 6px, transparent 6px 12px);
+        background-size: 2px 12px;
+        background-repeat: repeat-y;
+        background-position: center;
+      }
+      .paw-marker {
+        filter: drop-shadow(0 1px 2px rgba(23, 46, 41, 0.25));
+      }
+      ::selection {
+        background: #e3a039;
+        color: #172e29;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          animation-duration: 0.01ms !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+    </style>
+  </head>
+
+  <body class="bg-base text-ink font-body antialiased">
+    <SiteHeader clinicName={clinic.name} />
+    <main id="top">
+      <slot />
+    </main>
+    <SiteFooter clinicName={clinic.name} />
+    <MobileBookCta />
+  </body>
+</html>

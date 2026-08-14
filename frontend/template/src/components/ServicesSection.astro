@@ -1,0 +1,28 @@
+---
+import ServiceCard from "./ServiceCard.astro";
+import { services } from "../data/services";
+---
+
+<section id="services" class="max-w-6xl mx-auto px-6 pb-20 md:pb-28">
+  <div class="flex items-end justify-between mb-8">
+    <h2 class="font-display font-700 text-2xl md:text-3xl text-ink">
+      What we see patients for
+    </h2>
+    <p class="hidden md:block text-sm text-inksoft font-mono">
+      Tap a service to jump to booking
+    </p>
+  </div>
+
+  <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    {services.map((service) => <ServiceCard title={service.title} description={service.description} />)}
+
+    <div class="bg-ink rounded-2xl p-6 flex flex-col justify-between">
+      <p class="text-white/70 text-sm leading-relaxed">
+        Not sure which visit you need? Tell us the symptoms when you book — we'll route you to the right one.
+      </p>
+      <a href="#booking" class="inline-flex items-center gap-2 mt-4 text-white font-display font-600 text-sm">
+        Start booking <span aria-hidden="true">→</span>
+      </a>
+    </div>
+  </div>
+</section>

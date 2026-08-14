@@ -1,0 +1,31 @@
+---
+import PawIcon from "./icons/PawIcon.astro";
+
+interface Props {
+  clinicName: string;
+}
+
+const { clinicName } = Astro.props;
+---
+
+<header class="sticky top-0 z-50 bg-base/90 backdrop-blur border-b border-line">
+  <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+    <a href="#top" class="flex items-center gap-2 font-display font-700 text-lg tracking-tight text-ink">
+      <span class="w-7 h-7 rounded-full bg-teal flex items-center justify-center shrink-0">
+        <PawIcon class="w-3.5 h-3.5 fill-gold" />
+      </span>
+      {clinicName}
+    </a>
+    <nav class="hidden md:flex items-center gap-8 text-sm text-inksoft font-medium">
+      <a href="#services" class="hover:text-ink transition-colors">Services</a>
+      <a href="#hours" class="hover:text-ink transition-colors">Hours</a>
+      <a href="#location" class="hover:text-ink transition-colors">Location</a>
+    </nav>
+    <a
+      href="#booking"
+      class="inline-flex items-center gap-2 bg-gold hover:bg-[#d1922f] text-ink font-display font-600 text-sm px-4 py-2.5 rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-teal focus-visible:ring-offset-2 focus-visible:ring-offset-base"
+    >
+      Book a visit
+    </a>
+  </div>
+</header>
