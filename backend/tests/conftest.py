@@ -54,7 +54,7 @@ async def _infra_smoke_check():
         from databases import Database
         from app.core.config import DATABASE_URL
 
-        db = Database(f"{DATABASE_URL}_test")
+        db = Database(str(DATABASE_URL))  # base DB, e.g. postgres_super/postgres — always exists
         await db.connect()
         await db.disconnect()
     except Exception as exc:
@@ -62,5 +62,5 @@ async def _infra_smoke_check():
             f"\n\nINFRA SMOKE CHECK FAILED: test DB unreachable.\n{exc!r}\n",
             returncode=1,
         )
-
+        
     yield
