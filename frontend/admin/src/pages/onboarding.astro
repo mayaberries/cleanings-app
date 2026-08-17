@@ -1,6 +1,14 @@
 ---
 import "../styles/global.css";
+import "../styles/onboarding.css";
 import { googleFontsHref } from "../../../shared/design-tokens.mjs";
+import OnboardingHeader from "./onboarding/OnboardingHeader.astro";
+import StepAccount from "./onboarding/StepAccount.astro";
+import StepClinic from "./onboarding/StepClinic.astro";
+import StepServices from "./onboarding/StepServices.astro";
+import StepReview from "./onboarding/StepReview.astro";
+import StepSuccess from "./onboarding/StepSuccess.astro";
+import OnboardingNav from "./onboarding/OnboardingNav.astro";
 
 export const prerender = false;
 
@@ -18,79 +26,11 @@ const prefillDemo = Astro.url.searchParams.get("demo") === "1";
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href={googleFontsHref} rel="stylesheet" />
-
-    <style>
-        html { scroll-behavior: smooth; }
-        body { font-family: "Inter", sans-serif; }
-        ::selection { background: #E3A039; color: #172E29; }
-
-        @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .rise { animation: rise .45s ease-out both; }
-
-        .step-panel { display: none; }
-        .step-panel.active { display: block; }
-
-        .field-error { display: none; }
-        .field-error.show { display: block; }
-        .field-invalid { border-color: #B3492F !important; }
-
-        input[type="checkbox"].switch {
-            appearance: none; width: 38px; height: 22px; border-radius: 999px;
-            background: #DCE1D9; position: relative; cursor: pointer; transition: background .15s ease; flex-shrink: 0;
-        }
-        input[type="checkbox"].switch::after {
-            content: ""; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px;
-            border-radius: 999px; background: #fff; transition: transform .15s ease;
-            box-shadow: 0 1px 2px rgba(23,46,41,.3);
-        }
-        input[type="checkbox"].switch:checked { background: #3F7377; }
-        input[type="checkbox"].switch:checked::after { transform: translateX(16px); }
-
-        .task-row .task-icon { transition: all .2s ease; }
-
-        @media (prefers-reduced-motion: reduce) {
-            * { animation-duration: .01ms !important; transition-duration: .01ms !important; }
-        }
-    </style>
 </head>
 
 <body class="bg-base text-ink font-body antialiased min-h-screen">
 
-<!-- Header -->
-<header class="sticky top-0 z-40 bg-base/90 backdrop-blur border-b border-line">
-    <div class="max-w-3xl mx-auto px-6 h-16 flex items-center justify-between">
-        <div class="flex items-center gap-2 font-display font-700 text-lg tracking-tight text-ink">
-      <span class="w-7 h-7 rounded-full bg-teal flex items-center justify-center shrink-0">
-        <svg viewBox="0 0 24 24" class="w-3.5 h-3.5 fill-gold"><path d="M12 14.5c-3 0-6.5 2-6.5 5A2.5 2.5 0 0 0 8 22c1.2 0 2-0.6 4-0.6s2.8 0.6 4 0.6a2.5 2.5 0 0 0 2.5-2.5c0-3-3.5-5-6.5-5Z"/><ellipse cx="5" cy="10.5" rx="2.1" ry="2.7"/><ellipse cx="9.2" cy="6.3" rx="2" ry="2.6"/><ellipse cx="14.8" cy="6.3" rx="2" ry="2.6"/><ellipse cx="19" cy="10.5" rx="2.1" ry="2.7"/></svg>
-      </span>
-            Clinic setup
-        </div>
-        <button id="settingsToggle" type="button"
-                class="inline-flex items-center gap-2 text-sm text-inksoft hover:text-ink font-medium px-3 py-2 rounded-full border border-line hover:border-teal transition-colors">
-            <svg viewBox="0 0 24 24" class="w-4 h-4 fill-none stroke-current stroke-2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.56V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.56-1H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.56V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.56 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9a1.7 1.7 0 0 0 1.56 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1Z"/></svg>
-            Connection
-        </button>
-    </div>
-
-    <!-- Settings / connection panel -->
-    <div id="settingsPanel" class:list={["border-t border-line bg-panel", { hidden: !prefillDemo }]}>
-        <div class="max-w-3xl mx-auto px-6 py-4 space-y-3">
-            <p class="text-xs text-inksoft leading-relaxed">
-                This POC talks directly to the backend API from the browser. Point it at a running instance,
-                or flip on demo mode to click through the flow with mocked responses (nothing is sent anywhere).
-            </p>
-            <div class="flex flex-col sm:flex-row sm:items-center gap-3">
-                <label class="text-xs font-medium text-ink font-mono shrink-0 w-28">API base URL</label>
-                <input id="apiBaseInput" type="text" value={BACKEND_API_URL}
-                       class="flex-1 text-sm font-mono px-3 py-2 rounded-lg border border-line bg-surface focus:outline-none focus:ring-2 focus:ring-teal" />
-            </div>
-            <label class="flex items-center gap-3 cursor-pointer w-fit">
-                <input id="demoModeToggle" type="checkbox" class="switch" checked={prefillDemo} />
-                <span class="text-sm text-ink font-medium">Demo mode (no backend required)</span>
-            </label>
-        </div>
-    </div>
-</header>
+<OnboardingHeader apiBaseUrl={BACKEND_API_URL} prefillDemo={prefillDemo} />
 
 <main class="max-w-3xl mx-auto px-6 py-10">
 
@@ -105,139 +45,18 @@ const prefillDemo = Astro.url.searchParams.get("demo") === "1";
     </div>
 
     <!-- Stepper -->
-    <ol id="stepper" class="flex items-center gap-2 mb-8 rise" style="animation-delay:.05s">
-    </ol>
+    <ol id="stepper" class="flex items-center gap-2 mb-8 rise" style="animation-delay:.05s"></ol>
 
     <!-- Card -->
     <div class="bg-surface border border-line rounded-2xl p-6 sm:p-8 rise" style="animation-delay:.1s">
-
-        <!-- STEP 0: account -->
-        <section class="step-panel" data-step="0">
-            <h2 class="font-display font-600 text-xl text-ink mb-1">Your account</h2>
-            <p class="text-sm text-inksoft mb-6">You'll use this to sign in and manage bookings later.</p>
-
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-ink mb-1.5">Email</label>
-                    <input id="acc_email" type="email" placeholder="you@yourclinic.com"
-                           class="w-full px-3.5 py-2.5 rounded-xl border border-line bg-surface focus:outline-none focus:ring-2 focus:ring-teal" />
-                    <p class="field-error text-xs text-danger mt-1" data-for="acc_email"></p>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-ink mb-1.5">Username</label>
-                    <input id="acc_username" type="text" placeholder="janedoe_vet"
-                           class="w-full px-3.5 py-2.5 rounded-xl border border-line bg-surface focus:outline-none focus:ring-2 focus:ring-teal" />
-                    <p class="text-xs text-inksoft mt-1">3+ characters. Letters, numbers, "-" and "_" only.</p>
-                    <p class="field-error text-xs text-danger mt-1" data-for="acc_username"></p>
-                </div>
-                <div class="grid sm:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-ink mb-1.5">Password</label>
-                        <input id="acc_password" type="password" placeholder="7+ characters"
-                               class="w-full px-3.5 py-2.5 rounded-xl border border-line bg-surface focus:outline-none focus:ring-2 focus:ring-teal" />
-                        <p class="field-error text-xs text-danger mt-1" data-for="acc_password"></p>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-ink mb-1.5">Confirm password</label>
-                        <input id="acc_password2" type="password" placeholder="Repeat password"
-                               class="w-full px-3.5 py-2.5 rounded-xl border border-line bg-surface focus:outline-none focus:ring-2 focus:ring-teal" />
-                        <p class="field-error text-xs text-danger mt-1" data-for="acc_password2"></p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- STEP 1: clinic -->
-        <section class="step-panel" data-step="1">
-            <h2 class="font-display font-600 text-xl text-ink mb-1">Your clinic</h2>
-            <p class="text-sm text-inksoft mb-6">This becomes the tenant everything else — staff, services, bookings — lives under.</p>
-
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-ink mb-1.5">Clinic name</label>
-                    <input id="cl_name" type="text" placeholder="Acme Veterinary Clinic"
-                           class="w-full px-3.5 py-2.5 rounded-xl border border-line bg-surface focus:outline-none focus:ring-2 focus:ring-teal" />
-                    <p class="field-error text-xs text-danger mt-1" data-for="cl_name"></p>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-ink mb-1.5">Booking page slug</label>
-                    <div class="flex items-center gap-0 rounded-xl border border-line bg-panel overflow-hidden focus-within:ring-2 focus-within:ring-teal">
-                        <span class="pl-3.5 pr-1 text-sm text-inksoft font-mono select-none">/sites/</span>
-                        <input id="cl_slug" type="text" placeholder="acme-vet"
-                               class="flex-1 py-2.5 pr-3.5 bg-transparent font-mono text-sm focus:outline-none" />
-                    </div>
-                    <p class="text-xs text-inksoft mt-1">Auto-filled from the name — you can change it now, not later.</p>
-                    <p class="field-error text-xs text-danger mt-1" data-for="cl_slug"></p>
-                </div>
-                <div class="grid sm:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-ink mb-1.5">Clinic email <span class="text-inksoft font-normal">(optional)</span></label>
-                        <input id="cl_email" type="email" placeholder="hello@acmevet.com"
-                               class="w-full px-3.5 py-2.5 rounded-xl border border-line bg-surface focus:outline-none focus:ring-2 focus:ring-teal" />
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-ink mb-1.5">Phone <span class="text-inksoft font-normal">(optional)</span></label>
-                        <input id="cl_phone" type="text" placeholder="+52 55 0000 0000"
-                               class="w-full px-3.5 py-2.5 rounded-xl border border-line bg-surface focus:outline-none focus:ring-2 focus:ring-teal" />
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-ink mb-1.5">Address <span class="text-inksoft font-normal">(optional)</span></label>
-                    <input id="cl_address" type="text" placeholder="Street, city"
-                           class="w-full px-3.5 py-2.5 rounded-xl border border-line bg-surface focus:outline-none focus:ring-2 focus:ring-teal" />
-                </div>
-            </div>
-        </section>
-
-        <!-- STEP 2: services -->
-        <section class="step-panel" data-step="2">
-            <h2 class="font-display font-600 text-xl text-ink mb-1">What you offer</h2>
-            <p class="text-sm text-inksoft mb-6">Add at least one bookable service. You can add more later.</p>
-
-            <div id="servicesList" class="space-y-4"></div>
-
-            <button id="addServiceBtn" type="button"
-                    class="mt-2 inline-flex items-center gap-2 text-sm font-medium text-teal hover:text-ink transition-colors">
-                <svg viewBox="0 0 24 24" class="w-4 h-4 fill-none stroke-current stroke-2"><path d="M12 5v14M5 12h14"/></svg>
-                Add another service
-            </button>
-        </section>
-
-        <!-- STEP 3: review + launch -->
-        <section class="step-panel" data-step="3">
-            <h2 class="font-display font-600 text-xl text-ink mb-1">Review &amp; launch</h2>
-            <p class="text-sm text-inksoft mb-6">Here's what we'll create. Nothing is sent until you press launch.</p>
-
-            <div id="reviewBlock" class="space-y-4 mb-6"></div>
-
-            <div id="launchTasks" class="hidden space-y-2 border border-line rounded-xl p-4 bg-panel mb-4"></div>
-            <div id="launchError" class="hidden bg-dangersoft border border-danger/30 text-sm text-danger rounded-xl p-4 mb-4"></div>
-        </section>
-
-        <!-- STEP 4: success -->
-        <section class="step-panel" data-step="4">
-            <div class="w-12 h-12 rounded-full bg-teal flex items-center justify-center mb-4">
-                <svg viewBox="0 0 24 24" class="w-6 h-6 fill-none stroke-goldsoft stroke-2"><path d="M20 6 9 17l-5-5"/></svg>
-            </div>
-            <h2 class="font-display font-600 text-xl text-ink mb-1">You're bookable</h2>
-            <p class="text-sm text-inksoft mb-6">Save these — you'll need the key to connect a booking widget to your site.</p>
-
-            <div id="successBlock" class="space-y-4"></div>
-        </section>
-
+        <StepAccount />
+        <StepClinic />
+        <StepServices />
+        <StepReview />
+        <StepSuccess />
     </div>
 
-    <!-- Nav -->
-    <div id="navRow" class="flex items-center justify-between mt-6 rise" style="animation-delay:.15s">
-        <button id="backBtn" type="button"
-                class="text-sm font-medium text-inksoft hover:text-ink px-4 py-2.5 transition-colors">
-            ← Back
-        </button>
-        <button id="nextBtn" type="button"
-                class="inline-flex items-center gap-2 bg-teal hover:bg-[#2F5A5D] text-white font-display font-600 text-sm px-5 py-2.5 rounded-full transition-colors">
-            Continue
-        </button>
-    </div>
+    <OnboardingNav />
 
 </main>
 
@@ -246,552 +65,41 @@ const prefillDemo = Astro.url.searchParams.get("demo") === "1";
 </footer>
 
 <script>
-    (function () {
-        "use strict";
+    import { el, slugify } from "../lib/onboarding/dom.js";
+    import { state, newService } from "../lib/onboarding/state.js";
+    import { renderServices } from "../lib/onboarding/servicesForm.js";
+    import { renderStepper } from "../lib/onboarding/stepper.js";
+    import { showStep } from "../lib/onboarding/navigation.js";
+    import { validateStep0, validateStep1, validateStep2 } from "../lib/onboarding/validation.js";
+    import { launch } from "../lib/onboarding/launch.js";
 
-        // ---------------------------------------------------------------
-        // Config, matches the categories the backend actually recognizes
-        // (backend/app/models/services/service_categories.py). Anything
-        // else is still accepted server-side and just normalized to a slug.
-        // ---------------------------------------------------------------
-        const SUGGESTED_CATEGORIES = [
-            "wellness_exam", "vaccination", "microchipping", "nail_trim", "bloodwork",
-            "imaging", "lab_testing", "sick_visit", "dental_cleaning", "spay_neuter",
-            "surgery", "wound_care", "grooming", "boarding", "end_of_life",
-        ];
-        const CATEGORY_LABELS = {
-            wellness_exam: "Wellness exam", vaccination: "Vaccination", microchipping: "Microchipping",
-            nail_trim: "Nail trim", bloodwork: "Bloodwork", imaging: "Imaging", lab_testing: "Lab testing",
-            sick_visit: "Sick visit", dental_cleaning: "Dental cleaning", spay_neuter: "Spay / neuter",
-            surgery: "Surgery", wound_care: "Wound care", grooming: "Grooming", boarding: "Boarding",
-            end_of_life: "End of life",
-        };
+    el("settingsToggle").addEventListener("click", function () {
+        el("settingsPanel").classList.toggle("hidden");
+    });
 
-        const state = {
-            step: 0,
-            account: { email: "", username: "", password: "" },
-            clinic: { name: "", slug: "", email: "", phone_number: "", address: "" },
-            services: [],
-            slugTouched: false,
-            token: null,
-            createdClinic: null,
-            createdServices: [],
-            apiKey: null,
-        };
+    el("cl_name").addEventListener("input", function () {
+        if (!state.slugTouched) el("cl_slug").value = slugify(el("cl_name").value);
+    });
+    el("cl_slug").addEventListener("input", function () { state.slugTouched = true; });
 
-        let serviceSeq = 0;
-        function newService() {
-            serviceSeq += 1;
-            return { _id: serviceSeq, name: "", category: "wellness_exam", customCategory: "", price: "", duration_minutes: "", description: "" };
-        }
+    el("addServiceBtn").addEventListener("click", function () {
         state.services.push(newService());
+        renderServices();
+    });
 
-        // ---------------------------------------------------------------
-        // Helpers
-        // ---------------------------------------------------------------
-        function slugify(value) {
-            return (value || "")
-                .toLowerCase()
-                .normalize("NFKD").replace(/[\u0300-\u036f]/g, "")
-                .replace(/[^\w\s-]/g, "")
-                .trim()
-                .replace(/[-\s]+/g, "-");
-        }
+    el("backBtn").addEventListener("click", function () {
+        if (state.step > 0) showStep(state.step - 1);
+    });
 
-        // Every id here is static markup in this same file -- a missing
-        // element means a typo/removed element, a real bug worth failing on
-        // immediately, not something to silently no-op past with `?.` at each
-        // of this helper's ~40 call sites. Throwing also narrows the return
-        // type from HTMLElement | null to HTMLElement, which is what actually
-        // clears the "Object is possibly 'null'" errors everywhere el() is used.
-        function el(id) {
-            const node = document.getElementById(id);
-            if (!node) throw new Error(`onboarding: expected #${id} to exist`);
-            return node;
-        }
+    el("nextBtn").addEventListener("click", function () {
+        if (state.step === 0) { if (validateStep0()) showStep(1); return; }
+        if (state.step === 1) { if (validateStep1()) showStep(2); return; }
+        if (state.step === 2) { if (validateStep2()) showStep(3); return; }
+        if (state.step === 3) { launch(); return; }
+    });
 
-        function apiBase() { return el("apiBaseInput").value.replace(/\/+$/, ""); }
-        function isDemo() { return el("demoModeToggle").checked; }
-
-        function setFieldError(id, message) {
-            const input = el(id);
-            const err = document.querySelector('.field-error[data-for="' + id + '"]');
-            if (message) {
-                if (input) input.classList.add("field-invalid");
-                if (err) { err.textContent = message; err.classList.add("show"); }
-            } else {
-                if (input) input.classList.remove("field-invalid");
-                if (err) { err.classList.remove("show"); err.textContent = ""; }
-            }
-        }
-
-        // ---------------------------------------------------------------
-        // Mock backend for demo mode — mirrors the real response shapes
-        // ---------------------------------------------------------------
-        function demoDelay(fn) {
-            return new Promise((resolve) => setTimeout(() => resolve(fn()), 450 + Math.random() * 350));
-        }
-
-        function demoRegisterUser() {
-            return demoDelay(() => ({ ok: true, data: { access_token: { access_token: "demo.jwt.token" } } }));
-        }
-        function demoCreateClinic(payload) {
-            return demoDelay(() => ({
-                ok: true,
-                data: { id: "demo-clinic-id", name: payload.name, slug: payload.slug || slugify(payload.name),
-                    email: payload.email, phone_number: payload.phone_number, address: payload.address },
-            }));
-        }
-        function demoCreateService(payload) {
-            return demoDelay(() => ({ ok: true, data: { id: "demo-service-" + Math.random().toString(36).slice(2, 8), ...payload } }));
-        }
-        function demoCreateKey() {
-            return demoDelay(() => ({
-                ok: true,
-                data: { public_key: "pk_live_demo_" + Math.random().toString(36).slice(2, 10), environment: "live" },
-            }));
-        }
-
-        async function apiCall(path, options) {
-            if (isDemo()) return null; // callers branch on isDemo() themselves
-            try {
-                const res = await fetch(apiBase() + path, options);
-                let data = null;
-                try { data = await res.json(); } catch (e) { /* no body */ }
-                if (!res.ok) {
-                    const detail = (data && (data.detail || data.message)) || (res.status + " " + res.statusText);
-                    return { ok: false, status: res.status, detail: typeof detail === "string" ? detail : JSON.stringify(detail) };
-                }
-                return { ok: true, data };
-            } catch (err) {
-                return { ok: false, status: 0, detail: "Could not reach " + apiBase() + " — check the API base URL and that the backend is running (and CORS-enabled) for this origin." };
-            }
-        }
-
-        // ---------------------------------------------------------------
-        // Stepper UI
-        // ---------------------------------------------------------------
-        const STEP_LABELS = ["Account", "Clinic", "Services", "Review"];
-
-        function renderStepper() {
-            const stepper = el("stepper");
-            stepper.innerHTML = STEP_LABELS.map((label, i) => {
-                const isDone = i < state.step;
-                const isActive = i === state.step;
-                const circleClasses = isDone
-                    ? "bg-teal text-white"
-                    : isActive
-                        ? "bg-gold text-ink"
-                        : "bg-panel text-inksoft border border-line";
-                const lineClasses = i < STEP_LABELS.length - 1
-                    ? '<div class="flex-1 h-px ' + (isDone ? "bg-teal" : "bg-line") + ' mx-1"></div>'
-                    : "";
-                return (
-                    '<li class="flex items-center flex-1 last:flex-none">' +
-                    '<div class="flex items-center gap-2 shrink-0">' +
-                    '<span class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-display font-600 ' + circleClasses + '">' +
-                    (isDone ? "✓" : i + 1) +
-                    '</span>' +
-                    '<span class="hidden sm:inline text-xs font-medium ' + (isActive ? "text-ink" : "text-inksoft") + '">' + label + '</span>' +
-                    '</div>' +
-                    lineClasses +
-                    '</li>'
-                );
-            }).join("");
-        }
-
-        // ---------------------------------------------------------------
-        // Step 2: services list rendering
-        // ---------------------------------------------------------------
-        function renderServices() {
-            const wrap = el("servicesList");
-            wrap.innerHTML = state.services.map(function (svc, idx) {
-                const isCustom = !SUGGESTED_CATEGORIES.includes(svc.category);
-                const options = SUGGESTED_CATEGORIES.map(function (c) {
-                    return '<option value="' + c + '"' + (svc.category === c ? " selected" : "") + '>' + CATEGORY_LABELS[c] + '</option>';
-                }).join("") + '<option value="__custom__"' + (isCustom ? " selected" : "") + '>Other…</option>';
-
-                return (
-                    '<div class="relative border border-line rounded-xl p-4 bg-panel/50" data-svc="' + svc._id + '">' +
-                    (state.services.length > 1
-                        ? '<button type="button" class="remove-svc absolute top-3 right-3 text-inksoft hover:text-danger transition-colors" data-svc="' + svc._id + '" title="Remove service">' +
-                        '<svg viewBox="0 0 24 24" class="w-4 h-4 fill-none stroke-current stroke-2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>'
-                        : "") +
-                    '<div class="grid sm:grid-cols-2 gap-3">' +
-                    '<div>' +
-                    '<label class="block text-xs font-medium text-ink mb-1">Service name</label>' +
-                    '<input type="text" class="svc-name w-full px-3 py-2 rounded-lg border border-line bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-teal" placeholder="Annual wellness exam" value="' + escapeHtml(svc.name) + '" data-svc="' + svc._id + '" />' +
-                    '</div>' +
-                    '<div>' +
-                    '<label class="block text-xs font-medium text-ink mb-1">Category</label>' +
-                    '<select class="svc-category w-full px-3 py-2 rounded-lg border border-line bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-teal" data-svc="' + svc._id + '">' + options + '</select>' +
-                    '</div>' +
-                    '</div>' +
-                    (isCustom
-                        ? '<div class="mt-3"><label class="block text-xs font-medium text-ink mb-1">Custom category name</label>' +
-                        '<input type="text" class="svc-custom-category w-full px-3 py-2 rounded-lg border border-line bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-teal" placeholder="e.g. behavior-consult" value="' + escapeHtml(svc.customCategory) + '" data-svc="' + svc._id + '" /></div>'
-                        : "") +
-                    '<div class="grid sm:grid-cols-2 gap-3 mt-3">' +
-                    '<div>' +
-                    '<label class="block text-xs font-medium text-ink mb-1">Price (MXN)</label>' +
-                    '<input type="number" min="0" step="0.01" class="svc-price w-full px-3 py-2 rounded-lg border border-line bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-teal" placeholder="450.00" value="' + escapeHtml(svc.price) + '" data-svc="' + svc._id + '" />' +
-                    '</div>' +
-                    '<div>' +
-                    '<label class="block text-xs font-medium text-ink mb-1">Duration (minutes)</label>' +
-                    '<input type="number" min="5" step="5" class="svc-duration w-full px-3 py-2 rounded-lg border border-line bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-teal" placeholder="30" value="' + escapeHtml(svc.duration_minutes) + '" data-svc="' + svc._id + '" />' +
-                    '</div>' +
-                    '</div>' +
-                    '<div class="mt-3">' +
-                    '<label class="block text-xs font-medium text-ink mb-1">Description <span class="text-inksoft font-normal">(optional)</span></label>' +
-                    '<textarea rows="2" class="svc-description w-full px-3 py-2 rounded-lg border border-line bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-teal" placeholder="What\'s included, what to bring…" data-svc="' + svc._id + '">' + escapeHtml(svc.description) + '</textarea>' +
-                    '</div>' +
-                    '<p class="field-error text-xs text-danger mt-2" data-for="svc-' + svc._id + '"></p>' +
-                    '</div>'
-                );
-            }).join("");
-
-            wrap.querySelectorAll(".svc-name").forEach(function (i) { i.addEventListener("input", onServiceInput); });
-            wrap.querySelectorAll(".svc-category").forEach(function (i) { i.addEventListener("change", onServiceInput); });
-            wrap.querySelectorAll(".svc-custom-category").forEach(function (i) { i.addEventListener("input", onServiceInput); });
-            wrap.querySelectorAll(".svc-price").forEach(function (i) { i.addEventListener("input", onServiceInput); });
-            wrap.querySelectorAll(".svc-duration").forEach(function (i) { i.addEventListener("input", onServiceInput); });
-            wrap.querySelectorAll(".svc-description").forEach(function (i) { i.addEventListener("input", onServiceInput); });
-            wrap.querySelectorAll(".remove-svc").forEach(function (btn) {
-                btn.addEventListener("click", function () {
-                    const id = Number(btn.getAttribute("data-svc"));
-                    state.services = state.services.filter(function (s) { return s._id !== id; });
-                    renderServices();
-                });
-            });
-        }
-
-        function onServiceInput(e) {
-            const id = Number(e.target.getAttribute("data-svc"));
-            const svc = state.services.find(function (s) { return s._id === id; });
-            if (!svc) return;
-            const needsRerender = e.target.classList.contains("svc-category");
-            if (e.target.classList.contains("svc-name")) svc.name = e.target.value;
-            if (e.target.classList.contains("svc-category")) {
-                svc.category = e.target.value === "__custom__" ? "" : e.target.value;
-            }
-            if (e.target.classList.contains("svc-custom-category")) svc.customCategory = e.target.value;
-            if (e.target.classList.contains("svc-price")) svc.price = e.target.value;
-            if (e.target.classList.contains("svc-duration")) svc.duration_minutes = e.target.value;
-            if (e.target.classList.contains("svc-description")) svc.description = e.target.value;
-            if (needsRerender) renderServices();
-        }
-
-        function escapeHtml(v) {
-            return String(v == null ? "" : v).replace(/[&<>"']/g, function (c) {
-                return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
-            });
-        }
-
-        // ---------------------------------------------------------------
-        // Validation per step
-        // ---------------------------------------------------------------
-        function validateStep0() {
-            let ok = true;
-            state.account.email = el("acc_email").value.trim();
-            state.account.username = el("acc_username").value.trim();
-            state.account.password = el("acc_password").value;
-            const password2 = el("acc_password2").value;
-
-            setFieldError("acc_email", "");
-            setFieldError("acc_username", "");
-            setFieldError("acc_password", "");
-            setFieldError("acc_password2", "");
-
-            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(state.account.email)) {
-                setFieldError("acc_email", "Enter a valid email address."); ok = false;
-            }
-            if (state.account.username.length < 3 || !/^[A-Za-z0-9_-]+$/.test(state.account.username)) {
-                setFieldError("acc_username", "3+ characters, letters/numbers/-/_ only."); ok = false;
-            }
-            if (state.account.password.length < 7) {
-                setFieldError("acc_password", "Use at least 7 characters."); ok = false;
-            }
-            if (password2 !== state.account.password) {
-                setFieldError("acc_password2", "Passwords don't match."); ok = false;
-            }
-            return ok;
-        }
-
-        function validateStep1() {
-            let ok = true;
-            state.clinic.name = el("cl_name").value.trim();
-            state.clinic.slug = slugify(el("cl_slug").value.trim());
-            state.clinic.email = el("cl_email").value.trim();
-            state.clinic.phone_number = el("cl_phone").value.trim();
-            state.clinic.address = el("cl_address").value.trim();
-
-            setFieldError("cl_name", "");
-            setFieldError("cl_slug", "");
-
-            if (!state.clinic.name) { setFieldError("cl_name", "Clinic name is required."); ok = false; }
-            if (!state.clinic.slug) { setFieldError("cl_slug", "Slug must contain at least one letter or number."); ok = false; }
-            return ok;
-        }
-
-        function validateStep2() {
-            let ok = true;
-            state.services.forEach(function (svc) {
-                const err = document.querySelector('.field-error[data-for="svc-' + svc._id + '"]');
-                let msg = "";
-                const finalCategory = svc.category || svc.customCategory;
-                if (!svc.name.trim()) msg = "Name and price are required.";
-                else if (svc.price === "" || isNaN(Number(svc.price)) || Number(svc.price) < 0) msg = "Enter a valid price.";
-                else if (!finalCategory || !finalCategory.trim()) msg = "Pick a category or name a custom one.";
-                if (msg) { ok = false; if (err) { err.textContent = msg; err.classList.add("show"); } }
-                else if (err) { err.classList.remove("show"); err.textContent = ""; }
-            });
-            return ok;
-        }
-
-        // ---------------------------------------------------------------
-        // Step navigation
-        // ---------------------------------------------------------------
-        function showStep(n) {
-            state.step = n;
-            document.querySelectorAll(".step-panel").forEach(function (p) {
-                p.classList.toggle("active", Number(p.getAttribute("data-step")) === n);
-            });
-            el("intro").style.display = n === 0 ? "" : "none";
-            el("stepper").style.display = n === 4 ? "none" : "flex";
-            el("navRow").style.display = n === 4 ? "none" : "flex";
-            el("backBtn").style.visibility = n === 0 ? "hidden" : "visible";
-            el("nextBtn").textContent = n === 3 ? "Launch clinic 🚀" : "Continue";
-            if (n === 2) renderServices();
-            if (n === 3) renderReview();
-            renderStepper();
-            window.scrollTo({ top: 0, behavior: "smooth" });
-        }
-
-        function renderReview() {
-            const finalServices = state.services.map(function (s) {
-                return {
-                    name: s.name,
-                    category: s.category || s.customCategory,
-                    price: s.price,
-                    duration_minutes: s.duration_minutes,
-                    description: s.description,
-                };
-            });
-
-            el("reviewBlock").innerHTML =
-                '<div class="border border-line rounded-xl p-4">' +
-                '<p class="text-xs font-mono uppercase tracking-wider text-teal mb-2">Account</p>' +
-                '<p class="text-sm text-ink">' + escapeHtml(state.account.username) + ' · ' + escapeHtml(state.account.email) + '</p>' +
-                '</div>' +
-                '<div class="border border-line rounded-xl p-4">' +
-                '<p class="text-xs font-mono uppercase tracking-wider text-teal mb-2">Clinic</p>' +
-                '<p class="text-sm text-ink font-medium">' + escapeHtml(state.clinic.name) + '</p>' +
-                '<p class="text-xs text-inksoft font-mono mt-0.5">/sites/' + escapeHtml(state.clinic.slug) + '</p>' +
-                (state.clinic.email || state.clinic.phone_number
-                    ? '<p class="text-xs text-inksoft mt-1">' + [state.clinic.email, state.clinic.phone_number].filter(Boolean).map(escapeHtml).join(" · ") + '</p>'
-                    : "") +
-                '</div>' +
-                '<div class="border border-line rounded-xl p-4">' +
-                '<p class="text-xs font-mono uppercase tracking-wider text-teal mb-2">Services (' + finalServices.length + ')</p>' +
-                '<ul class="space-y-1.5">' +
-                finalServices.map(function (s) {
-                    return '<li class="text-sm text-ink flex items-center justify-between gap-2">' +
-                        '<span>' + escapeHtml(s.name) + ' <span class="text-inksoft">— ' + escapeHtml(CATEGORY_LABELS[s.category] || s.category) + '</span></span>' +
-                        '<span class="text-inksoft font-mono text-xs shrink-0">$' + escapeHtml(s.price) + (s.duration_minutes ? " · " + escapeHtml(s.duration_minutes) + "min" : "") + '</span>' +
-                        '</li>';
-                }).join("") +
-                '</ul>' +
-                '</div>';
-
-            el("launchTasks").classList.add("hidden");
-            el("launchTasks").innerHTML = "";
-            el("launchError").classList.add("hidden");
-            el("nextBtn").disabled = false;
-        }
-
-        // ---------------------------------------------------------------
-        // Launch sequence
-        // ---------------------------------------------------------------
-        const TASKS = [
-            { key: "account", label: "Creating your account" },
-            { key: "clinic", label: "Setting up the clinic" },
-            { key: "services", label: "Adding services" },
-            { key: "key", label: "Issuing a public booking key" },
-        ];
-
-        function renderTasks(statusMap) {
-            const box = el("launchTasks");
-            box.classList.remove("hidden");
-            box.innerHTML = TASKS.map(function (t) {
-                const status = statusMap[t.key] || "pending";
-                let icon;
-                if (status === "done") icon = '<span class="task-icon w-5 h-5 rounded-full bg-teal text-white text-xs flex items-center justify-center">✓</span>';
-                else if (status === "active") icon = '<span class="task-icon w-5 h-5 rounded-full border-2 border-gold border-t-transparent animate-spin"></span>';
-                else if (status === "error") icon = '<span class="task-icon w-5 h-5 rounded-full bg-danger text-white text-xs flex items-center justify-center">!</span>';
-                else icon = '<span class="task-icon w-5 h-5 rounded-full border-2 border-line"></span>';
-                const textClass = status === "pending" ? "text-inksoft" : "text-ink";
-                return '<div class="task-row flex items-center gap-3">' + icon + '<span class="text-sm ' + textClass + '">' + t.label + '</span></div>';
-            }).join("");
-        }
-
-        async function launch() {
-            el("nextBtn").disabled = true;
-            el("backBtn").style.pointerEvents = "none";
-            el("launchError").classList.add("hidden");
-
-            const status = { account: "active", clinic: "pending", services: "pending", key: "pending" };
-            renderTasks(status);
-
-            // 1. Account
-            let regResult;
-            if (isDemo()) regResult = await demoRegisterUser();
-            else regResult = await apiCall("/users/", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email: state.account.email, username: state.account.username, password: state.account.password }),
-            });
-
-            if (!regResult.ok) return fail("account", status, regResult.detail);
-            state.token = regResult.data.access_token.access_token;
-            status.account = "done"; status.clinic = "active"; renderTasks(status);
-
-            // 2. Clinic
-            const clinicPayload = {
-                name: state.clinic.name, slug: state.clinic.slug,
-                email: state.clinic.email || undefined, phone_number: state.clinic.phone_number || undefined,
-                address: state.clinic.address || undefined,
-            };
-            let clinicResult;
-            if (isDemo()) clinicResult = await demoCreateClinic(clinicPayload);
-            else clinicResult = await apiCall("/clinics/", {
-                method: "POST",
-                headers: { "Content-Type": "application/json", Authorization: "Bearer " + state.token },
-                body: JSON.stringify(clinicPayload),
-            });
-
-            if (!clinicResult.ok) {
-                const knownGap = /clinic admin/i.test(clinicResult.detail || "");
-                return fail("clinic", status, clinicResult.detail, knownGap);
-            }
-            state.createdClinic = clinicResult.data;
-            status.clinic = "done"; status.services = "active"; renderTasks(status);
-
-            // 3. Services (sequential — keeps task UI honest about progress)
-            state.createdServices = [];
-            for (const svc of state.services) {
-                const payload = {
-                    name: svc.name,
-                    description: svc.description || undefined,
-                    price: Number(svc.price),
-                    category: svc.category || svc.customCategory,
-                    duration_minutes: svc.duration_minutes ? Number(svc.duration_minutes) : undefined,
-                };
-                let svcResult;
-                if (isDemo()) svcResult = await demoCreateService(payload);
-                else svcResult = await apiCall("/services/", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json", Authorization: "Bearer " + state.token },
-                    body: JSON.stringify(payload),
-                });
-                if (!svcResult.ok) return fail("services", status, svcResult.detail);
-                state.createdServices.push(svcResult.data);
-            }
-            status.services = "done"; status.key = "active"; renderTasks(status);
-
-            // 4. Public API key
-            let keyResult;
-            if (isDemo()) keyResult = await demoCreateKey();
-            else keyResult = await apiCall("/clinics/" + state.createdClinic.id + "/api-keys/", {
-                method: "POST",
-                headers: { "Content-Type": "application/json", Authorization: "Bearer " + state.token },
-                body: JSON.stringify({ label: "Onboarding widget key", environment: "live" }),
-            });
-            if (!keyResult.ok) return fail("key", status, keyResult.detail);
-            state.apiKey = keyResult.data;
-            status.key = "done"; renderTasks(status);
-
-            el("backBtn").style.pointerEvents = "";
-            renderSuccess();
-            showStep(4);
-        }
-
-        function fail(taskKey, status, detail, knownGap) {
-            status[taskKey] = "error";
-            renderTasks(status);
-            el("backBtn").style.pointerEvents = "";
-            el("nextBtn").disabled = false;
-            const box = el("launchError");
-            box.classList.remove("hidden");
-            box.innerHTML =
-                '<p class="font-medium mb-1">Couldn\'t finish that step.</p>' +
-                '<p class="font-mono text-xs opacity-90">' + escapeHtml(detail) + '</p>' +
-                (knownGap
-                    ? '<p class="mt-2 text-xs">This is a known gap in the current backend: <code class="font-mono">POST /users/</code> always registers a <code class="font-mono">client</code>-role account, and clinic creation requires <code class="font-mono">clinic_admin</code>. There\'s no self-service HTTP path yet to register as a clinic admin — see the note at the bottom of this page. Try demo mode to preview the rest of the flow, or promote the account via the CLI/DB in the meantime.</p>'
-                    : "");
-        }
-
-        function renderSuccess() {
-            const key = state.apiKey ? state.apiKey.public_key : "";
-            const slug = state.createdClinic ? state.createdClinic.slug : state.clinic.slug;
-            el("successBlock").innerHTML =
-                '<div class="border border-line rounded-xl p-4 bg-panel">' +
-                '<p class="text-xs font-mono uppercase tracking-wider text-teal mb-2">Public booking key</p>' +
-                '<div class="flex items-center gap-2">' +
-                '<code id="keyText" class="flex-1 text-sm font-mono bg-surface border border-line rounded-lg px-3 py-2 overflow-x-auto whitespace-nowrap">' + escapeHtml(key) + '</code>' +
-                '<button id="copyKeyBtn" type="button" class="shrink-0 text-xs font-medium px-3 py-2 rounded-lg border border-line hover:border-teal text-ink transition-colors">Copy</button>' +
-                '</div>' +
-                '<p class="text-xs text-inksoft mt-2">Safe to use client-side. Scoped to this clinic only — you can revoke or rotate it later without downtime.</p>' +
-                '</div>' +
-                '<div class="border border-line rounded-xl p-4">' +
-                '<p class="text-xs font-mono uppercase tracking-wider text-teal mb-2">Embed on your own site</p>' +
-                '<pre class="text-xs font-mono bg-panel border border-line rounded-lg p-3 overflow-x-auto">&lt;iframe\n  src="https://sites.yourdomain.com/' + escapeHtml(slug) + '/"\n  style="width:100%;border:0;min-height:640px"\n&gt;&lt;/iframe&gt;</pre>' +
-                '<p class="text-xs text-inksoft mt-2">Or build the standalone static site from this clinic via the admin CLI:</p>' +
-                '<pre class="text-xs font-mono bg-panel border border-line rounded-lg p-3 mt-1 overflow-x-auto">sites generate ' + escapeHtml(state.createdClinic ? state.createdClinic.id : "&lt;clinic_id&gt;") + ' --public-api-url https://api.yourdomain.com/api</pre>' +
-                '</div>' +
-                '<div class="flex flex-wrap gap-3 pt-2">' +
-                '<button id="restartBtn" type="button" class="text-sm font-medium text-inksoft hover:text-ink px-4 py-2.5 border border-line rounded-full transition-colors">Set up another clinic</button>' +
-                '</div>';
-
-            el("copyKeyBtn").addEventListener("click", function () {
-                navigator.clipboard.writeText(key).then(function () {
-                    el("copyKeyBtn").textContent = "Copied";
-                    setTimeout(function () { el("copyKeyBtn").textContent = "Copy"; }, 1500);
-                });
-            });
-            el("restartBtn").addEventListener("click", function () { window.location.reload(); });
-        }
-
-        // ---------------------------------------------------------------
-        // Wiring
-        // ---------------------------------------------------------------
-        el("settingsToggle").addEventListener("click", function () {
-            el("settingsPanel").classList.toggle("hidden");
-        });
-
-        el("cl_name").addEventListener("input", function () {
-            if (!state.slugTouched) el("cl_slug").value = slugify(el("cl_name").value);
-        });
-        el("cl_slug").addEventListener("input", function () { state.slugTouched = true; });
-
-        el("addServiceBtn").addEventListener("click", function () {
-            state.services.push(newService());
-            renderServices();
-        });
-
-        el("backBtn").addEventListener("click", function () {
-            if (state.step > 0) showStep(state.step - 1);
-        });
-
-        el("nextBtn").addEventListener("click", function () {
-            if (state.step === 0) { if (validateStep0()) showStep(1); return; }
-            if (state.step === 1) { if (validateStep1()) showStep(2); return; }
-            if (state.step === 2) { if (validateStep2()) showStep(3); return; }
-            if (state.step === 3) { launch(); return; }
-        });
-
-        renderStepper();
-        showStep(0);
-    })();
+    renderStepper();
+    showStep(0);
 </script>
 
 </body>

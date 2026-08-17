@@ -1,0 +1,51 @@
+---
+interface Props {
+    apiBaseUrl: string;
+    prefillDemo: boolean;
+}
+
+const {apiBaseUrl, prefillDemo} = Astro.props;
+---
+
+<header class="sticky top-0 z-40 bg-base/90 backdrop-blur border-b border-line">
+    <div class="max-w-3xl mx-auto px-6 h-16 flex items-center justify-between">
+        <div class="flex items-center gap-2 font-display font-700 text-lg tracking-tight text-ink">
+      <span class="w-7 h-7 rounded-full bg-teal flex items-center justify-center shrink-0">
+        <svg viewBox="0 0 24 24" class="w-3.5 h-3.5 fill-gold"><path
+                d="M12 14.5c-3 0-6.5 2-6.5 5A2.5 2.5 0 0 0 8 22c1.2 0 2-0.6 4-0.6s2.8 0.6 4 0.6a2.5 2.5 0 0 0 2.5-2.5c0-3-3.5-5-6.5-5Z"/><ellipse
+                cx="5" cy="10.5" rx="2.1" ry="2.7"/><ellipse cx="9.2" cy="6.3" rx="2" ry="2.6"/><ellipse cx="14.8"
+                                                                                                         cy="6.3" rx="2"
+                                                                                                         ry="2.6"/><ellipse
+                cx="19" cy="10.5" rx="2.1" ry="2.7"/></svg>
+      </span>
+            Clinic setup
+        </div>
+        <button id="settingsToggle" type="button"
+                class="inline-flex items-center gap-2 text-sm text-inksoft hover:text-ink font-medium px-3 py-2 rounded-full border border-line hover:border-teal transition-colors">
+            <svg viewBox="0 0 24 24" class="w-4 h-4 fill-none stroke-current stroke-2">
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.56V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.56-1H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.56V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.56 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9a1.7 1.7 0 0 0 1.56 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1Z"/>
+            </svg>
+            Connection
+        </button>
+    </div>
+
+    <!-- Settings / connection panel -->
+    <div id="settingsPanel" class:list={["border-t border-line bg-panel", {hidden: !prefillDemo}]}>
+        <div class="max-w-3xl mx-auto px-6 py-4 space-y-3">
+            <p class="text-xs text-inksoft leading-relaxed">
+                This POC talks directly to the backend API from the browser. Point it at a running instance,
+                or flip on demo mode to click through the flow with mocked responses (nothing is sent anywhere).
+            </p>
+            <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+                <label class="text-xs font-medium text-ink font-mono shrink-0 w-28">API base URL</label>
+                <input id="apiBaseInput" type="text" value={apiBaseUrl}
+                       class="flex-1 text-sm font-mono px-3 py-2 rounded-lg border border-line bg-surface focus:outline-none focus:ring-2 focus:ring-teal"/>
+            </div>
+            <label class="flex items-center gap-3 cursor-pointer w-fit">
+                <input id="demoModeToggle" type="checkbox" class="switch" checked={prefillDemo}/>
+                <span class="text-sm text-ink font-medium">Demo mode (no backend required)</span>
+            </label>
+        </div>
+    </div>
+</header>
