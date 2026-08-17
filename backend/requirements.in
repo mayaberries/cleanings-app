@@ -1,5 +1,5 @@
 fastapi==0.141.1
-uvicorn==0.52.1
+uvicorn==0.52.3
 sqlalchemy  # if you import it directly anywhere; otherwise omit, alembic/databases pull it in
 alembic==1.19.1
 asyncpg==0.31.0
