@@ -25,6 +25,14 @@ const {title, user} = Astro.props;
 </head>
 
 <body class="bg-base text-ink font-body antialiased min-h-screen">
+{user.isDemo && (
+        <div class="bg-gold text-ink text-xs font-medium px-6 py-2 flex items-center justify-between">
+            <span>Demo mode — seeded data only, nothing here touches the real backend.</span>
+            <form method="POST" action={actions.logout}>
+                <button type="submit" class="underline hover:no-underline">Exit demo</button>
+            </form>
+        </div>
+)}
 <header class="sticky top-0 z-40 bg-base/90 backdrop-blur border-b border-line">
     <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
         <div class="flex items-center gap-2 font-display font-700 text-lg tracking-tight text-ink">

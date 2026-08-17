@@ -5,4 +5,5 @@ export interface SessionUser {
     isSuperuser: boolean;
     role: string | null;
     clinicId: string | null;
+    isDemo: boolean;
 }
