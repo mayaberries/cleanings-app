@@ -8,3 +8,5 @@ __pycache__/
 
 # Environment files
 backend/.env
+
+.DS_Store

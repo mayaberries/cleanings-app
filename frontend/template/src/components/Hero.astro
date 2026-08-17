@@ -1,0 +1,90 @@
+---
+import PawIcon from "./icons/PawIcon.astro";
+import AvailabilityTicket from "./AvailabilityTicket.astro";
+import { getClinicConfig } from "../lib/clinicConfig";
+
+type ClinicConfig = ReturnType<typeof getClinicConfig>;
+
+interface Props {
+  clinic: ClinicConfig;
+}
+
+const { clinic } = Astro.props;
+
+// Not part of clinicConfig yet — hardcoded until the clinic model grows
+// to include staff, address, and phone.
+const vetName = "Dr. Amelia Cruz, DVM";
+const address = "428 Alder Street";
+const phone = "(555) 123-4567";
+const phoneHref = "tel:+15551234567";
+---
+
+<section class="max-w-6xl mx-auto px-6 pt-16 pb-20 md:pt-24 md:pb-28">
+  <div class="grid md:grid-cols-[1.3fr_1fr] gap-12 items-center">
+    <div class="rise">
+      <div class="flex items-center gap-3 mb-6">
+        <div class="w-10 h-10 rounded-full bg-teal flex items-center justify-center shrink-0">
+          <PawIcon class="w-5 h-5 fill-gold" />
+        </div>
+        <div>
+          <p class="text-sm font-semibold leading-tight text-ink">{vetName}</p>
+          <p class="text-xs text-inksoft leading-tight">{clinic.name}</p>
+        </div>
+      </div>
+
+      <h1
+        class="font-display font-700 text-4xl md:text-5xl lg:text-[3.2rem] leading-[1.05] tracking-tight text-ink"
+      >
+        Get your pet seen<br class="hidden md:block" /> without the phone tag.
+      </h1>
+
+      <ul class="flex flex-wrap items-center gap-x-5 gap-y-2 mt-5 text-sm text-inksoft">
+        <li class="flex items-center gap-1.5">
+          <svg class="w-4 h-4 shrink-0 text-teal" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"
+            ><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg
+          >
+          30 minutes
+        </li>
+        <li class="flex items-center gap-1.5">
+          <svg class="w-4 h-4 shrink-0 text-teal" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"
+            ><path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11Z" /><circle cx="12" cy="10" r="2.4" /></svg
+          >
+          In-clinic · {address}
+        </li>
+        <li class="flex items-center gap-1.5">
+          <svg class="w-4 h-4 shrink-0 text-teal" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"
+            ><path
+              d="M12 3v3M12 18v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M3 12h3M18 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"
+            /></svg
+          >
+          Free consult · pay at visit
+        </li>
+      </ul>
+
+      <p class="mt-5 text-lg text-inksoft max-w-md leading-relaxed">
+        Pick a time, tell us what's going on, and we'll have a room ready. No hold music, no
+        back-and-forth — just an open slot with your name on it.
+      </p>
+
+      <div class="mt-8 flex flex-wrap items-center gap-4">
+        <a
+          href="#booking"
+          class="inline-flex items-center gap-2 bg-ink hover:bg-[#0f211d] text-white font-display font-600 px-6 py-3.5 rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-teal focus-visible:ring-offset-2 focus-visible:ring-offset-base"
+        >
+          Book a visit
+          <span aria-hidden="true">→</span>
+        </a>
+        <a
+          href={phoneHref}
+          class="inline-flex items-center gap-2 text-ink font-medium px-2 py-3.5 hover:text-teal transition-colors"
+        >
+          or call {phone}
+        </a>
+      </div>
+    </div>
+
+    <div class="rise rise-delay-1">
+      <AvailabilityTicket />
+    </div>
+  </div>
+</section>

@@ -1,0 +1,18 @@
+---
+// Hardcoded brand mark. We don't have a per-clinic logoUrl yet, so this
+// stands in as the fixed NovaVet-style paw mark until clinics can upload
+// their own logo (see clinic.logoUrl in clinicConfig).
+interface Props {
+  class?: string;
+}
+
+const { class: className = "w-5 h-5" } = Astro.props;
+---
+
+<svg viewBox="0 0 24 24" class={className} aria-hidden="true">
+  <ellipse cx="12" cy="15.2" rx="5.4" ry="4.6" />
+  <ellipse cx="5.4" cy="9.6" rx="2.1" ry="2.6" />
+  <ellipse cx="18.6" cy="9.6" rx="2.1" ry="2.6" />
+  <ellipse cx="8.5" cy="5.2" rx="1.8" ry="2.3" />
+  <ellipse cx="15.5" cy="5.2" rx="1.8" ry="2.3" />
+</svg>

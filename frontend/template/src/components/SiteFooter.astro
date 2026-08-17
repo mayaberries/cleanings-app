@@ -1,0 +1,15 @@
+---
+interface Props {
+  clinicName: string;
+}
+
+const { clinicName } = Astro.props;
+const year = new Date().getFullYear();
+---
+
+<footer class="border-t border-line">
+  <div class="max-w-6xl mx-auto px-6 py-10 flex flex-col md:flex-row items-center justify-between gap-4">
+    <p class="font-display font-600 text-sm text-ink">{clinicName}</p>
+    <p class="text-xs text-inksoft">© {year} {clinicName}. All rights reserved.</p>
+  </div>
+</footer>

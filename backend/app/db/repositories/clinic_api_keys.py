@@ -38,7 +38,7 @@ GET_KEY_BY_ID_QUERY = f"""
 # Hot path — hit on every public booking-surface request. Matches the
 # partial index created in c3f7a2e9d5b1_create_clinic_api_keys.py.
 GET_ACTIVE_CLINIC_BY_PUBLIC_KEY_QUERY = """
-    SELECT c.id, c.name, c.email, c.phone_number, c.address, c.created_at, c.updated_at
+    SELECT c.id, c.name, c.slug, c.email, c.phone_number, c.address, c.created_at, c.updated_at
     FROM clinic_api_keys k
     INNER JOIN clinics c ON c.id = k.clinic_id
     WHERE k.public_key = :public_key
@@ -74,10 +74,13 @@ class ClinicAPIKeysRepository(BaseRepository):
     async def create_key_for_clinic(
             self, *, clinic_id: str, key_create: ClinicAPIKeyCreate, requesting_user: UserInDB
     ) -> ClinicAPIKeyInDB:
-        if requesting_user.role != UserRole.clinic_admin or requesting_user.clinic_id != clinic_id:
+        is_own_clinic_admin = (
+                requesting_user.role == UserRole.clinic_admin and requesting_user.clinic_id == clinic_id
+        )
+        if not requesting_user.is_superuser and not is_own_clinic_admin:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Only the admin of this clinic may create API keys for it.",
+                detail="Only the admin of this clinic (or a platform administrator) may create API keys for it.",
             )
 
         public_key = self.generate_public_key(environment=key_create.environment)
@@ -123,10 +126,13 @@ class ClinicAPIKeysRepository(BaseRepository):
         return ClinicInDB(**record)
 
     async def revoke_key(self, *, key_id: str, clinic_id: str, requesting_user: UserInDB) -> ClinicAPIKeyInDB:
-        if requesting_user.role != UserRole.clinic_admin or requesting_user.clinic_id != clinic_id:
+        is_own_clinic_admin = (
+                requesting_user.role == UserRole.clinic_admin and requesting_user.clinic_id == clinic_id
+        )
+        if not requesting_user.is_superuser and not is_own_clinic_admin:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Only the admin of this clinic may revoke its API keys.",
+                detail="Only the admin of this clinic (or a platform administrator) may revoke its API keys.",
             )
 
         record = await self.db.fetch_one(

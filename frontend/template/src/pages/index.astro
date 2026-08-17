@@ -1,0 +1,19 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import Hero from "../components/Hero.astro";
+import ServicesSection from "../components/ServicesSection.astro";
+import TrustStrip from "../components/TrustStrip.astro";
+import BookingWidget from "../components/BookingWidget.astro";
+import HoursAndLocation from "../components/HoursAndLocation.astro";
+import { getClinicConfig } from "../lib/clinicConfig";
+
+const clinic = getClinicConfig();
+---
+
+<BaseLayout clinic={clinic}>
+  <Hero clinic={clinic} />
+  <ServicesSection />
+  <TrustStrip />
+  <BookingWidget />
+  <HoursAndLocation />
+</BaseLayout>

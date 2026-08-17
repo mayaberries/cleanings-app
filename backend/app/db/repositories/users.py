@@ -5,13 +5,17 @@ from uuid import uuid4
 from databases import Database
 from fastapi import HTTPException
 from pydantic import EmailStr
-from starlette.status import HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
+from starlette.status import HTTP_400_BAD_REQUEST, HTTP_403_FORBIDDEN, HTTP_404_NOT_FOUND
 
 from app.db.repositories.base import BaseRepository
 from app.db.repositories.profiles import OwnerProfilesRepository
-from app.models.profiles.owner_profile import OwnerProfileCreate, OwnerProfilePublic, OwnerProfileUpdate
 from app.models.auth.user import UserCreate, UserPublic, UserInDB, UserRole
+from app.models.profiles.owner_profile import OwnerProfileCreate, OwnerProfilePublic, OwnerProfileUpdate
 from app.services import auth_service
+
+COUNT_SUPERUSERS_QUERY = "SELECT COUNT(*) AS count FROM users WHERE is_superuser = true;"
+
+SET_SUPERUSER_QUERY = "UPDATE users SET is_superuser = true WHERE id = :id;"
 
 USER_COLUMNS = (
     "id, username, email, email_verified, role, clinic_id, password, salt, "
@@ -171,7 +175,7 @@ class UsersRepository(BaseRepository):
         return await self.populate_user(user=UserInDB(**created_user))
 
     async def get_or_create_guest_user(
-        self, *, email: EmailStr, full_name: Optional[str] = None, phone_number: Optional[str] = None
+            self, *, email: EmailStr, full_name: Optional[str] = None, phone_number: Optional[str] = None
     ) -> UserInDB:
         """
         Used by the public (no-JWT) booking surface. Looks up an existing
@@ -244,3 +248,47 @@ class UsersRepository(BaseRepository):
             **user.model_dump(),
             profile=OwnerProfilePublic(**profile.model_dump()) if profile else None,
         )
+
+    async def bootstrap_first_superuser(self, *, new_user: UserCreate) -> UserInDB:
+        """
+        One-time setup path: creates the platform's first (and, for now,
+        only -- see ix_users_single_superuser) superuser. Deliberately
+        unauthenticated, since there's no admin session to gate this
+        behind before one exists -- but self-limiting: once any row has
+        is_superuser = true, this always 403s, so it's safe to leave
+        wired in permanently rather than needing removal after first use.
+
+        Reuses _create_user_record for the same uniqueness checks +
+        password hashing as ordinary registration, then flips
+        is_superuser in a second statement rather than threading an
+        is_superuser param through the shared helper that the public
+        /users/ registration route also calls -- that route must never
+        be able to set it.
+        """
+        existing = await self.db.fetch_one(query=COUNT_SUPERUSERS_QUERY)
+        if existing["count"] > 0:
+            raise HTTPException(
+                status_code=HTTP_403_FORBIDDEN,
+                detail="A superuser already exists. Ask them to grant you access instead.",
+            )
+
+        created_user = await self._create_user_record(new_user=new_user, role=UserRole.client)
+
+        try:
+            await self.db.execute(query=SET_SUPERUSER_QUERY, values={"id": created_user["id"]})
+        except Exception as exc:
+            # Race: another bootstrap request won between our count check
+            # and this UPDATE. ix_users_single_superuser is what actually
+            # caught it -- translate the resulting DB error into the same
+            # 403 a sequential caller would have seen.
+            raise HTTPException(
+                status_code=HTTP_403_FORBIDDEN,
+                detail="A superuser already exists. Ask them to grant you access instead.",
+            ) from exc
+
+        await self.profiles_repo.create_owner_profile(
+            profile_create=OwnerProfileCreate(user_id=created_user["id"])
+        )
+
+        final_record = await self.db.fetch_one(query=GET_USER_BY_ID_QUERY, values={"id": created_user["id"]})
+        return await self.populate_user(user=UserInDB(**final_record))
