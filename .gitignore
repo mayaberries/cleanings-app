@@ -10,3 +10,5 @@ __pycache__/
 backend/.env
 
 .DS_Store
+
+.claude/
