@@ -1,24 +1,27 @@
 ---
 import "../styles/global.css";
-import { googleFontsHref } from "../../../shared/design-tokens.mjs";
+import {googleFontsHref} from "../../../shared/design-tokens.mjs";
+import {actions} from "astro:actions";
+import type {SessionUser} from "../lib/auth";
 
 interface Props {
     title: string;
+    user: SessionUser;
 }
 
-const { title } = Astro.props;
+const {title, user} = Astro.props;
 ---
 
 <!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>{title} · Pets Admin</title>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href={googleFontsHref} rel="stylesheet" />
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+    <link href={googleFontsHref} rel="stylesheet"/>
 </head>
 
 <body class="bg-base text-ink font-body antialiased min-h-screen">
@@ -26,22 +29,27 @@ const { title } = Astro.props;
     <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
         <div class="flex items-center gap-2 font-display font-700 text-lg tracking-tight text-ink">
           <span class="w-7 h-7 rounded-full bg-teal flex items-center justify-center shrink-0">
-            <svg viewBox="0 0 24 24" class="w-3.5 h-3.5 fill-gold"><circle cx="12" cy="12" r="10" /></svg>
+            <svg viewBox="0 0 24 24" class="w-3.5 h-3.5 fill-gold"><circle cx="12" cy="12" r="10"/></svg>
           </span>
             Pets Admin
-            <slot name="role-badge" />
+            <span class={`badge ${user.isSuperuser ? "badge-warn" : "badge-ok"}`}>
+            {user.isSuperuser ? "Superadmin" : user.role || "staff"}
+          </span>
         </div>
         <div class="flex items-center gap-4 text-sm text-inksoft">
-            <slot name="user-controls" />
+            <span class="font-mono">{user.email}</span>
+            <form method="POST" action={actions.logout}>
+                <button type="submit" class="text-ink font-medium hover:text-teal transition-colors">Sign out</button>
+            </form>
         </div>
     </div>
     <nav class="max-w-6xl mx-auto px-6 flex gap-6 text-sm font-medium text-inksoft">
-        <slot name="tabs" />
+        <slot name="tabs"/>
     </nav>
 </header>
 
 <main class="max-w-6xl mx-auto px-6 py-8">
-    <slot />
+    <slot/>
 </main>
 </body>
 </html>
