@@ -11,6 +11,9 @@ help: ## Show this help message
 run: ## Start the FastAPI server locally (venv), against the dockerized db
 	cd backend && uvicorn app.api.server:app --reload
 
+admin-dev: ## Start the Astro SSR admin dashboard's dev server (frontend/admin)
+	cd frontend/admin && npm run dev
+
 db-up: ## Start the database container
 	docker-compose up -d db
 
