@@ -1,4 +1,20 @@
 ---
+import AdminLayout from "../layout/AdminLayout.astro";
+
+
+// Every dashboard page is on-demand rendered -- see README_STATIC_SITES.md
+// caveat this deliberately does NOT share: unlike frontend/template, this
+// project always needs a live Node process (the Node adapter), since it's
+// per-request (auth, live data), never a static build.
 export const prerender = false;
 ---
-<p>Server time: {new Date().toISOString()}</p>
+
+<AdminLayout title="Overview">
+    <h1 class="font-display font-700 text-2xl text-ink mb-2">Dashboard shell is live</h1>
+    <p class="text-sm text-inksoft max-w-xl">
+        Server-rendered on every request. Layout and design tokens now come from
+        <code class="font-mono text-xs bg-panel px-1.5 py-0.5 rounded">frontend/shared/design-tokens.mjs</code>,
+        the same source <code class="font-mono text-xs bg-panel px-1.5 py-0.5 rounded">frontend/template</code>
+        should eventually read from too. Login and the first Action come next.
+    </p>
+</AdminLayout>

@@ -1,0 +1,75 @@
+/*
+ *
+ * Tailwind v4 is CSS-first -- no tailwind.config.js, no CDN <script>, no
+ * inline `tailwind.config = {...}`. This @theme block is now the
+ * canonical token definition for THIS project.
+ *
+ * frontend/shared/design-tokens.mjs still exists (frontend/template still
+ * reads it, and this file's values were copied from it) but Tailwind v4
+ * can't consume a JS object directly, so this CSS block and that JS
+ * module are kept in sync by hand from here on. If that manual sync ever
+ * becomes a real pain (e.g. once frontend/template also migrates to
+ * Tailwind v4), the fix is a tiny script generating one from the other --
+ * not hand-copying forever.
+ */
+@import "tailwindcss";
+
+@theme {
+    --color-base: #F1F3EE;
+    --color-ink: #172E29;
+    --color-inksoft: #4B5D58;
+    --color-surface: #FFFFFF;
+    --color-line: #DCE1D9;
+    --color-gold: #E3A039;
+    --color-goldsoft: #F7DBA6;
+    --color-teal: #3F7377;
+    --color-panel: #F7F9F4;
+    --color-muted: #4B5D58;
+
+    /* --color-primary / --color-primary-dark generate bg-primary,
+       bg-primary-dark, text-primary, etc. -- same DEFAULT/dark shape the
+       old JS config used. */
+    --color-primary: #3F7377;
+    --color-primary-dark: #2F5A5D;
+    --color-accent: #E3A039;
+    --color-accent-dark: #C1841F;
+    --color-accent-light: #F7DBA6;
+
+    --font-display: "Space Grotesk", sans-serif;
+    --font-body: "Inter", sans-serif;
+    --font-sans: "Inter", sans-serif;
+    --font-mono: "IBM Plex Mono", monospace;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+body {
+    font-family: "Inter", sans-serif;
+}
+::selection {
+    background: #e3a039;
+    color: #172e29;
+}
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.15rem 0.6rem;
+    border-radius: 9999px;
+}
+.badge-ok {
+    background: #DCEFE0;
+    color: #1E6B3A;
+}
+.badge-warn {
+    background: #F7DBA6;
+    color: #7A4E0F;
+}
+.badge-off {
+    background: #EDEFEA;
+    color: #6B7A75;
+}
