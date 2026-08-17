@@ -1,17 +1,3 @@
-/*
- *
- * Tailwind v4 is CSS-first -- no tailwind.config.js, no CDN <script>, no
- * inline `tailwind.config = {...}`. This @theme block is now the
- * canonical token definition for THIS project.
- *
- * frontend/shared/design-tokens.mjs still exists (frontend/template still
- * reads it, and this file's values were copied from it) but Tailwind v4
- * can't consume a JS object directly, so this CSS block and that JS
- * module are kept in sync by hand from here on. If that manual sync ever
- * becomes a real pain (e.g. once frontend/template also migrates to
- * Tailwind v4), the fix is a tiny script generating one from the other --
- * not hand-copying forever.
- */
 @import "tailwindcss";
 
 @theme {
@@ -25,6 +11,8 @@
     --color-teal: #3F7377;
     --color-panel: #F7F9F4;
     --color-muted: #4B5D58;
+    --color-danger: #B3492F;
+    --color-dangersoft: #F5DED7;
 
     /* --color-primary / --color-primary-dark generate bg-primary,
        bg-primary-dark, text-primary, etc. -- same DEFAULT/dark shape the

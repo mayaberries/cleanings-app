@@ -2,7 +2,7 @@ import {defineMiddleware} from "astro:middleware";
 import {requireSession} from "./lib/session";
 import type {SessionUser} from "./lib/auth";
 
-const PUBLIC_PATHS = new Set(["/login"]);
+const PUBLIC_PATHS = new Set(["/login", "/onboarding"]);
 
 export const onRequest = defineMiddleware(async (context, next) => {
     const session = requireSession(context.session);

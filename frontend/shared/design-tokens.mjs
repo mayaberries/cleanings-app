@@ -1,13 +1,7 @@
-// frontend/shared/design-tokens.mjs
-//
 // Single source of truth for the Tailwind CDN color/font tokens used by
 // every Astro project in this repo (frontend/template, frontend/admin).
-// Previously each project hardcoded its own copy of this palette inline
-// in its layout's tailwind.config script -- fine while there was one
-// project, a drift risk now that there are two. Both projects import
-// this instead of keeping their own copies in sync by hand.
 //
-// Prototype-only setup, same caveat as before: this is a plain object fed
+// TODO: Prototype-only setup, same caveat as before: this is a plain object fed
 // into the Tailwind CDN's `tailwind.config`, not a real tailwind.config.*.
 // Swap for a real Tailwind build pipeline (and this file for a proper
 // config module) before any of this ships.
@@ -23,6 +17,8 @@ export const colors = {
     teal: "#3F7377",
     panel: "#F7F9F4",
     muted: "#4B5D58",
+    danger: "#B3492F",
+    dangersoft: "#F5DED7",
     primary: { DEFAULT: "#3F7377", dark: "#2F5A5D" },
     accent: { DEFAULT: "#E3A039", dark: "#C1841F", light: "#F7DBA6" },
 };
