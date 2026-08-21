@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pets Admin · Sign in</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+<!-- Static prototype: no backend, no network calls other than the two above
+     (Google Fonts + the Tailwind CDN build below). See README.md. -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="theme-config.js"></script>
+</head>
+<body class="bg-base text-ink font-body antialiased min-h-screen">
+
+<div class="min-h-screen flex items-center justify-center px-6">
+  <div class="w-full max-w-sm bg-surface border border-line rounded-2xl p-8">
+    <div class="flex items-center gap-2 mb-6">
+      <span class="w-7 h-7 rounded-full bg-teal flex items-center justify-center shrink-0">
+        <svg viewBox="0 0 24 24" class="w-3.5 h-3.5 fill-gold"><circle cx="12" cy="12" r="10"/></svg>
+      </span>
+      <span class="font-display font-700 text-lg tracking-tight text-ink">Pets Admin</span>
+    </div>
+
+    <label class="block text-xs font-medium text-inksoft mb-1.5">Email</label>
+    <input id="login-email" type="email" autocomplete="username"
+      class="w-full rounded-lg border border-line px-3.5 py-2.5 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary" />
+
+    <label class="block text-xs font-medium text-inksoft mb-1.5">Password</label>
+    <input id="login-password" type="password" autocomplete="current-password"
+      class="w-full rounded-lg border border-line px-3.5 py-2.5 text-sm mb-5 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary" />
+
+    <button id="login-btn"
+      class="w-full bg-ink hover:bg-[#0f211d] text-white font-display font-600 text-sm px-4 py-3 rounded-full transition-colors">
+      Sign in
+    </button>
+    <p id="login-error" class="text-sm text-red-600 mt-3 hidden"></p>
+
+    <div class="flex items-center gap-3 my-5">
+      <div class="h-px bg-line flex-1"></div>
+      <span class="text-xs text-inksoft font-mono">or jump straight in</span>
+      <div class="h-px bg-line flex-1"></div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-2">
+      <button onclick="loginAs('superadmin')"
+        class="border border-line hover:border-teal text-ink text-xs font-medium px-3 py-2.5 rounded-lg transition-colors">
+        Superadmin view
+      </button>
+      <button onclick="loginAs('clinic_admin')"
+        class="border border-line hover:border-teal text-ink text-xs font-medium px-3 py-2.5 rounded-lg transition-colors">
+        Clinic admin view
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="shared.js"></script>
+<script src="login.js"></script>
+</body>
+</html>

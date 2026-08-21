@@ -1,0 +1,7 @@
+/* Shared across every page in this prototype. */
+body { font-family: "Inter", sans-serif; }
+.badge { display:inline-flex; align-items:center; gap:.35rem; font-size:.75rem; font-weight:600; padding:.15rem .6rem; border-radius:9999px; }
+.badge-ok { background:#DCEFE0; color:#1E6B3A; }
+.badge-warn { background:#F7DBA6; color:#7A4E0F; }
+.badge-off { background:#EDEFEA; color:#6B7A75; }
+::selection { background:#e3a039; color:#172e29; }

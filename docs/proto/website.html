@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pets Admin · Website</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+<!-- Static prototype: no backend, no network calls other than the two above
+     (Google Fonts + the Tailwind CDN build below). See README.md. -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="theme-config.js"></script>
+</head>
+<body class="bg-base text-ink font-body antialiased min-h-screen">
+
+<header class="sticky top-0 z-40 bg-base/90 backdrop-blur border-b border-line">
+  <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+    <div class="flex items-center gap-2 font-display font-700 text-lg tracking-tight text-ink">
+      <span class="w-7 h-7 rounded-full bg-teal flex items-center justify-center shrink-0">
+        <svg viewBox="0 0 24 24" class="w-3.5 h-3.5 fill-gold"><circle cx="12" cy="12" r="10"/></svg>
+      </span>
+      Pets Admin
+      <span id="role-badge" class="badge badge-ok ml-2"></span>
+    </div>
+    <div class="flex items-center gap-4 text-sm text-inksoft">
+      <span id="user-email" class="font-mono"></span>
+      <button id="signout-btn" class="text-ink font-medium hover:text-teal transition-colors">Sign out</button>
+    </div>
+  </div>
+  <nav id="tab-nav" class="max-w-6xl mx-auto px-6 flex gap-6 text-sm font-medium text-inksoft border-t border-line/0"></nav>
+</header>
+
+<main class="max-w-6xl mx-auto px-6 py-8">
+  <div id="toast" class="hidden mb-4 text-sm rounded-lg px-4 py-3 border"></div>
+  <div id="view-content"></div>
+</main>
+
+<script src="shared.js"></script>
+<script src="website.js"></script>
+</body>
+</html>
