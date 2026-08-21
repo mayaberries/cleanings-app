@@ -1,4 +1,6 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '@playwright/test';
+import { account, clinic, mismatchedConfirmPassword, service } from './fixtures/onboarding';
+import { enableDemoMode, fillAccountStep, fillClinicStep, fillFirstService } from './helpers/onboarding';
 
 /**
  * Covers the onboarding wizard (src/pages/onboarding.astro and src/lib/onboarding/*):
@@ -8,35 +10,10 @@ import { test, expect, type Page } from '@playwright/test';
  * Runs in the wizard's built-in demo mode, which swaps every backend call for a
  * mocked response (see src/lib/onboarding/demoBackend.js) — no API or database
  * needs to be up for these tests.
+ *
+ * Input data lives in tests/fixtures/onboarding.ts; the fill/toggle steps below
+ * live in tests/helpers/onboarding.ts, so other onboarding specs can reuse both.
  */
-
-async function enableDemoMode(page: Page) {
-  await page.locator('#settingsToggle').click();
-  await page.locator('#demoModeToggle').check();
-}
-
-async function fillAccountStep(page: Page) {
-  await page.locator('#acc_email').fill('jane@acmevet.com');
-  await page.locator('#acc_username').fill('janedoe_vet');
-  await page.locator('#acc_password').fill('supersecret1');
-  await page.locator('#acc_password2').fill('supersecret1');
-}
-
-async function fillClinicStep(page: Page) {
-  await page.locator('#cl_name').fill('Acme Veterinary Clinic');
-  await page.locator('#cl_email').fill('hello@acmevet.com');
-  await page.locator('#cl_phone').fill('+52 55 0000 0000');
-  await page.locator('#cl_address').fill('123 Main St, CDMX');
-}
-
-async function fillFirstService(
-  page: Page,
-  { name = 'Annual wellness exam', price = '450', duration = '30' } = {},
-) {
-  await page.locator('.svc-name').first().fill(name);
-  await page.locator('.svc-price').first().fill(price);
-  await page.locator('.svc-duration').first().fill(duration);
-}
 
 test.describe('Onboarding wizard', () => {
   test('the login view links through to the onboarding wizard', async ({ page }) => {
@@ -59,13 +36,13 @@ test.describe('Onboarding wizard', () => {
 
     // Valid fields but a mismatched confirmation still blocks progress.
     await fillAccountStep(page);
-    await page.locator('#acc_password2').fill('somethingElse');
+    await page.locator('#acc_password2').fill(mismatchedConfirmPassword);
     await page.locator('#nextBtn').click();
     await expect(page.locator('.field-error[data-for="acc_password2"]')).toHaveText(/don't match/i);
     await expect(page.locator('.step-panel[data-step="0"]')).toBeVisible();
 
     // Fixing it lets the wizard move on.
-    await page.locator('#acc_password2').fill('supersecret1');
+    await page.locator('#acc_password2').fill(account.password);
     await page.locator('#nextBtn').click();
     await expect(page.locator('.step-panel[data-step="1"]')).toBeVisible();
   });
@@ -102,7 +79,7 @@ test.describe('Onboarding wizard', () => {
     // Step 1: clinic — slug should auto-derive from the name
     await expect(page.locator('.step-panel[data-step="1"]')).toBeVisible();
     await fillClinicStep(page);
-    await expect(page.locator('#cl_slug')).toHaveValue('acme-veterinary-clinic');
+    await expect(page.locator('#cl_slug')).toHaveValue(clinic.slug);
     await page.locator('#nextBtn').click();
 
     // Step 2: services
@@ -113,10 +90,10 @@ test.describe('Onboarding wizard', () => {
     // Step 3: review — summarizes everything entered so far, nothing sent yet
     await expect(page.locator('.step-panel[data-step="3"]')).toBeVisible();
     const review = page.locator('#reviewBlock');
-    await expect(review).toContainText('janedoe_vet');
-    await expect(review).toContainText('jane@acmevet.com');
-    await expect(review).toContainText('Acme Veterinary Clinic');
-    await expect(review).toContainText('Annual wellness exam');
+    await expect(review).toContainText(account.username);
+    await expect(review).toContainText(account.email);
+    await expect(review).toContainText(clinic.name);
+    await expect(review).toContainText(service.name);
     await expect(page.locator('#nextBtn')).toHaveText('Launch clinic 🚀');
 
     // Accept the review and launch
