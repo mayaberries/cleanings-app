@@ -9,7 +9,7 @@
       <excludeFolder url="file://$MODULE_DIR$/.claude" />
       <excludeFolder url="file://$MODULE_DIR$/frontend/admin/.astro" />
     </content>
-    <orderEntry type="jdk" jdkName="~/Projects/cleanings-app/.venv" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Python 3.13 (cleanings-app) (2)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
   <component name="PyDocumentationSettings">
