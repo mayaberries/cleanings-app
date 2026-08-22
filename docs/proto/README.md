@@ -66,9 +66,16 @@ opened directly via `file://`.
 
 ## Promoting a view into the real app
 
-When a tab here is ready to become real (backed by `frontend/admin` and the
-actual API — see `docs/openapi.json` and `frontend/admin/tests/wip/` for
-what's already scoped): treat this page's markup and interactions as the
-target to hit, not something to copy wholesale — the real page will fetch
-from the backend instead of reading `state`, and will live under Astro's
-routing/session/layout conventions instead of this prototype's `boot()`.
+**The shell is already ported.** `boot()`'s role/tab access guard now lives in
+`frontend/admin/src/middleware.ts` + `src/lib/nav.ts`, and `renderShell()`'s tab
+bar is `src/components/AdminNav.vue`. Every tab below has a real route in the
+admin app; most are still content placeholders. See
+[../admin-dashboard.md](../admin-dashboard.md).
+
+What's left to port is each tab's **body**. When one is ready to become real
+(backed by the actual API — see `docs/openapi.json` and
+`frontend/admin/tests/wip/`, plus [../testing.md](../testing.md) for the
+graduation workflow): treat this page's markup and interactions as the target to
+hit, not something to copy wholesale. The real page fetches from the backend
+instead of reading `state`, and lives under Astro's routing/session/layout
+conventions instead of this prototype's `boot()`.

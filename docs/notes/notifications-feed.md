@@ -3,7 +3,8 @@
 > **Status:** speculative, not scoped, not scheduled. This is a design note
 > to save the reasoning for later, not something to build now. Written when
 > we decided to skip (not delete) the old marketplace Feed feature pending a
-> decision — see `appointments-evaluations-roadmap.md`.
+> decision — see [../roadmap.md](../roadmap.md) and
+> [../domain.md](../domain.md#feed).
 
 ## The idea in one sentence
 
