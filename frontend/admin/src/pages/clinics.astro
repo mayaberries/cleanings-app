@@ -1,0 +1,12 @@
+---
+import AdminLayout from "../layout/AdminLayout.astro";
+import TabStub from "../components/TabStub.astro";
+
+export const prerender = false;
+
+const user = Astro.locals.user!;
+---
+
+<AdminLayout title="Clinics" user={user}>
+    <TabStub title="Clinics" note="Every clinic on the platform, each with its own site-launch panel. Backed by GET /api/clinics/ — see tests/wip/superadmin-clinics.spec.ts for the acceptance criteria."/>
+</AdminLayout>

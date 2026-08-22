@@ -1,0 +1,12 @@
+---
+import AdminLayout from "../layout/AdminLayout.astro";
+import TabStub from "../components/TabStub.astro";
+
+export const prerender = false;
+
+const user = Astro.locals.user!;
+---
+
+<AdminLayout title="Account" user={user}>
+    <TabStub title="Account" note="Display name, email, and password for the signed-in user — the one tab both roles share."/>
+</AdminLayout>

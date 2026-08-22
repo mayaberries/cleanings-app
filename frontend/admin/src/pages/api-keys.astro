@@ -1,0 +1,12 @@
+---
+import AdminLayout from "../layout/AdminLayout.astro";
+import TabStub from "../components/TabStub.astro";
+
+export const prerender = false;
+
+const user = Astro.locals.user!;
+---
+
+<AdminLayout title="API Keys" user={user}>
+    <TabStub title="API Keys" note="Create and revoke the keys the public booking widget authenticates with. Backed by /api/clinics/{id}/api-keys/ — see tests/wip/api-keys.spec.ts."/>
+</AdminLayout>

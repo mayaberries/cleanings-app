@@ -1,0 +1,42 @@
+---
+import StatCard from "../components/StatCard.astro";
+import AdminLayout from "../layout/AdminLayout.astro";
+import {getDemoServices, getDemoAppointments, getDemoApiKeys} from "../lib/demoData";
+
+export const prerender = false;
+
+const user = Astro.locals.user!;
+
+const statCards = user.isDemo
+    ? (() => {
+        const services = getDemoServices();
+        const appointments = getDemoAppointments();
+        const keys = getDemoApiKeys();
+        return [
+            {label: "Services", value: services.length},
+            {label: "Appointments (total)", value: appointments.length},
+            {label: "Awaiting confirmation", value: appointments.filter((a) => a.status === "requested").length},
+            {label: "Active API keys", value: keys.filter((k) => k.is_active).length},
+        ];
+    })()
+    : null;
+---
+
+<AdminLayout title="Overview" user={user}>
+    <h1 class="font-display font-700 text-2xl text-ink mb-2">Overview</h1>
+
+    {statCards && (
+            <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+                {statCards.map((card) =>
+                        <StatCard label={card.label} value={card.value}/>)}
+            </div>
+    )}
+
+    {!statCards && (
+            <p class="text-sm text-inksoft max-w-xl">
+                Clinic admin session (clinic {user.clinicId}) — these stat cards read from the real backend once the
+                services/appointments/keys tabs are wired up. Sign out and try the demo login on the sign-in page for a
+                preview of what's coming.
+            </p>
+    )}
+</AdminLayout>

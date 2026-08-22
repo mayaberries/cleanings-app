@@ -1,0 +1,16 @@
+---
+/**
+ * Placeholder body for a tab whose route exists but whose content doesn't yet.
+ * Delete the usage (not this file) as each tab gets built out -- the matching
+ * acceptance criteria are already written up in tests/wip/.
+ */
+interface Props {
+    title: string;
+    note: string;
+}
+
+const {title, note} = Astro.props;
+---
+
+<h1 class="font-display font-700 text-2xl text-ink mb-2">{title}</h1>
+<p class="text-sm text-inksoft max-w-xl">{note}</p>

@@ -1,0 +1,12 @@
+---
+import AdminLayout from "../layout/AdminLayout.astro";
+import TabStub from "../components/TabStub.astro";
+
+export const prerender = false;
+
+const user = Astro.locals.user!;
+---
+
+<AdminLayout title="Services" user={user}>
+    <TabStub title="Services" note="The services this clinic offers, as editable cards. Backed by GET/POST /api/services/ — see tests/wip/services.spec.ts."/>
+</AdminLayout>

@@ -2,6 +2,8 @@
 import "../styles/global.css";
 import {googleFontsHref} from "../../../shared/design-tokens.mjs";
 import {actions} from "astro:actions";
+import AdminNav from "../components/AdminNav.vue";
+import {tabForPath} from "../lib/nav";
 import type {SessionUser} from "../lib/auth";
 
 interface Props {
@@ -10,6 +12,10 @@ interface Props {
 }
 
 const {title, user} = Astro.props;
+
+// Derived from the URL rather than passed in, so a page can never disagree
+// with the nav about which tab it is.
+const activeTab = tabForPath(Astro.url.pathname)?.id ?? null;
 ---
 
 <!doctype html>
@@ -51,9 +57,7 @@ const {title, user} = Astro.props;
             </form>
         </div>
     </div>
-    <nav class="max-w-6xl mx-auto px-6 flex gap-6 text-sm font-medium text-inksoft">
-        <slot name="tabs"/>
-    </nav>
+    <AdminNav client:load user={user} activeTab={activeTab}/>
 </header>
 
 <main class="max-w-6xl mx-auto px-6 py-8">

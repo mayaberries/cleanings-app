@@ -1,0 +1,12 @@
+---
+import AdminLayout from "../layout/AdminLayout.astro";
+import TabStub from "../components/TabStub.astro";
+
+export const prerender = false;
+
+const user = Astro.locals.user!;
+---
+
+<AdminLayout title="Appointments" user={user}>
+    <TabStub title="Appointments" note="Per-service appointment list with confirm/cancel. Backed by the appointments endpoints under /api/services/{id}/appointments/ — see tests/wip/appointments.spec.ts."/>
+</AdminLayout>

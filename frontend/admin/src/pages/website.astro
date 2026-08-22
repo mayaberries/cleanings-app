@@ -1,0 +1,12 @@
+---
+import AdminLayout from "../layout/AdminLayout.astro";
+import TabStub from "../components/TabStub.astro";
+
+export const prerender = false;
+
+const user = Astro.locals.user!;
+---
+
+<AdminLayout title="Website" user={user}>
+    <TabStub title="Website" note="This clinic's own site-launch panel — brand color, logo, and the build trigger. Needs a backend route that doesn't exist yet."/>
+</AdminLayout>
